@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="OnDaGO.MAUI.Views.HomePage"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:maps="http://schemas.microsoft.com/dotnet/2021/maui/maps"
+             xmlns:sensors="clr-namespace:Microsoft.Maui.Devices.Sensors;assembly=Microsoft.Maui.Essentials"
+             NavigationPage.HasNavigationBar="False"
+             Title="">
+
+    <Grid>
+
+        <Grid x:Name="Overlay"
+              BackgroundColor="#E3FCF7"
+              IsVisible="True"
+              VerticalOptions="FillAndExpand"
+              HorizontalOptions="FillAndExpand">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnOverlayTapped" />
+            </Grid.GestureRecognizers>
+        </Grid>
+
+        <!-- Map and other controls -->
+        <maps:Map x:Name="map"
+                  MapType="Hybrid"
+                  IsShowingUser="True"
+                  IsScrollEnabled="True"
+                  IsZoomEnabled="True"
+                  IsTrafficEnabled="True">
+            <x:Arguments>
+                <maps:MapSpan>
+                    <x:Arguments>
+                        <sensors:Location>
+                            <x:Arguments>
+                                <x:Double>14.6310</x:Double>
+                                <x:Double>121.0725</x:Double>
+                            </x:Arguments>
+                        </sensors:Location>
+                        <x:Double>0.1</x:Double>
+                        <x:Double>0.1</x:Double>
+                    </x:Arguments>
+                </maps:MapSpan>
+            </x:Arguments>
+        </maps:Map>
+
+        <!-- Overlaying buttons on the map -->
+        <VerticalStackLayout 
+            HorizontalOptions="End" 
+            VerticalOptions="Start" 
+            Padding="10">
+
+            <Button Text="Settings" 
+                    Clicked="OnSettingsClicked" 
+                    Margin="0,0,0,10">
+                <Button.Shadow>
+                    <Shadow Brush="Black" Offset="5,5" Radius="10"/>
+                </Button.Shadow>
+            </Button>
+
+            <Button Text="Map Type" 
+                    Clicked="ChangeMapType" 
+                    Margin="0,0,0,0">
+                <Button.Shadow>
+                    <Shadow Brush="Black" Offset="5,5" Radius="10"/>
+                </Button.Shadow>
+            </Button>
+
+            <Button Text="Where to?" 
+                    Clicked="ToggleSearchFields" 
+                    Margin="0,10,0,0">
+                <Button.Shadow>
+                    <Shadow Brush="Black" Offset="5,5" Radius="10"/>
+                </Button.Shadow>
+            </Button>
+        </VerticalStackLayout>
+
+        <!-- Toggle Switch for location -->
+        <VerticalStackLayout 
+    HorizontalOptions="Center" 
+    VerticalOptions="Start" 
+    Padding="10" 
+    Margin="0,0,0,0">
+            <!-- Adjusted margin to push the layout down from the top -->
+
+            <Switch x:Name="LocationSwitch"
+        Toggled="OnLocationToggled"
+        HeightRequest="40"
+        VerticalOptions="Center"
+        HorizontalOptions="Center">
+                <Switch.Shadow>
+                    <Shadow Brush="Black" Offset="5,5" Radius="10"/>
+                </Switch.Shadow>
+            </Switch>
+
+            <Label x:Name="LocationLabel"
+       Text="Cubao"
+       FontSize="15"
+       VerticalOptions="Center"
+       HorizontalTextAlignment="Center"
+       HeightRequest="30"
+       WidthRequest="100"
+       TextColor="White">
+                <Label.Shadow>
+                    <Shadow Brush="Black" Offset="5,5" Radius="10"/>
+                </Label.Shadow>
+            </Label>
+
+        </VerticalStackLayout>
+
+
+        <!-- Profile button on top left -->
+        <VerticalStackLayout Padding="10">
+            <Button Text="Profile" 
+                    Clicked="OnProfileClicked"
+                    TextColor="White"
+                    CornerRadius="5"
+                    Padding="10"
+                    FontSize="16"
+                    HorizontalOptions="Start"
+                    VerticalOptions="Start"
+                    Margin="0,0,0,10"
+                    AbsoluteLayout.LayoutBounds="0, 0, AutoSize, AutoSize"
+                    AbsoluteLayout.LayoutFlags="PositionProportional">
+                <Button.Shadow>
+                    <Shadow Brush="Black" Offset="5,5" Radius="10"/>
+                </Button.Shadow>
+            </Button>
+        </VerticalStackLayout>
+
+        <!-- Frame with StackLayout for immersive view -->
+        <Frame x:Name="FrameLayout"
+               CornerRadius="10" 
+               HasShadow="True" 
+               BackgroundColor="White"
+               Padding="15" 
+               Margin="10"
+               VerticalOptions="End"
+               HorizontalOptions="FillAndExpand"
+               IsClippedToBounds="True"
+               IsVisible="{Binding IsSearchVisible}">
+            <StackLayout x:Name="SearchFieldsStackLayout" 
+                         Orientation="Vertical" 
+                         Padding="10" 
+                         Spacing="10" 
+                         VerticalOptions="End">
+                <Label x:Name="FarePrice" Text="Fare Price: ">
+                    
+                </Label>
+                <Label x:Name="DiscountedPrice" Text="Discounted Price: ">
+                    
+                </Label>
+                <Picker x:Name="StartLocationPicker" Title="Select start location"/>
+                <Picker x:Name="EndLocationPicker" Title="Select destination"/>
+                <Button Text="Get Directions" Clicked="OnGetDirectionsClicked">
+                    <Button.Shadow>
+                        <Shadow Brush="Black" Offset="5,5" Radius="10"/>
+                    </Button.Shadow>
+                </Button>
+            </StackLayout>
+        </Frame>
+    </Grid>
+</ContentPage>

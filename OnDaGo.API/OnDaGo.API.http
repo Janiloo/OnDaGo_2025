@@ -1,0 +1,6 @@
+@OnDaGo.API_HostAddress = http://localhost:5147
+
+GET {{OnDaGo.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

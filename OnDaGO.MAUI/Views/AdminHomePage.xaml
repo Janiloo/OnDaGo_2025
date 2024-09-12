@@ -1,0 +1,108 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="OnDaGO.MAUI.Views.AdminHomePage"
+             NavigationPage.HasNavigationBar="False"
+             Title="AdminHomePage">
+    <AbsoluteLayout>
+
+        <!-- Main Content (Stacked vertically) -->
+        <VerticalStackLayout AbsoluteLayout.LayoutBounds="0,0,1,1" AbsoluteLayout.LayoutFlags="All" x:Name="MainContent">
+            <Button Text="Settings" 
+                Clicked="OnSettingsClicked" 
+                Margin="0,0,0,10">
+                <Button.Shadow>
+                    <Shadow Brush="Black" Offset="5,5" Radius="10"/>
+                </Button.Shadow>
+            </Button>
+
+            <Button Text="Profile" 
+                Clicked="OnProfileClicked"
+                TextColor="White"
+                CornerRadius="5"
+                Padding="10"
+                FontSize="16"
+                HorizontalOptions="Start"
+                VerticalOptions="Start"
+                Margin="0,0,0,10">
+                <Button.Shadow>
+                    <Shadow Brush="Black" Offset="5,5" Radius="10"/>
+                </Button.Shadow>
+            </Button>
+
+            <Button Text="Fare Matrix" 
+                Clicked="OnFareMatrixClicked" 
+                Margin="0,0,0,10">
+                <Button.Shadow>
+                    <Shadow Brush="Black" Offset="5,5" Radius="10"/>
+                </Button.Shadow>
+            </Button>
+        </VerticalStackLayout>
+
+        <!-- Fare Matrix Overlay -->
+        <StackLayout IsVisible="False" x:Name="FareMatrixTable" AbsoluteLayout.LayoutBounds="0,0,1,1" AbsoluteLayout.LayoutFlags="All"
+                     InputTransparent="False">
+
+            <!-- Semi-transparent background layer -->
+            <BoxView BackgroundColor="#80000000" AbsoluteLayout.LayoutBounds="0,0,1,1" AbsoluteLayout.LayoutFlags="All" />
+
+            <!-- White background for content (using Frame to add padding and a white background) -->
+            <Frame BackgroundColor="White" Padding="10" CornerRadius="10"
+               HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="300">
+                <StackLayout>
+
+                    <!-- Back Button to exit Fare Matrix -->
+                    <Button Text="Back"
+                        Clicked="OnBackClicked"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Start"
+                        Margin="0,0,0,10" />
+
+                    <!-- Header Row for Fare Matrix -->
+                    <Grid ColumnSpacing="5" RowSpacing="5" BackgroundColor="LightGray" Padding="5">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Headers for Fare Matrix -->
+                        <Label Text="Origin" FontAttributes="Bold" Grid.Row="0" Grid.Column="0" HorizontalOptions="Center"/>
+                        <Label Text="Destination" FontAttributes="Bold" Grid.Row="0" Grid.Column="1" HorizontalOptions="Center"/>
+                        <Label Text="Fare" FontAttributes="Bold" Grid.Row="0" Grid.Column="2" HorizontalOptions="Center"/>
+                        <Label Text="Discounted Fare" FontAttributes="Bold" Grid.Row="0" Grid.Column="3" HorizontalOptions="Center"/>
+                    </Grid>
+
+                    <!-- CollectionView for displaying fare matrix in grid format -->
+                    <CollectionView x:Name="FareMatrixCollection" Margin="0,10,0,0">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnSpacing="5" RowSpacing="5" Padding="5">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- FareMatrix Data Rows -->
+                                    <Label Text="{Binding Origin}" Grid.Row="0" Grid.Column="0" HorizontalOptions="Center"/>
+                                    <Label Text="{Binding Destination}" Grid.Row="0" Grid.Column="1" HorizontalOptions="Center"/>
+                                    <Label Text="{Binding Fare}" Grid.Row="0" Grid.Column="2" HorizontalOptions="Center"/>
+                                    <Label Text="{Binding DiscountedFare}" Grid.Row="0" Grid.Column="3" HorizontalOptions="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                </StackLayout>
+            </Frame>
+        </StackLayout>
+    </AbsoluteLayout>
+</ContentPage>
