@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
+using MongoDB.Driver;
 using OnDaGo.API.Models;
 using OnDaGo.API.Services;
 using System.Collections.Generic;
@@ -26,20 +27,34 @@ namespace OnDaGo.API.Controllers
         }
 
         [HttpPatch("{id}")]
-        public async Task<IActionResult> PatchFare(string id, [FromBody] FareMatrixItem updateModel)
+        public async Task<IActionResult> PatchFare(string id, [FromBody] FareMatrixUpdateModel updateModel)
         {
-            if (updateModel == null)
+            if (string.IsNullOrWhiteSpace(id) || updateModel == null)
             {
-                return BadRequest("Invalid update data.");
+                return BadRequest("Invalid update data or ID.");
             }
 
             var existingFare = await _fareMatrixService.GetFareByIdAsync(id);
             if (existingFare == null)
             {
-                return NotFound();
+                return NotFound($"Fare with ID {id} not found.");
             }
 
-            await _fareMatrixService.PatchFareAsync(id, updateModel);
+            
+            System.Diagnostics.Debug.WriteLine($"Patching Fare with ID: {id}. Fare: {updateModel.Fare}, DiscountedFare: {updateModel.DiscountedFare}");
+
+            
+            if (updateModel.Fare.HasValue)
+            {
+                existingFare.Fare = updateModel.Fare.Value;
+            }
+
+            if (updateModel.DiscountedFare.HasValue)
+            {
+                existingFare.DiscountedFare = updateModel.DiscountedFare.Value;
+            }
+
+            await _fareMatrixService.UpdateFareAsync(id, existingFare);
             return NoContent();
         }
 
@@ -65,19 +80,16 @@ namespace OnDaGo.API.Controllers
             return CreatedAtAction(nameof(GetFareById), new { id = fare.Id.ToString() }, fare);
         }
 
-
-
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateFare(string id, [FromBody] FareMatrixItem updatedFare)
         {
             var fare = await _fareMatrixService.GetFareByIdAsync(id);
             if (fare == null) return NotFound();
 
-            updatedFare.Id = new ObjectId(id); // Ensure the correct ID is retained
+            updatedFare.Id = new ObjectId(id);
             await _fareMatrixService.UpdateFareAsync(id, updatedFare);
             return NoContent();
         }
-
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFare(string id)
@@ -89,4 +101,5 @@ namespace OnDaGo.API.Controllers
             return NoContent();
         }
     }
+
 }

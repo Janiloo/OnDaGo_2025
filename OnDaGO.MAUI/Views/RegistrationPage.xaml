@@ -1,15 +1,88 @@
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="OnDaGO.MAUI.Views.RegistrationPage"
+             BackgroundColor="#F5F5F5"
              NavigationPage.HasNavigationBar="False"
              Title="RegistrationPage">
 
-    <StackLayout Padding="20">
-        <Entry Placeholder="Name" x:Name="NameEntry" />
-        <Entry Placeholder="Email" x:Name="EmailEntry" />
-        <Entry Placeholder="Password" IsPassword="True" x:Name="PasswordEntry" />
-        <Entry Placeholder="Phone Number" x:Name="PhoneNumberEntry" />
-        <Button Text="Register" Clicked="OnRegisterClicked" />
-        <Button Text="Already have an account? Login" Clicked="OnLoginClicked" />
+    <StackLayout Padding="30" Spacing="20" VerticalOptions="Center">
+
+        <Label Text="Create Your Account"
+               FontSize="32"
+               FontAttributes="Bold"
+               HorizontalOptions="Center"
+               TextColor="#333"/>
+
+        <Frame Padding="10" CornerRadius="10" HasShadow="False" BackgroundColor="White">
+            <Entry Placeholder="Name" x:Name="NameEntry" 
+                   TextColor="#333"
+                   PlaceholderColor="#999"
+                   FontSize="18"/>
+        </Frame>
+
+        <Frame Padding="10" CornerRadius="10" HasShadow="False" BackgroundColor="White">
+            <Entry Placeholder="Email" x:Name="EmailEntry" 
+                   Keyboard="Email"
+                   TextColor="#333"
+                   PlaceholderColor="#999"
+                   FontSize="18"/>
+        </Frame>
+
+        <!-- Phone Number moved above Password fields -->
+        <Frame Padding="10" CornerRadius="10" HasShadow="False" BackgroundColor="White">
+            <Entry Placeholder="Phone Number" x:Name="PhoneNumberEntry"
+                   Keyboard="Telephone"
+                   TextColor="#333"
+                   PlaceholderColor="#999"
+                   FontSize="18"/>
+        </Frame>
+
+        <Frame Padding="10" CornerRadius="10" HasShadow="False" BackgroundColor="White">
+            <Entry Placeholder="Password" x:Name="PasswordEntry"
+                   IsPassword="True"
+                   TextColor="#333"
+                   PlaceholderColor="#999"
+                   FontSize="18"/>
+        </Frame>
+
+        <Frame Padding="10" CornerRadius="10" HasShadow="False" BackgroundColor="White">
+            <Entry Placeholder="Confirm Password" x:Name="ConfirmPasswordEntry"
+                   IsPassword="True"
+                   TextColor="#333"
+                   PlaceholderColor="#999"
+                   FontSize="18"/>
+        </Frame>
+
+        <StackLayout Orientation="Horizontal" HorizontalOptions="End">
+            <CheckBox x:Name="ShowPasswordCheckBox" CheckedChanged="OnShowPasswordCheckedChanged"/>
+            <Label Text="Show Password" VerticalOptions="Center"/>
+        </StackLayout>
+
+        <!-- Error Label -->
+        <Label x:Name="ErrorLabel"
+               TextColor="Red"
+               FontSize="14"
+               HorizontalOptions="Center"
+               IsVisible="False"/>
+
+        <Button Text="Register"
+                Clicked="OnRegisterClicked"
+                BackgroundColor="#6200EE"
+                TextColor="White"
+                CornerRadius="20"
+                HeightRequest="50"
+                FontSize="18"
+                HorizontalOptions="FillAndExpand"/>
+
+        <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+            <Label Text="Already have an account?" FontSize="14" TextColor="#999"/>
+            <Button Text="Login"
+                    Clicked="OnLoginClicked"
+                    TextColor="#6200EE"
+                    BackgroundColor="Transparent"
+                    FontAttributes="Bold"
+                    FontSize="14"/>
+        </StackLayout>
     </StackLayout>
 </ContentPage>

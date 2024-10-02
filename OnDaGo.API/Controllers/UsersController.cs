@@ -124,16 +124,16 @@ namespace OnDaGo.API.Controllers
         private string GenerateJwtToken(UserItem user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes("Yxg/R2jDGHJpLz0LeU8s9y8RcY3ThVwB9yZ9V6n1yQI="); // Use your actual secret key here
+            var key = Encoding.ASCII.GetBytes("Yxg/R2jDGHJpLz0LeU8s9y8RcY3ThVwB9yZ9V6n1yQI=");
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(ClaimTypes.Email, user.Email),
-                    new Claim(ClaimTypes.Role, user.Role)  // Include the user's role in the token
+                    new Claim(ClaimTypes.Role, user.Role)
                 }),
-                Expires = DateTime.UtcNow.AddDays(7), // Token valid for 7 days
+                Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -184,7 +184,7 @@ namespace OnDaGo.API.Controllers
                 return NotFound("User not found.");
             }
 
-            // Create a response model with only the required properties
+
             var userProfile = new
             {
                 user.Name,
@@ -232,7 +232,7 @@ namespace OnDaGo.API.Controllers
                 return NotFound("User not found.");
             }
 
-            // Update user details
+
             user.Name = request.Name;
             user.PhoneNumber = request.PhoneNumber;
             user.UpdatedAt = DateTime.UtcNow;
@@ -278,8 +278,10 @@ namespace OnDaGo.API.Controllers
 
         private string GenerateResetToken()
         {
-            return Guid.NewGuid().ToString();
+            var random = new Random();
+            return random.Next(100000, 999999).ToString();
         }
+
     }
 
     public class LoginResponse

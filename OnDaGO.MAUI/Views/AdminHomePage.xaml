@@ -1,37 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="OnDaGO.MAUI.Views.AdminHomePage"
+             xmlns:maps="http://schemas.microsoft.com/dotnet/2021/maui/maps"
+             xmlns:sensors="clr-namespace:Microsoft.Maui.Devices.Sensors;assembly=Microsoft.Maui.Essentials"
              NavigationPage.HasNavigationBar="False"
              Title="AdminHomePage">
-    <AbsoluteLayout>
 
-        <!-- Main Content (Stacked vertically) -->
-        <VerticalStackLayout AbsoluteLayout.LayoutBounds="0,0,1,1" AbsoluteLayout.LayoutFlags="All" x:Name="MainContent">
+    <Grid>
+        <!-- Map and other controls -->
+        <maps:Map x:Name="map"
+                  MapType="Hybrid"
+                  IsShowingUser="True"
+                  IsScrollEnabled="True"
+                  IsZoomEnabled="True"
+                  IsTrafficEnabled="True">
+            <x:Arguments>
+                <maps:MapSpan>
+                    <x:Arguments>
+                        <sensors:Location>
+                            <x:Arguments>
+                                <x:Double>14.6310</x:Double>
+                                <x:Double>121.0725</x:Double>
+                            </x:Arguments>
+                        </sensors:Location>
+                        <x:Double>0.1</x:Double>
+                        <x:Double>0.1</x:Double>
+                    </x:Arguments>
+                </maps:MapSpan>
+            </x:Arguments>
+        </maps:Map>
+
+        <!-- Overlaying buttons -->
+        <VerticalStackLayout 
+            HorizontalOptions="End" 
+            VerticalOptions="Start" 
+            Padding="10">
+
             <Button Text="Settings" 
-                Clicked="OnSettingsClicked" 
-                Margin="0,0,0,10">
-                <Button.Shadow>
-                    <Shadow Brush="Black" Offset="5,5" Radius="10"/>
-                </Button.Shadow>
-            </Button>
-
-            <Button Text="Profile" 
-                Clicked="OnProfileClicked"
-                TextColor="White"
-                CornerRadius="5"
-                Padding="10"
-                FontSize="16"
-                HorizontalOptions="Start"
-                VerticalOptions="Start"
-                Margin="0,0,0,10">
+                    Clicked="OnSettingsClicked" 
+                    Margin="0,0,0,10"
+                    TextColor="White"
+                    CornerRadius="5"
+                    Padding="10"
+                    FontSize="16">
                 <Button.Shadow>
                     <Shadow Brush="Black" Offset="5,5" Radius="10"/>
                 </Button.Shadow>
             </Button>
 
             <Button Text="Fare Matrix" 
-                Clicked="OnFareMatrixClicked" 
-                Margin="0,0,0,10">
+                    Clicked="OnFareMatrixClicked" 
+                    Margin="0,0,0,10"
+                    TextColor="White"
+                    CornerRadius="5"
+                    Padding="10"
+                    FontSize="16">
+                <Button.Shadow>
+                    <Shadow Brush="Black" Offset="5,5" Radius="10"/>
+                </Button.Shadow>
+            </Button>
+
+            <Button Text="Profile" 
+                    Clicked="OnProfileClicked"
+                    TextColor="White"
+                    CornerRadius="5"
+                    Padding="10"
+                    FontSize="16">
                 <Button.Shadow>
                     <Shadow Brush="Black" Offset="5,5" Radius="10"/>
                 </Button.Shadow>
@@ -39,23 +74,15 @@
         </VerticalStackLayout>
 
         <!-- Fare Matrix Overlay -->
-        <StackLayout IsVisible="False" x:Name="FareMatrixTable" AbsoluteLayout.LayoutBounds="0,0,1,1" AbsoluteLayout.LayoutFlags="All"
-                     InputTransparent="False">
-
-            <!-- Semi-transparent background layer -->
-            <BoxView BackgroundColor="#80000000" AbsoluteLayout.LayoutBounds="0,0,1,1" AbsoluteLayout.LayoutFlags="All" />
-
-            <!-- White background for content (using Frame to add padding and a white background) -->
-            <Frame BackgroundColor="White" Padding="10" CornerRadius="10"
-               HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="300">
+        <StackLayout IsVisible="False" x:Name="FareMatrixTable" BackgroundColor="#80000000" Padding="10" VerticalOptions="Center" HorizontalOptions="Center">
+            <Frame BackgroundColor="White" Padding="10" CornerRadius="10">
                 <StackLayout>
-
                     <!-- Back Button to exit Fare Matrix -->
                     <Button Text="Back"
-                        Clicked="OnBackClicked"
-                        HorizontalOptions="Start"
-                        VerticalOptions="Start"
-                        Margin="0,0,0,10" />
+                            Clicked="OnBackClicked"
+                            HorizontalOptions="Start"
+                            VerticalOptions="Start"
+                            Margin="0,0,0,10" />
 
                     <!-- Header Row for Fare Matrix -->
                     <Grid ColumnSpacing="5" RowSpacing="5" BackgroundColor="LightGray" Padding="5">
@@ -104,5 +131,5 @@
                 </StackLayout>
             </Frame>
         </StackLayout>
-    </AbsoluteLayout>
+    </Grid>
 </ContentPage>

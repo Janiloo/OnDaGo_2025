@@ -1,0 +1,42 @@
+﻿
+runtime: aspnetcore
+env: flex
+
+
+instance_class: F2
+
+
+entrypoint: dotnet OnDaGo.API.dll
+
+
+env_variables:
+  ASPNETCORE_ENVIRONMENT: Development
+  ConnectionStrings__MongoDb: "mongodb+srv://USER:PASSWORD@onthego.5aw2u.mongodb.net/"
+  Smtp__Host: "smtp.gmail.com"
+  Smtp__Port: "587"
+  Smtp__EnableSsl: "true"
+  Smtp__Username: "avancena.johnilo@gmail.com"
+  Smtp__Password: "YOUR_SMTP_APP_PASSWORD"
+
+
+resources:
+  cpu: 1
+  memory_gb: 2
+
+
+
+allow_unauthenticated: true
+
+
+network:
+  forwarded_ports:
+    - 5147  # This is the port from your app configuration (http://localhost:5147)
+
+
+health_check:
+  enable_health_check: true
+  check_interval: 10s
+  timeout: 5s
+  failure_threshold: 3
+  success_threshold: 1
+

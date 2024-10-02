@@ -1,39 +1,55 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="OnDaGO.MAUI.Views.EditFarePage"
-             Title="Edit Fare Page">
+             Title="Edit Fare Page"
+             BackgroundColor="White">
 
-    <StackLayout Padding="10">
-        <!-- CollectionView to display fare matrix in a grid format -->
-        <CollectionView x:Name="FareMatrixCollection" Margin="0,10,0,0">
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Grid ColumnSpacing="5" RowSpacing="5" Padding="5" BackgroundColor="LightGray">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
+    <ScrollView>
+        <StackLayout Padding="20">
+            <!-- Header for Fare Matrix -->
+            <Label Text="Fare Matrix"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,20"/>
 
-                        <!-- Display Fare Matrix Data -->
-                        <Label Text="{Binding Origin}" Grid.Row="0" Grid.Column="0" HorizontalOptions="Center"/>
-                        <Label Text="{Binding Destination}" Grid.Row="0" Grid.Column="1" HorizontalOptions="Center"/>
-                        <Entry Text="{Binding Fare, Mode=TwoWay}" Grid.Row="0" Grid.Column="2" Keyboard="Numeric"/>
-                        <Entry Text="{Binding DiscountedFare, Mode=TwoWay}" Grid.Row="0" Grid.Column="3" Keyboard="Numeric"/>
-                    </Grid>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+            <!-- CollectionView to display fare matrix in a card-style format -->
+            <CollectionView x:Name="FareMatrixCollection" Margin="0,10,0,0">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Padding="10" Margin="0,5" BackgroundColor="LightGray" CornerRadius="10" HasShadow="True">
+                            <Grid ColumnSpacing="10" RowSpacing="5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
 
-        <!-- Save Button -->
-        <Button Text="Save Changes" 
-                Clicked="OnSaveChangesClicked"
-                HorizontalOptions="Center"
-                VerticalOptions="End"
-                Margin="0,10,0,0"/>
-    </StackLayout>
+                                <!-- Display Fare Matrix Data -->
+                                <Label Text="{Binding Origin}" Grid.Row="0" Grid.Column="0" HorizontalOptions="Center" FontSize="Medium"/>
+                                <Label Text="{Binding Destination}" Grid.Row="0" Grid.Column="1" HorizontalOptions="Center" FontSize="Medium"/>
+                                <Entry Text="{Binding Fare, Mode=TwoWay}" Grid.Row="0" Grid.Column="2" Keyboard="Numeric" Placeholder="Fare" Margin="5" />
+                                <Entry Text="{Binding DiscountedFare, Mode=TwoWay}" Grid.Row="0" Grid.Column="3" Keyboard="Numeric" Placeholder="Discounted Fare" Margin="5" />
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Save Button -->
+            <Button Text="Save Changes" 
+                    Clicked="OnSaveChangesClicked"
+                    HorizontalOptions="Center"
+                    VerticalOptions="End"
+                    Margin="0,20,0,0"
+                    BackgroundColor="#007ACC"
+                    TextColor="White"
+                    CornerRadius="25"
+                    Padding="10"/>
+        </StackLayout>
+    </ScrollView>
 </ContentPage>

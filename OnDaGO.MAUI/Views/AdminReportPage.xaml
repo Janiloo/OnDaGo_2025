@@ -1,0 +1,25 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="OnDaGO.MAUI.Views.AdminReportPage">
+
+    <StackLayout>
+        <Label Text="Reports"
+               FontSize="24"
+               HorizontalOptions="Center" />
+
+        <CollectionView ItemsSource="{Binding Reports}" BackgroundColor="LightGray">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <StackLayout Padding="10">
+                        <Label Text="{Binding Subject}" FontSize="20" />
+                        <Label Text="{Binding Description}" />
+                        <Label Text="{Binding Status}" />
+                        <Button Text="Mark as Completed"
+                                Command="{Binding Source={x:Reference Name=AdminReportPage}, Path=MarkAsCompletedCommand}"
+                                CommandParameter="{Binding .}" />
+                    </StackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </StackLayout>
+</ContentPage>

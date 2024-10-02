@@ -41,6 +41,10 @@ namespace OnDaGO.MAUI.Views
             }
         }
 
+        private async void OnReportIssueClicked(object sender, EventArgs e)
+    {
+        await Navigation.PushAsync(new UserReportPage());
+    }
 
         private async void OnLogoutClicked(object sender, EventArgs e)
         {

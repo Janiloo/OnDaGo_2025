@@ -1,3 +1,6 @@
+using OnDaGO.MAUI.Services;
+using OnDaGO.MAUI.Models;
+
 namespace OnDaGO.MAUI.Views;
 
 public partial class AdminSettingsPage : ContentPage
@@ -18,6 +21,22 @@ public partial class AdminSettingsPage : ContentPage
         catch (Exception ex)
         {
             await DisplayAlert("Error", $"Failed to navigate to Create Admin Page: {ex.Message}", "OK");
+        }
+    }
+
+    private async void OnReportClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            // Create an instance of ReportService
+            var reportService = new ReportService();
+
+            // Navigate to AdminReportPage, passing the reportService as a parameter
+            await Navigation.PushAsync(new AdminReportPage(reportService));
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", $"Failed to navigate to Admin Report Page: {ex.Message}", "OK");
         }
     }
 

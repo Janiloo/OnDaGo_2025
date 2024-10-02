@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
+using OnDaGO.MAUI.Services;
+using OnDaGO.MAUI.Models;
 
 namespace OnDaGO.MAUI;
 
@@ -22,6 +24,6 @@ public static class MauiProgram
 		builder.Logging.AddDebug();
 #endif
 
-		return builder.Build();
+        return builder.Build();
 	}
 }

@@ -13,11 +13,23 @@ namespace OnDaGO.MAUI.Views
 
         private async void OnLoginClicked(object sender, EventArgs e)
         {
+            // Clear the error message before login attempt
+            ErrorLabel.IsVisible = false;
+            ErrorLabel.Text = string.Empty;
+
             var user = new UserItem
             {
                 Email = EmailEntry.Text,
                 PasswordHash = PasswordEntry.Text // Hash password in a real app
             };
+
+            // Check if fields are empty
+            if (string.IsNullOrWhiteSpace(user.Email) || string.IsNullOrWhiteSpace(user.PasswordHash))
+            {
+                ErrorLabel.Text = "Email and Password are required.";
+                ErrorLabel.IsVisible = true;
+                return;
+            }
 
             try
             {
@@ -40,45 +52,23 @@ namespace OnDaGO.MAUI.Views
                         await Navigation.PushAsync(new HomePage());
                     }
                 }
+                else
+                {
+                    ErrorLabel.Text = "Invalid login credentials.";
+                    ErrorLabel.IsVisible = true;
+                }
             }
             catch (ApiException ex)
             {
-                await DisplayAlert("Error", $"Login failed: {ex.Content}", "OK");
+                ErrorLabel.Text = $"Login failed: {ex.Content}";
+                ErrorLabel.IsVisible = true;
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"An unexpected error occurred: {ex.Message}", "OK");
+                ErrorLabel.Text = $"An unexpected error occurred: {ex.Message}";
+                ErrorLabel.IsVisible = true;
             }
         }
-
-
-
-        /*private async void OnForgotPasswordClicked(object sender, EventArgs e)
-        {
-            string email = EmailEntry.Text;
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                await DisplayAlert("Error", "Please enter your email.", "OK");
-                return;
-            }
-
-            try
-            {
-                var response = await App.AuthApi.ForgotPassword(email);
-                if (response.IsSuccessStatusCode)
-                {
-                    await DisplayAlert("Success", "Reset token sent to your email.", "OK");
-                }
-                else
-                {
-                    await DisplayAlert("Error", "Failed to send reset token.", "OK");
-                }
-            }
-            catch (Exception ex)
-            {
-                await DisplayAlert("Error", $"An unexpected error occurred: {ex.Message}", "OK");
-            }
-        }*/
 
         private async void OnForgotPasswordClicked(object sender, EventArgs e)
         {
@@ -86,10 +76,15 @@ namespace OnDaGO.MAUI.Views
             await Navigation.PushAsync(new ResetPasswordPage());
         }
 
-
         private async void OnRegisterClicked(object sender, EventArgs e)
         {
             await Navigation.PushAsync(new RegistrationPage());
+        }
+
+        // Toggle the password visibility
+        private void OnShowPasswordCheckedChanged(object sender, CheckedChangedEventArgs e)
+        {
+            PasswordEntry.IsPassword = !e.Value;
         }
     }
 }

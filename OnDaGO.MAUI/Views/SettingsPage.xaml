@@ -2,16 +2,11 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="OnDaGO.MAUI.Views.SettingsPage"
-             Title="SettingsPage">
+             Title="Settings">
+
     <StackLayout Padding="10">
-     
-
-        <!-- Add other settings options here -->
-
-        <!-- Delete Account Button -->
+        <Button Text="Report an Issue" Clicked="OnReportIssueClicked" />
         <Button Text="Delete Account" TextColor="Red" Clicked="OnDeleteAccountClicked" />
-
-        <!-- Logout Button -->
         <Button Text="Logout" Clicked="OnLogoutClicked" />
     </StackLayout>
 </ContentPage>

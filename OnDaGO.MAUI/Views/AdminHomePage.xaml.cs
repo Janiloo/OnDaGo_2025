@@ -1,78 +1,99 @@
 using OnDaGO.MAUI.Models;
+using Microsoft.Maui.Controls.Maps;
+using Microsoft.Maui.Devices.Sensors;
 using OnDaGO.MAUI.Services;
+using Microsoft.Maui.Maps;
 
-namespace OnDaGO.MAUI.Views;
-
-public partial class AdminHomePage : ContentPage
+namespace OnDaGO.MAUI.Views
 {
-    public AdminHomePage()
+    public partial class AdminHomePage : ContentPage
     {
-        InitializeComponent();
-    }
+        private GoogleMapsApiService _googleMapsApiService;
 
-    private async void OnProfileClicked(object sender, EventArgs e)
-    {
-        try
+        public AdminHomePage()
         {
-            // Navigate to ProfilePage
-            await Navigation.PushAsync(new AdminProfilePage());
+            InitializeComponent();
+            _googleMapsApiService = new GoogleMapsApiService("YOUR_GOOGLE_MAPS_API_KEY");
         }
-        catch (Exception ex)
+
+        private async void OnProfileClicked(object sender, EventArgs e)
         {
-            await DisplayAlert("Error", $"Failed to navigate to ProfilePage: {ex.Message}", "OK");
+            try
+            {
+                // Navigate to ProfilePage
+                await Navigation.PushAsync(new AdminProfilePage());
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error", $"Failed to navigate to ProfilePage: {ex.Message}", "OK");
+            }
         }
-    }
 
-    private async void OnSettingsClicked(object sender, EventArgs e)
-    {
-        try
+        private async void ChangeMapType(object sender, EventArgs e)
         {
-            // Navigate to SettingsPage
-            await Navigation.PushAsync(new AdminSettingsPage());
+            var action = await DisplayActionSheet("Change Map Type", "Cancel", null, "Street", "Satellite");
+
+            if (action == "Street")
+            {
+                map.MapType = MapType.Street;
+            }
+            else if (action == "Satellite")
+            {
+                map.MapType = MapType.Satellite;
+            }
         }
-        catch (Exception ex)
+
+        private async void OnSettingsClicked(object sender, EventArgs e)
         {
-            await DisplayAlert("Error", $"Failed to navigate to SettingsPage: {ex.Message}", "OK");
+            try
+            {
+                // Navigate to SettingsPage
+                await Navigation.PushAsync(new AdminSettingsPage());
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error", $"Failed to navigate to SettingsPage: {ex.Message}", "OK");
+            }
         }
-    }
 
-    private async void OnFareMatrixClicked(object sender, EventArgs e)
-    {
-        try
+        private async void OnFareMatrixClicked(object sender, EventArgs e)
         {
-            // Fetch the fare matrix data from your API service
-            var fareMatrixService = new FareMatrixService();
-            var fareMatrixList = await fareMatrixService.GetFareMatrixAsync();
+            try
+            {
+                // Fetch the fare matrix data from your API service
+                var fareMatrixService = new FareMatrixService();
+                var fareMatrixList = await fareMatrixService.GetFareMatrixAsync();
 
-            // Display the data in the CollectionView
-            FareMatrixCollection.ItemsSource = fareMatrixList;
+                // Display the data in the CollectionView
+                FareMatrixCollection.ItemsSource = fareMatrixList;
 
-            // Show overlay and disable interactions for main content
-            FareMatrixTable.IsVisible = true;
-            MainContent.InputTransparent = true;
+                // Show overlay and disable interactions for main content
+                FareMatrixTable.IsVisible = true;
+                // No MainContent to set InputTransparent on; adjust as needed
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error", $"Failed to load fare matrix: {ex.Message}", "OK");
+            }
         }
-        catch (Exception ex)
-        {
-            await DisplayAlert("Error", $"Failed to load fare matrix: {ex.Message}", "OK");
-        }
-    }
 
-    private void OnBackClicked(object sender, EventArgs e)
-    {
-        // Hide the fare matrix overlay and re-enable interactions for main content
-        FareMatrixTable.IsVisible = false;
-        MainContent.InputTransparent = false;
-    }
-
-    protected override bool OnBackButtonPressed()
-    {
-        // Handle back button press differently if FareMatrixTable is visible
-        if (FareMatrixTable.IsVisible)
+        private void OnBackClicked(object sender, EventArgs e)
         {
+            // Hide the fare matrix overlay and re-enable interactions for main content
             FareMatrixTable.IsVisible = false;
-            return true; // Prevent further back navigation
+            // No MainContent to set InputTransparent on; adjust as needed
         }
 
-        return base.OnBackButtonPressed(); // Default behavior if overlay is not shown
+        protected override bool OnBackButtonPressed()
+        {
+            // Handle back button press differently if FareMatrixTable is visible
+            if (FareMatrixTable.IsVisible)
+            {
+                FareMatrixTable.IsVisible = false;
+                return true; // Prevent further back navigation
+            }
+
+            return base.OnBackButtonPressed(); // Default behavior if overlay is not shown
+        }
     }
 }

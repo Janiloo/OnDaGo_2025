@@ -50,7 +50,11 @@ namespace OnDaGo.API.Services
                 .Set(fare => fare.Fare, updateModel.Fare)
                 .Set(fare => fare.DiscountedFare, updateModel.DiscountedFare);
 
-            await _fareMatrix.UpdateOneAsync(fare => fare.Id == new ObjectId(id), updateDefinition);
+            await _fareMatrix.UpdateOneAsync(
+                fare => fare.Id == new ObjectId(id),
+                updateDefinition
+            );
         }
+
     }
 }

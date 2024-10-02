@@ -28,6 +28,7 @@ public class Startup
         services.AddScoped<UserService>();
         services.AddScoped<EmailService>(); // Add EmailService
         services.AddScoped<FareMatrixService>();  // Register FareMatrixService
+        services.AddScoped<ReportService>();
 
         // JSON serialization
         services.AddControllers().AddNewtonsoftJson();

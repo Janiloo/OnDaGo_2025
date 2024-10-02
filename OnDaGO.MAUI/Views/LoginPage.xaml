@@ -2,14 +2,73 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="OnDaGO.MAUI.Views.LoginPage"
+             BackgroundColor="#F5F5F5"
              NavigationPage.HasNavigationBar="False"
              Title="LoginPage">
 
-    <StackLayout Padding="20">
-        <Entry Placeholder="Email" x:Name="EmailEntry" />
-        <Entry Placeholder="Password" IsPassword="True" x:Name="PasswordEntry" />
-        <Button Text="Login" Clicked="OnLoginClicked" />
-        <Button Text="Forgot Password?" Clicked="OnForgotPasswordClicked" />
-        <Button Text="Don't have an account? Register" Clicked="OnRegisterClicked" />
+    <StackLayout Padding="30" Spacing="20" VerticalOptions="Center">
+
+        <Label Text="OnDaGo" 
+               FontSize="32" 
+               FontAttributes="Bold" 
+               HorizontalOptions="Center"
+               TextColor="#333"/>
+
+        <Frame Padding="10" CornerRadius="10" HasShadow="False" BackgroundColor="White">
+            <Entry Placeholder="Email" x:Name="EmailEntry" 
+                   Keyboard="Email"
+                   TextColor="#333"
+                   PlaceholderColor="#999"
+                   FontSize="18"/>
+        </Frame>
+
+        <Frame Padding="10" CornerRadius="10" HasShadow="False" BackgroundColor="White">
+            <Entry Placeholder="Password" x:Name="PasswordEntry" 
+                   IsPassword="True"
+                   TextColor="#333"
+                   PlaceholderColor="#999"
+                   FontSize="18"/>
+        </Frame>
+
+        <!-- Show Password Toggle -->
+        <StackLayout Orientation="Horizontal" HorizontalOptions="End">
+            <CheckBox x:Name="ShowPasswordCheckBox" CheckedChanged="OnShowPasswordCheckedChanged"/>
+            <Label Text="Show Password" VerticalOptions="Center"/>
+        </StackLayout>
+
+        <!-- Error Label -->
+        <Label x:Name="ErrorLabel"
+               TextColor="Red"
+               FontSize="14"
+               HorizontalOptions="Center"
+               IsVisible="False"/>
+        <!-- Initially hidden -->
+
+        <Button Text="Login"
+                Clicked="OnLoginClicked"
+                BackgroundColor="#6200EE"
+                TextColor="White"
+                CornerRadius="20"
+                HeightRequest="50"
+                FontSize="18"
+                HorizontalOptions="FillAndExpand"/>
+
+        <Button Text="Forgot Password?"
+                Clicked="OnForgotPasswordClicked"
+                TextColor="#6200EE"
+                BackgroundColor="Transparent"
+                FontAttributes="Bold"
+                FontSize="16"
+                HorizontalOptions="Center"/>
+
+        <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+            <Label Text="Don't have an account?" FontSize="14" TextColor="#999"/>
+            <Button Text="Register"
+                    Clicked="OnRegisterClicked"
+                    TextColor="#6200EE"
+                    BackgroundColor="Transparent"
+                    FontAttributes="Bold"
+                    FontSize="14"/>
+        </StackLayout>
     </StackLayout>
 </ContentPage>

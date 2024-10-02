@@ -5,13 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using OnDaGO.MAUI.Models;
+using Newtonsoft.Json;
 
 namespace OnDaGO.MAUI.Services
 {
     public interface IFareMatrixApi
     {
         [Get("/api/FareMatrix/{id}")]
-        Task<FareMatrixItem> GetFareByIdAsync(string id); // Add this in the API interface
+        Task<FareMatrixItem> GetFareByIdAsync(string id);
 
         [Get("/api/FareMatrix")]
         Task<List<FareMatrixItem>> GetFareMatrixAsync();
@@ -20,7 +21,7 @@ namespace OnDaGO.MAUI.Services
         Task UpdateFareAsync(string id, [Body] FareMatrixItem updatedFare);
 
         [Patch("/api/FareMatrix/{id}")]
-        Task PatchFareAsync(string id, [Body] FareMatrixItem updateModel);
+        Task PatchFareAsync(string id, [Body] object updateModel);
     }
 
     public class FareMatrixService
@@ -36,7 +37,7 @@ namespace OnDaGO.MAUI.Services
             _api = RestService.For<IFareMatrixApi>(baseUrl);
         }
 
-        public async Task<FareMatrixItem> GetFareByIdAsync(string id) // Implement the missing method
+        public async Task<FareMatrixItem> GetFareByIdAsync(string id)
         {
             return await _api.GetFareByIdAsync(id);
         }
@@ -47,13 +48,16 @@ namespace OnDaGO.MAUI.Services
         }
 
         public async Task UpdateFareAsync(string id, FareMatrixItem updatedFare)
-    {
-        await _api.UpdateFareAsync(id, updatedFare);
-    }
-        public async Task PatchFareAsync(string id, FareMatrixItem updateModel)
+        {
+            await _api.UpdateFareAsync(id, updatedFare);
+        }
+
+        public async Task PatchFareAsync(string id, object updateModel)
         {
             await _api.PatchFareAsync(id, updateModel);
         }
 
+
     }
+
 }

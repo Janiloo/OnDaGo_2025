@@ -1,4 +1,6 @@
-﻿using System;
+﻿using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,11 +10,13 @@ namespace OnDaGO.MAUI.Models
 {
     public class FareMatrixItem
     {
-        public string Id { get; set; } // Use string for Id since ObjectId might not be needed here
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string Id { get; set; }
         public string Origin { get; set; }
         public string Destination { get; set; }
         public decimal Fare { get; set; }
         public decimal DiscountedFare { get; set; }
     }
+
 }
 
