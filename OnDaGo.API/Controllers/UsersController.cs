@@ -311,7 +311,6 @@ namespace OnDaGo.API.Controllers
     {
         public string Name { get; set; }
         public string PhoneNumber { get; set; }
-        // Add other fields as needed
     }
 
 }
