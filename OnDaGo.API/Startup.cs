@@ -22,13 +22,20 @@ public class Startup
         services.AddSingleton(sp =>
         {
             var client = sp.GetRequiredService<IMongoClient>();
-            return client.GetDatabase("application-0-ggkpswj");
+            return client.GetDatabase("db_ondago");
         });
+
+        
 
         services.AddScoped<UserService>();
         services.AddScoped<EmailService>(); // Add EmailService
         services.AddScoped<FareMatrixService>();  // Register FareMatrixService
         services.AddScoped<ReportService>();
+        services.AddSingleton<MongoDbContext>();  // Register MongoDB context
+        services.AddScoped<VehicleService>();     // Register Vehicle service
+
+
+
 
         // JSON serialization
         services.AddControllers().AddNewtonsoftJson();
