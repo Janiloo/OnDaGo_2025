@@ -4,10 +4,80 @@
              x:Class="OnDaGO.MAUI.Views.EditProfilePage"
              Title="Edit Profile">
 
-    <StackLayout Padding="20">
-        <Entry x:Name="NameEntry" Placeholder="Name" />
-        <Entry x:Name="PhoneNumberEntry" Placeholder="Phone Number" />
+    <ContentPage.Content>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <Button Text="Save" Clicked="OnSaveClicked" />
-    </StackLayout>
+            <ScrollView Grid.Row="0">
+                <StackLayout Padding="0" Spacing="0">
+
+                    <!-- Edit Profile Header Section -->
+                    <Frame BackgroundColor="#efbb6b" Padding="0" HasShadow="False" CornerRadius="0">
+                        <StackLayout Spacing="10">
+                            <Label Text="Edit Profile"
+                                   FontSize="16" 
+                                   FontAttributes="Bold"  
+                                   Margin="20,5,0,5"
+                                   TextColor="White" />
+                        </StackLayout>
+                    </Frame>
+
+                    <!-- Name Section -->
+                    <Frame BackgroundColor="Transparent" Padding="10" HasShadow="False" CornerRadius="0">
+                        <Frame BackgroundColor="White" Padding="10" HasShadow="True" CornerRadius="10">
+                            <StackLayout>
+                                <Entry x:Name="NameEntry" 
+                                       Placeholder="Name" 
+                                       FontSize="16" 
+                                       TextColor="Gray" 
+                                       BackgroundColor="Transparent"
+                                       HeightRequest="50"/>
+                            </StackLayout>
+                        </Frame>
+                    </Frame>
+
+                    <!-- Phone Number Section Header -->
+                    <Frame BackgroundColor="#efbb6b" Padding="0" HasShadow="False" CornerRadius="0">
+                        <StackLayout Spacing="10">
+                            <Label Text="Edit Phone Number"
+                                   FontSize="16" 
+                                   FontAttributes="Bold"  
+                                   Margin="20,5,0,5"
+                                   TextColor="White" />
+                        </StackLayout>
+                    </Frame>
+
+                    <!-- Phone Number Section -->
+                    <Frame BackgroundColor="Transparent" Padding="10" HasShadow="False" CornerRadius="0">
+                        <Frame BackgroundColor="White" Padding="10" HasShadow="True" CornerRadius="10">
+                            <StackLayout>
+                                <Entry x:Name="PhoneNumberEntry" 
+                                       Placeholder="Phone Number" 
+                                       FontSize="16" 
+                                       TextColor="Gray" 
+                                       BackgroundColor="Transparent"
+                                       HeightRequest="50"/>
+                            </StackLayout>
+                        </Frame>
+                    </Frame>
+
+                </StackLayout>
+            </ScrollView>
+
+            <!-- Save Button Section -->
+            <Frame BackgroundColor="White" Padding="20" Grid.Row="1" HasShadow="False" CornerRadius="0">
+                <StackLayout Spacing="10" HorizontalOptions="FillAndExpand" VerticalOptions="Center">
+                    <Button Text="Save"
+                            BackgroundColor="Transparent"
+                            TextColor="#efbb6b"
+                            FontAttributes="Bold"
+                            Clicked="OnSaveClicked"/>
+                </StackLayout>
+            </Frame>
+
+        </Grid>
+    </ContentPage.Content>
 </ContentPage>

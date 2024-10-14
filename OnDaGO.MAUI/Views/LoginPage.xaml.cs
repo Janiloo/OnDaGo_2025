@@ -43,12 +43,11 @@ namespace OnDaGO.MAUI.Views
                     // Check if the user is an admin and navigate to AdminHomePage
                     if (result.User.Role == "Admin")
                     {
-                        await DisplayAlert("Success", "Admin login successful!", "OK");
+                    
                         await Navigation.PushAsync(new AdminHomePage());
                     }
                     else
                     {
-                        await DisplayAlert("Success", "Login successful!", "OK");
                         await Navigation.PushAsync(new HomePage());
                     }
                 }

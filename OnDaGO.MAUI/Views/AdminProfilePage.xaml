@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="OnDaGO.MAUI.Views.AdminProfilePage"
              Title="Admin Profile"
+             
              BackgroundColor="#F5F5F5">
 
     <ScrollView>

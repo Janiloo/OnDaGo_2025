@@ -38,6 +38,25 @@ namespace OnDaGO.MAUI.Services
             }
         }
 
-
+        // New method to get vehicle details
+        public async Task<VehicleModel> GetVehicleDetailsAsync(string vehicleId)
+        {
+            try
+            {
+                var vehicleDetails = await _api.GetVehicleDetailsAsync(vehicleId); // Call the API method
+                return vehicleDetails;
+            }
+            catch (ApiException apiEx)
+            {
+                Console.WriteLine($"API Error: {apiEx.StatusCode} - {apiEx.Content}");
+                throw; // Rethrow to handle in the calling method
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Error: {ex.Message}");
+                throw;
+            }
+        }
     }
+
 }

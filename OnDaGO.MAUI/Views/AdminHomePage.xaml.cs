@@ -20,17 +20,38 @@ namespace OnDaGO.MAUI.Views
         public AdminHomePage()
         {
             InitializeComponent();
+
+            //NavigationPage.SetHasNavigationBar(this, false);
             _googleMapsApiService = new GoogleMapsApiService("YOUR_GOOGLE_MAPS_API_KEY");
             _vehicleService = new VehicleService(); // Initialize the VehicleService
-
+            UpdateMapToUserLocation();
             // Increase timer interval to 5000 ms (5 seconds)
             _vehicleRefreshTimer = new System.Timers.Timer(1000);
             _vehicleRefreshTimer.Elapsed += OnVehicleRefreshTimerElapsed;
             _vehicleRefreshTimer.Start();
 
+            map.MapClicked += OnMapClicked;
+
             // Load vehicles when the page is initialized
             LoadVehicles();
+
         }
+
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+
+            // Ensure the user's location is updated when the page appears
+            await UpdateMapToUserLocation();
+        }
+
+
+        /*private void OnFlyoutClicked(object sender, EventArgs e)
+        {
+            // This is where you will define what happens when the flyout button is clicked.
+            // For now, since you don't want any functionality, you can leave it empty or add a basic alert.
+            DisplayAlert("Flyout Clicked", "Flyout button clicked!", "OK");
+        }*/
 
         private async void LoadVehicles()
         {
@@ -63,34 +84,83 @@ namespace OnDaGO.MAUI.Views
             }
         }
 
-        private void UpdatePins(List<VehicleModel> vehicles)
+        private async Task UpdateMapToUserLocation()
         {
-            // Find new pins (vehicles that have moved or are newly added)
-            var newPins = vehicles.Select(vehicle => new Pin
-            {
-                Label = $"PUV No: {vehicle.PuvNo}",
-                Location = new Location(vehicle.CurrentLat, vehicle.CurrentLong),
-                Type = PinType.Place
-            }).ToList();
+            Location userLocation = null;
 
-            // Only update the map if there's a change in pin locations
-            if (!ArePinsEqual(newPins, _currentPins))
+            try
             {
-                map.Pins.Clear();
-                foreach (var pin in newPins)
-                {
-                    map.Pins.Add(pin);
-                }
+#if DEBUG
+                // Hardcoded user location for development (e.g., Montalban Terminal)
+                userLocation = new Location(14.7288, 121.1441);
+#else
+        // Get the actual location in release mode
+        userLocation = await Geolocation.Default.GetLastKnownLocationAsync();
+#endif
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Location error: {ex.Message}");
+            }
 
-                // Update current pins to the new set
-                _currentPins = new List<Pin>(newPins);
-                Console.WriteLine($"Updated {newPins.Count} vehicle pins.");
+            if (userLocation != null)
+            {
+                // Set the map's region to the user's location with a closer zoom level
+                map.MoveToRegion(MapSpan.FromCenterAndRadius(userLocation, new Distance(0.1)));
             }
             else
             {
-                Console.WriteLine("No vehicle movement detected, skipping pin update.");
+                await DisplayAlert("Error", "Unable to retrieve user location.", "OK");
             }
         }
+
+
+
+        private void UpdatePins(List<VehicleModel> vehicles)
+        {
+            // Clear existing pins from the map
+            map.Pins.Clear();
+
+            // Add new pins for each vehicle
+            foreach (var vehicle in vehicles)
+            {
+                var pin = new Pin
+                {
+                    Label = $"PUV No: {vehicle.PuvNo}",
+                    Location = new Location(vehicle.CurrentLat, vehicle.CurrentLong),
+                    Type = PinType.Place // Specify the type of pin
+                };
+
+                // Add the pin to the map
+                map.Pins.Add(pin);
+            }
+
+            Console.WriteLine($"Updated {vehicles.Count} vehicle pins.");
+        }
+
+        private void OnMapClicked(object sender, MapClickedEventArgs e)
+        {
+            var clickedLocation = e.Location;
+
+            // Check if the click is near any pin
+            foreach (var pin in map.Pins)
+            {
+                if (IsLocationClose(clickedLocation, pin.Location))
+                {
+                    // Show vehicle info (using the pin label, which contains PUV No)
+                    DisplayAlert("Vehicle Info", pin.Label, "OK");
+                    break; // Break after finding the first close pin
+                }
+            }
+        }
+
+        private bool IsLocationClose(Location clickedLocation, Location pinLocation, double tolerance = 0.0001)
+        {
+            return Math.Abs(clickedLocation.Latitude - pinLocation.Latitude) < tolerance &&
+                   Math.Abs(clickedLocation.Longitude - pinLocation.Longitude) < tolerance;
+        }
+
+
 
         private bool ArePinsEqual(List<Pin> newPins, List<Pin> oldPins)
         {
@@ -148,6 +218,8 @@ namespace OnDaGO.MAUI.Views
                 map.MapType = MapType.Satellite;
             }
         }
+
+
 
         private async void OnSettingsClicked(object sender, EventArgs e)
         {

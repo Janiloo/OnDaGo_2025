@@ -11,5 +11,7 @@ namespace OnDaGO.MAUI.Services
         [Get("/api/vehicle")]
         Task<List<VehicleModel>> GetVehiclesAsync();
 
+        [Get("/vehicles/{id}")] // Define the endpoint to get vehicle details
+        Task<VehicleModel> GetVehicleDetailsAsync(string id);
     }
 }

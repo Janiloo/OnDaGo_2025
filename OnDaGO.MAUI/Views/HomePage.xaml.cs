@@ -9,6 +9,8 @@ using Microsoft.Maui.Devices.Sensors;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using OnDaGO.MAUI.Handlers;
+using OnDaGO.MAUI.Models;
 
 namespace OnDaGO.MAUI.Views
 {
@@ -24,12 +26,10 @@ namespace OnDaGO.MAUI.Views
             public Location Coordinates { get; set; }
         }
 
+
         // Initialize all locations
         private List<LocationItem> allLocations = new List<LocationItem>
         {
-            new LocationItem { Name = "Montalban Terminal", Coordinates = new Location(14.7288, 121.1441) },
-            new LocationItem { Name = "Geronimo", Coordinates = new Location(14.7288, 121.1441) }, // Replace with actual coordinates
-            new LocationItem { Name = "Geronimo Crossing", Coordinates = new Location(14.7288, 121.1441) }, // Replace with actual coordinates
             new LocationItem { Name = "Montalban Highway", Coordinates = new Location(14.7288, 121.1441) },
             new LocationItem { Name = "Montaña", Coordinates = new Location(14.7151, 121.1360) },
             new LocationItem { Name = "Maly", Coordinates = new Location(14.7114, 121.1337) },
@@ -81,6 +81,22 @@ namespace OnDaGO.MAUI.Views
             OnLocationToggled(null, new ToggledEventArgs(true)); // Assume the default is Cubao
         }
 
+        private async void LoadFareMatrixInBottomSheet()
+        {
+            try
+            {
+                var fareMatrixService = new FareMatrixService();
+                var fareMatrixList = await fareMatrixService.GetFareMatrixAsync();
+                FareMatrixCollection.ItemsSource = fareMatrixList;  // Bind the fetched data to the CollectionView
+                ScrollableContent.IsVisible = true;  // Make sure the content is visible
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error", $"Failed to load fare matrix: {ex.Message}", "OK");
+            }
+        }
+
+
         private async void OnOverlayTapped(object sender, EventArgs e)
         {
             if (_isSearchVisible)
@@ -89,18 +105,27 @@ namespace OnDaGO.MAUI.Views
                 _isSearchVisible = false;
                 FrameLayout.IsVisible = false;
                 Overlay.IsVisible = false; // Hide the overlay after closing FrameLayout
+
             }
         }
 
-        private async void OnLocationToggled(object sender, ToggledEventArgs e)
+        private bool isToggled = false;
+
+        private async void OnLocationToggled(object sender, EventArgs e)
         {
+            // Toggle the state
+            isToggled = !isToggled;
+
+            // Update the image source
+            ToggleImage.Source = isToggled ? "Images/toggleon.svg" : "Images/toggleoff.svg";
+
             // Clear existing pins and map elements
             map.Pins.Clear();
             map.MapElements.Clear();
-            LocationLabel.Text = e.Value ? "Cubao" : "Montalban";
+            LocationLabel.Text = isToggled ? "Cubao" : "Montalban";
 
             // Determine which list of locations to use based on toggle
-            var filteredLocations = e.Value
+            var filteredLocations = isToggled
                 ? allLocations.Where(loc => /* Define criteria for Cubao */ true).ToList()
                 : allLocations.Where(loc => /* Define criteria for Montalban */ true).ToList();
 
@@ -114,7 +139,14 @@ namespace OnDaGO.MAUI.Views
                     Type = PinType.Place,
                     Address = loc.Name
                 };
-                map.Pins.Add(pin);
+
+                var customPin = new CustomPin
+                {
+                    Pin = pin,
+                    Icon = "bustop.png"
+                };
+                map.Pins.Add(customPin.Pin);
+
 
                 var yellowCircle = new Circle
                 {
@@ -127,17 +159,22 @@ namespace OnDaGO.MAUI.Views
                 map.MapElements.Add(yellowCircle);
             }
 
-            // Optionally, center the map based on toggle
-            // Example:
-            var centerLocation = e.Value
-                ? new Location(14.6600, 121.0730) // Adjust as needed for Cubao
-                : new Location(14.6600, 121.0730); // Adjust as needed for Montalban
-
-            map.MoveToRegion(MapSpan.FromCenterAndRadius(centerLocation, new Microsoft.Maui.Maps.Distance(10)));
+            // Center the map to show both Rodriguez Rizal and Quezon City
+            var centerLocation = new Location(14.658330, 121.103572); // Center between Rodriguez and Quezon City
+            map.MoveToRegion(MapSpan.FromCenterAndRadius(centerLocation, new Microsoft.Maui.Maps.Distance(6000))); // Adjust the distance for zoom level
         }
 
-        private async void OnGetDirectionsClicked(object sender, EventArgs e)
+
+        public class CustomPin
         {
+            public Pin Pin { get; set; }
+            public string Icon { get; set; }
+        }
+
+        /*private async void OnGetDirectionsClicked(object sender, EventArgs e)
+        {
+            map.IsTrafficEnabled = false;
+
             if (StartLocationPicker.SelectedIndex == -1 || EndLocationPicker.SelectedIndex == -1)
             {
                 await DisplayAlert("Error", "Please select both start and end locations.", "OK");
@@ -157,6 +194,7 @@ namespace OnDaGO.MAUI.Views
             await GetDirectionsAsync(startLocationName, endLocationName);
         }
 
+
         private async Task GetDirectionsAsync(string startLocationName, string endLocationName)
         {
             // Retrieve the selected LocationItems
@@ -172,58 +210,161 @@ namespace OnDaGO.MAUI.Views
             var start = startLocationItem.Coordinates;
             var end = endLocationItem.Coordinates;
 
-            var directions = await _googleMapsApiService.GetDirectionsAsync(start.Latitude, start.Longitude, end.Latitude, end.Longitude);
-
-            if (directions != null && directions["routes"]?.Any() == true)
+            try
             {
-                var route = directions["routes"].First();
-                var encodedPoints = route["overview_polyline"]?["points"]?.ToString();
+                var directions = await _googleMapsApiService.GetDirectionsAsync(start.Latitude, start.Longitude, end.Latitude, end.Longitude);
 
-                if (!string.IsNullOrEmpty(encodedPoints))
+                // Log the full response for debugging
+                string responseContent = directions.ToString();
+                await DisplayAlert("API Response", responseContent, "OK"); // Show the API response (you can remove this later)
+
+                var status = directions["status"]?.ToString();
+                if (status != "OK")
                 {
-                    var points = DecodePolyline(encodedPoints);
+                    await DisplayAlert("Error", $"Directions API returned status: {status}", "OK");
+                    return;
+                }
 
-                    var polyline = new Polyline
-                    {
-                        StrokeColor = Colors.Blue,
-                        StrokeWidth = 10
-                    };
+                if (directions != null && directions["routes"]?.Any() == true)
+                {
+                    var route = directions["routes"].First();
+                    var encodedPoints = route["overview_polyline"]?["points"]?.ToString();
 
-                    foreach (var point in points)
+                    if (!string.IsNullOrEmpty(encodedPoints))
                     {
-                        polyline.Geopath.Add(new Location(point.Latitude, point.Longitude));
+                        var points = DecodePolyline(encodedPoints);
+
+                        // Filter points to limit the route between the two pins
+                        var filteredPoints = points.Where(p => IsPointWithinRange(p, start, end)).ToList();
+
+                        var polyline = new Polyline
+                        {
+                            StrokeColor = Color.FromArgb("#efbb6b"), // Updated color
+                            StrokeWidth = 30,
+                        };
+
+                        foreach (var point in filteredPoints)
+                        {
+                            polyline.Geopath.Add(new Location(point.Latitude, point.Longitude));
+                        }
+
+                        // Clear existing polylines
+                        map.MapElements.Clear();
+
+                        // Add the new polyline
+                        map.MapElements.Add(polyline);
+
+                        // Adjust the map to show the route between the two pins
+                        var region = CalculateMapRegion(filteredPoints);
+                        map.MoveToRegion(region);
                     }
-
-                    // Clear existing polylines
-                    map.MapElements.Clear();
-
-                    // Add the new polyline
-                    map.MapElements.Add(polyline);
-
-                    // Adjust the map to show the entire route
-                    var minLat = points.Min(p => p.Latitude);
-                    var maxLat = points.Max(p => p.Latitude);
-                    var minLng = points.Min(p => p.Longitude);
-                    var maxLng = points.Max(p => p.Longitude);
-
-                    var centerLat = (minLat + maxLat) / 2;
-                    var centerLng = (minLng + maxLng) / 2;
-
-                    var spanLat = Math.Abs(maxLat - minLat) * 1.2; // Add some padding
-                    var spanLng = Math.Abs(maxLng - minLng) * 1.2;
-
-                    var region = new MapSpan(new Location(centerLat, centerLng), spanLat, spanLng);
-                    map.MoveToRegion(region);
+                    else
+                    {
+                        await DisplayAlert("Error", "Unable to retrieve route information. Encoded points missing.", "OK");
+                    }
                 }
                 else
                 {
-                    await DisplayAlert("Error", "Unable to retrieve route information.", "OK");
+                    await DisplayAlert("Error", "No routes found in the response.", "OK");
                 }
             }
-            else
+            catch (Exception ex)
             {
-                await DisplayAlert("Error", "No directions found.", "OK");
+                await DisplayAlert("Exception", $"An error occurred: {ex.Message}", "OK");
             }
+        }*/
+
+        private List<Pin> savedPins = new List<Pin>(); // To store the pins
+
+        private async void OnGetDirectionsClicked(object sender, EventArgs e)
+        {
+            map.IsTrafficEnabled = false;
+
+            if (StartLocationPicker.SelectedIndex == -1 || EndLocationPicker.SelectedIndex == -1)
+            {
+                await DisplayAlert("Error", "Please select both start and end locations.", "OK");
+                return;
+            }
+
+            string startLocationName = StartLocationPicker.SelectedItem.ToString();
+            string endLocationName = EndLocationPicker.SelectedItem.ToString();
+
+            if (startLocationName == endLocationName)
+            {
+                await DisplayAlert("Error", "Start and end locations cannot be the same.", "OK");
+                return;
+            }
+
+            // Retrieve the selected LocationItems
+            var startLocationItem = allLocations.FirstOrDefault(loc => loc.Name == startLocationName);
+            var endLocationItem = allLocations.FirstOrDefault(loc => loc.Name == endLocationName);
+
+            if (startLocationItem == null || endLocationItem == null)
+            {
+                await DisplayAlert("Error", "Selected locations are invalid.", "OK");
+                return;
+            }
+
+            var start = startLocationItem.Coordinates;
+            var end = endLocationItem.Coordinates;
+
+            // Store existing pins before clearing them
+            savedPins = map.Pins.ToList();
+            map.Pins.Clear(); // Disable (clear) other pins
+
+            // Draw a straight line between the start and end locations
+            var polyline = new Polyline
+            {
+                StrokeColor = Color.FromArgb("#efbb6b"), // Updated color
+                StrokeWidth = 30,
+            };
+
+            polyline.Geopath.Add(start);
+            polyline.Geopath.Add(end);
+
+            // Clear existing polylines and elements
+            map.MapElements.Clear();
+
+            // Add the straight line polyline
+            map.MapElements.Add(polyline);
+
+            // Adjust the map to show the line between the two points
+            var region = CalculateMapRegion(new List<Location> { start, end });
+            map.MoveToRegion(region);
+        }
+
+
+
+        // Helper function to filter points within the straight path between start and end
+        private bool IsPointWithinRange(Location point, Location start, Location end)
+        {
+            // Implement logic to check if point is within a reasonable range between start and end
+            // You can calculate distance from the line formed by start and end locations
+            return true;
+        }
+
+        // Helper function to calculate the map region
+        private MapSpan CalculateMapRegion(List<Location> points)
+        {
+            var minLat = points.Min(p => p.Latitude);
+            var maxLat = points.Max(p => p.Latitude);
+            var minLng = points.Min(p => p.Longitude);
+            var maxLng = points.Max(p => p.Longitude);
+
+            var centerLat = (minLat + maxLat) / 2;
+            var centerLng = (minLng + maxLng) / 2;
+
+            var spanLat = Math.Abs(maxLat - minLat) * 1.2; // Add some padding
+            var spanLng = Math.Abs(maxLng - minLng) * 1.2;
+
+            return new MapSpan(new Location(centerLat, centerLng), spanLat, spanLng);
+        }
+
+
+        private void ClearPolylines()
+        {
+            // Clear existing polylines and elements from the map
+            map.MapElements.Clear();
         }
 
         public List<Location> DecodePolyline(string encodedPoints)
@@ -303,17 +444,102 @@ namespace OnDaGO.MAUI.Views
             {
                 // Slide down the FrameLayout
                 await SlideDown(FrameLayout);
+                map.IsTrafficEnabled = true;
+                ClearPolylines();
             }
             else
             {
                 // Make the FrameLayout visible and set its position off-screen
                 FrameLayout.TranslationY = Height; // Start position (off-screen)
                 await SlideUp(FrameLayout);
+                BottomSheet.IsVisible = false; // Hide the Bottom Sheet
+                map.IsTrafficEnabled = false;
+
             }
 
             // Toggle the visibility flag
             _isSearchVisible = !_isSearchVisible;
         }
+
+        private async void OnToggleBottomSheetClicked(object sender, EventArgs e)
+        {
+            if (!BottomSheet.IsVisible)
+            {
+                BottomSheet.IsVisible = true; // Show the Bottom Sheet
+                await BottomSheet.FadeTo(1, 250); // Fade in
+
+                await SlideDown(FrameLayout);
+
+
+                // Start off-screen (just above the bottom)
+                map.IsTrafficEnabled = false;
+                BottomSheet.TranslationY = this.Height; // Adjust to fit the screen size
+                await BottomSheet.TranslateTo(0, 0, 300, Easing.CubicInOut); // Slide up to reveal
+                ScrollableContent.IsVisible = true; // Show the scrollable content
+                LoadFareMatrixInBottomSheet();
+            }
+            else
+            {
+                await BottomSheet.TranslateTo(0, this.Height, 300, Easing.CubicInOut); // Slide down
+                await BottomSheet.FadeTo(0, 250); // Fade out
+                map.IsTrafficEnabled = true;
+                BottomSheet.IsVisible = false; // Hide the Bottom Sheet
+                ScrollableContent.IsVisible = false; // Hide the scrollable content
+
+
+            }
+        }
+
+        private async void OnCloseBottomSheetClicked(object sender, EventArgs e)
+        {
+            ClearPolylines();
+
+            await BottomSheet.TranslateTo(0, this.Height, 300, Easing.CubicInOut); // Slide down
+            await BottomSheet.FadeTo(0, 250); // Fade out
+            BottomSheet.IsVisible = false; // Hide the Bottom Sheet
+            ScrollableContent.IsVisible = false; // Hide the scrollable content
+            map.IsTrafficEnabled = true;
+        }
+
+        private void OnBottomSheetPanUpdated(object sender, PanUpdatedEventArgs e)
+        {
+            if (e.StatusType == GestureStatus.Running)
+            {
+                // Move the Bottom Sheet based on the drag amount
+                BottomSheet.TranslationY += e.TotalY;
+
+                // Prevent moving the sheet too far up
+                if (BottomSheet.TranslationY < 0)
+                {
+                    BottomSheet.TranslationY = 0;
+                }
+            }
+
+            if (e.StatusType == GestureStatus.Completed)
+            {
+                // Only close the bottom sheet if dragged downward (e.TotalY > 0)
+                // and if the bottom sheet has moved more than 150 pixels (threshold)
+                if (BottomSheet.TranslationY > 150) // Adjust the threshold as needed
+                {
+                    // Close the bottom sheet by moving it off the screen
+                    BottomSheet.TranslateTo(0, this.Height, 300, Easing.CubicInOut);
+
+                    // After the animation, make it invisible
+                    BottomSheet.FadeTo(0, 250); // Optional: Fade out for smoother effect
+                    BottomSheet.IsVisible = false; // Hide the sheet
+                    map.IsTrafficEnabled = true;
+                }
+                else
+                {
+                    // If not dragged down enough, snap it back to the top
+                    BottomSheet.TranslateTo(0, 0, 300, Easing.CubicInOut); // Move back to original position
+                }
+            }
+        }
+
+
+
+
 
         private async void OnSettingsClicked(object sender, EventArgs e)
         {
@@ -400,13 +626,51 @@ namespace OnDaGO.MAUI.Views
                 var activity = Platform.CurrentActivity;
                 activity.MoveTaskToBack(true);
 #elif IOS
-        // iOS doesn't allow programmatic exit, so the user would normally use the home button
-        Thread.CurrentThread.Abort(); // iOS workaround (use cautiously)
+                // iOS doesn't allow programmatic exit, so the user would normally use the home button
+                Thread.CurrentThread.Abort(); // iOS workaround (use cautiously)
 #endif
             }
 
             return true; // Return true to prevent default back navigation behavior
         }
+
+        //private async void OnProfileClickes(object sender, EventArgs e)
+        //{
+        // Navigate to ProfilePage
+        //    await Navigation.PushAsync(new ProfilePage());
+        //}
+
+        //private async void OnHomeClicked(object sender, EventArgs e)
+        //{
+        // Optionally refresh or perform some action for Home tab
+        //}
+
+
+
+        private async void OnSettingsClickes(object sender, EventArgs e)
+        {
+            // Navigate to SettingsPage
+            await Navigation.PushAsync(new SettingsPage());
+        }
+
+        private async void OnCloseButtonClicked(object sender, EventArgs e)
+        {
+            await SlideDown(FrameLayout); // Slide down and hide the Frame
+            _isSearchVisible = false;
+            map.IsTrafficEnabled = true;
+
+            // Clear the drawn polyline (straight line) when the frame is closed
+            ClearPolylines();
+
+            // Re-add the saved pins when the frame is closed
+            foreach (var pin in savedPins)
+            {
+                map.Pins.Add(pin);
+            }
+
+            savedPins.Clear(); // Clear the saved pins after they are re-added
+        }
+
 
 
         private async Task CheckUserProximity()

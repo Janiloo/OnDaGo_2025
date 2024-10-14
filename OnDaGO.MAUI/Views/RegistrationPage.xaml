@@ -68,18 +68,19 @@
 
         <Button Text="Register"
                 Clicked="OnRegisterClicked"
-                BackgroundColor="#6200EE"
+                BackgroundColor="#efbb6b"
                 TextColor="White"
                 CornerRadius="20"
                 HeightRequest="50"
                 FontSize="18"
+                FontAttributes="Bold"
                 HorizontalOptions="FillAndExpand"/>
 
         <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
             <Label Text="Already have an account?" FontSize="14" TextColor="#999"/>
             <Button Text="Login"
                     Clicked="OnLoginClicked"
-                    TextColor="#6200EE"
+                    TextColor="#efbb6b"
                     BackgroundColor="Transparent"
                     FontAttributes="Bold"
                     FontSize="14"/>

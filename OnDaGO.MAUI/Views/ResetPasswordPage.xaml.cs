@@ -12,12 +12,22 @@ namespace OnDaGO.MAUI.Views
             InitializeComponent();
         }
 
+        // Back button event handler
+        private async void OnBackButtonClicked(object sender, EventArgs e)
+        {
+            await Navigation.PopAsync(); // Navigate back to the previous page
+        }
+
         private async void OnForgotPasswordClicked(object sender, EventArgs e)
         {
             string email = EmailEntry.Text;
+            ErrorLabel.IsVisible = false; // Hide error label initially
+            ErrorLabel.Text = string.Empty; // Clear previous error message
+
             if (string.IsNullOrWhiteSpace(email))
             {
-                await DisplayAlert("Error", "Please enter your email.", "OK");
+                ErrorLabel.Text = "Please enter your email.";
+                ErrorLabel.IsVisible = true; // Show error message
                 return;
             }
 
@@ -25,21 +35,35 @@ namespace OnDaGO.MAUI.Views
             {
                 var request = new ForgotPasswordRequest { Email = email };
                 var response = await App.AuthApi.ForgotPassword(request);
+
                 if (response.IsSuccessStatusCode)
                 {
-                    await DisplayAlert("Success", "Reset token sent to your email.", "OK");
-                    await Navigation.PushAsync(new ResetTokenPage());
+                    // Hide error label if success
+                    ErrorLabel.IsVisible = false;
+                    // Pass the email to the ResetTokenPage
+                    await Navigation.PushAsync(new ResetTokenPage(email)); // Pass email as a parameter
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    ErrorLabel.Text = "Email does not exist. Please check your email and try again.";
+                    ErrorLabel.IsVisible = true; // Show error message
                 }
                 else
                 {
-                    await DisplayAlert("Error", "Failed to send reset token.", "OK");
+                    ErrorLabel.Text = "Failed to send reset token. Please try again later.";
+                    ErrorLabel.IsVisible = true; // Show error message
                 }
+            }
+            catch (ApiException ex)
+            {
+                ErrorLabel.Text = $"Failed to send reset token: {ex.Message}";
+                ErrorLabel.IsVisible = true; // Show error message
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"An unexpected error occurred: {ex.Message}", "OK");
+                ErrorLabel.Text = $"An unexpected error occurred: {ex.Message}";
+                ErrorLabel.IsVisible = true; // Show error message
             }
         }
-
     }
 }

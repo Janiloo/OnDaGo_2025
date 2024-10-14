@@ -20,6 +20,8 @@ public class GoogleMapsApiService
         var response = await _httpClient.GetAsync(requestUri);
         response.EnsureSuccessStatusCode();
         var responseContent = await response.Content.ReadAsStringAsync();
+        // Log the entire response to the console
+        Console.WriteLine(responseContent); // Add this line to log the raw response
         return JObject.Parse(responseContent);
     }
 

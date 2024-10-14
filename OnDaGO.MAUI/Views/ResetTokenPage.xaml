@@ -2,15 +2,105 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="OnDaGO.MAUI.Views.ResetTokenPage"
-             Title="Reset Password">
+             Title="">
 
-    <StackLayout Padding="20">
-        <Label Text="Enter Email, Reset Token and New Password" FontSize="32" />
+    <Grid RowDefinitions="Auto, *, Auto">
+        <!-- Background Gradient -->
+        <Image Grid.RowSpan="3" Aspect="AspectFill" Source="gradient.png"/>
 
-        <Entry Placeholder="Email" x:Name="EmailEntry" />
-        <Entry Placeholder="Reset Token" x:Name="TokenEntry" />
-        <Entry Placeholder="New Password" IsPassword="True" x:Name="NewPasswordEntry" />
+        <!-- Lock Icon for Reset Password -->
+        <Image 
+            Grid.Row="1"
+            Source="lockquestionmark.png" 
+            HorizontalOptions="Center"
+            HeightRequest="210"
+            WidthRequest="260"/>
 
-        <Button Text="Reset Password" Clicked="OnResetPasswordClicked" />
-    </StackLayout>
+        <!-- Bottom Sheet for Reset Password Form -->
+        <Border Grid.Row="2"
+                BackgroundColor="White"
+                StrokeThickness="0"
+                Margin="0, -40, 0, 0"
+                HeightRequest="400">
+
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="30,30,0,0"/>
+                <!-- Rounded top corners -->
+            </Border.StrokeShape>
+
+            <ScrollView>
+                <StackLayout Padding="30" Spacing="20">
+                    <Label Text="Reset Your Password" 
+                           FontSize="32" 
+                           FontAttributes="Bold" 
+                           HorizontalOptions="Center"
+                           TextColor="#333"/>
+
+                    <Label x:Name="emailMessageLabel"
+                           FontSize="16"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"
+                           TextColor="#333"
+                           LineBreakMode="WordWrap"/>
+
+                    <!-- Minimal Modern OTP Entry -->
+                    <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                        <Frame BorderColor="#efbb6b" CornerRadius="5" Padding="0" WidthRequest="50" HeightRequest="70" HasShadow="False">
+                            <Entry x:Name="otpBox1" MaxLength="1" Keyboard="Numeric" HorizontalTextAlignment="Center" FontSize="24" TextColor="#333" BackgroundColor="Transparent" TextChanged="OnOtpBoxTextChanged"/>
+                        </Frame>
+                        <Frame BorderColor="#efbb6b" CornerRadius="5" Padding="0" WidthRequest="50" HeightRequest="70" HasShadow="False">
+                            <Entry x:Name="otpBox2" MaxLength="1" Keyboard="Numeric" HorizontalTextAlignment="Center" FontSize="24" TextColor="#333" BackgroundColor="Transparent" TextChanged="OnOtpBoxTextChanged"/>
+                        </Frame>
+                        <Frame BorderColor="#efbb6b" CornerRadius="5" Padding="0" WidthRequest="50" HeightRequest="70" HasShadow="False">
+                            <Entry x:Name="otpBox3" MaxLength="1" Keyboard="Numeric" HorizontalTextAlignment="Center" FontSize="24" TextColor="#333" BackgroundColor="Transparent" TextChanged="OnOtpBoxTextChanged"/>
+                        </Frame>
+                        <Frame BorderColor="#efbb6b" CornerRadius="5" Padding="0" WidthRequest="50" HeightRequest="70" HasShadow="False">
+                            <Entry x:Name="otpBox4" MaxLength="1" Keyboard="Numeric" HorizontalTextAlignment="Center" FontSize="24" TextColor="#333" BackgroundColor="Transparent" TextChanged="OnOtpBoxTextChanged"/>
+                        </Frame>
+                        <Frame BorderColor="#efbb6b" CornerRadius="5" Padding="0" WidthRequest="50" HeightRequest="70" HasShadow="False">
+                            <Entry x:Name="otpBox5" MaxLength="1" Keyboard="Numeric" HorizontalTextAlignment="Center" FontSize="24" TextColor="#333" BackgroundColor="Transparent" TextChanged="OnOtpBoxTextChanged"/>
+                        </Frame>
+                        <Frame BorderColor="#efbb6b" CornerRadius="5" Padding="0" WidthRequest="50" HeightRequest="70" HasShadow="False">
+                            <Entry x:Name="otpBox6" MaxLength="1" Keyboard="Numeric" HorizontalTextAlignment="Center" FontSize="24" TextColor="#333" BackgroundColor="Transparent" TextChanged="OnOtpBoxTextChanged"/>
+                        </Frame>
+                    </HorizontalStackLayout>
+
+                    <!-- New Password Entry -->
+                    <Entry Placeholder="New Password" 
+                           IsPassword="True" 
+                           x:Name="NewPasswordEntry" 
+                           FontSize="18"
+                           TextColor="#333"
+                           BackgroundColor="Transparent"/>
+
+                    <!-- Confirm Password Entry -->
+                    <Entry Placeholder="Confirm Password" 
+                           IsPassword="True" 
+                           x:Name="ConfirmPasswordEntry" 
+                           FontSize="18"
+                           TextColor="#333"
+                           BackgroundColor="Transparent"/>
+
+                    <!-- Reset Button -->
+                    <Button 
+                        Text="Reset Password"
+                        BackgroundColor="#efbb6b"
+                        TextColor="White"
+                        CornerRadius="20"
+                        HeightRequest="50"
+                        FontSize="18"
+                        HorizontalOptions="FillAndExpand"
+                        Clicked="OnResetPasswordClicked"/>
+
+                    <!-- Error Label -->
+                    <Label
+                        x:Name="errorLabel"
+                        TextColor="Red"
+                        FontSize="14"
+                        IsVisible="False"
+                        HorizontalOptions="Center"/>
+                </StackLayout>
+            </ScrollView>
+        </Border>
+    </Grid>
 </ContentPage>

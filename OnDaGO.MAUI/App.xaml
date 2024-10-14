@@ -5,10 +5,19 @@
              x:Class="OnDaGO.MAUI.App">
     <Application.Resources>
         <ResourceDictionary>
+            <!-- Existing Merged Dictionaries -->
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Global NavigationPage Style
+            <Style TargetType="NavigationPage">
+                <Setter Property="BarBackgroundColor" Value="Transparent" />
+                <Setter Property="BarTextColor" Value="White" />
+                <Setter Property="BackgroundColor" Value="Transparent" />
+            </Style> -->
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

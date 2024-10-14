@@ -4,9 +4,32 @@
              x:Class="OnDaGO.MAUI.Views.SettingsPage"
              Title="Settings">
 
-    <StackLayout Padding="10">
-        <Button Text="Report an Issue" Clicked="OnReportIssueClicked" />
-        <Button Text="Delete Account" TextColor="Red" Clicked="OnDeleteAccountClicked" />
-        <Button Text="Logout" Clicked="OnLogoutClicked" />
+    <StackLayout Padding="0" Spacing="0">
+
+        <!-- Report an Issue Button -->
+        <Frame BackgroundColor="White" CornerRadius="0" HasShadow="True" Padding="10">
+            <Button Text="Report an Issue" 
+                    BackgroundColor="Transparent"
+                    TextColor="Black"
+                    Clicked="OnReportIssueClicked" />
+        </Frame>
+
+        <!-- Delete Account Button -->
+        <Frame BackgroundColor="White" CornerRadius="0" HasShadow="True" Padding="10">
+            <Button Text="Delete Account" 
+                    BackgroundColor="Transparent"
+                    TextColor="Red"
+                    Clicked="OnDeleteAccountClicked" />
+        </Frame>
+
+        <!-- Logout Button -->
+        <Frame BackgroundColor="White" CornerRadius="0" HasShadow="True" Padding="10">
+            <Button Text="Logout" 
+                    BackgroundColor="Transparent"
+                    TextColor="Black"
+                    Clicked="OnLogoutClicked" />
+        </Frame>
+
     </StackLayout>
+
 </ContentPage>
