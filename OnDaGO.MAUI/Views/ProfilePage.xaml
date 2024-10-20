@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="OnDaGO.MAUI.Views.ProfilePage"
              Title="Profile"
-             BackgroundColor="White">
+             BackgroundColor="#33efbb6b">
 
     <ContentPage.Content>
         <Grid>
@@ -30,12 +30,16 @@
 
                     <!-- Account Details Section -->
                     <Frame BackgroundColor="White" Padding="20" HasShadow="False" CornerRadius="0">
-                        <StackLayout Spacing="10">
+                        <StackLayout Spacing="0">
                             <!-- Name Section -->
                             <Label x:Name="NameLabel"
                                    FontSize="18" 
                                    FontAttributes="Bold" 
                                    TextColor="Black" />
+
+                            <Label x:Name="UserIdLabel"
+                                   FontSize="14" 
+                                   TextColor="Gray" />  
 
                             <!-- Edit Profile Button -->
                             <Button Text="Edit Profile"
@@ -43,6 +47,8 @@
                                     HorizontalOptions="Start"
                                     TextColor="#efbb6b"
                                     FontAttributes="Bold"
+                                    Padding="0,0,0,0" 
+                                    Margin = "0,0,0,0"
                                     Clicked="OnEditProfileClicked"/>
                         </StackLayout>
                     </Frame>

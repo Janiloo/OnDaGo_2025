@@ -3,41 +3,98 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="OnDaGO.MAUI.Views.AdminSettingsPage"
              Title="Admin Settings"
-             BackgroundColor="#F5F5F5">
+             BackgroundColor="#33efbb6b">
 
     <ScrollView>
         <VerticalStackLayout>
-            <!-- Settings Buttons -->
-            <Frame Padding="10" BackgroundColor="White" HasShadow="True" CornerRadius="0">
-                <Button Text="View Report" 
-                        Clicked="OnReportClicked" 
-                        BackgroundColor="Transparent" 
-                        TextColor="#007ACC" 
-                        HorizontalOptions="Start" />
+
+            <!-- Account Details Header Section -->
+            <Frame BackgroundColor="#efbb6b" Padding="0" HasShadow="False" CornerRadius="0">
+                <StackLayout Spacing="10">
+                    <Label Text="Help and Support"
+               FontSize="12" 
+               FontAttributes="Bold"  
+               Margin="20,5,0,5"
+               TextColor="White" />
+                </StackLayout>
             </Frame>
 
+            <!-- View Report Button -->
             <Frame Padding="10" BackgroundColor="White" HasShadow="True" CornerRadius="0">
-                <Button Text="Create Admin Account" 
-                        Clicked="OnCreateClicked" 
-                        BackgroundColor="Transparent" 
-                        TextColor="#007ACC" 
-                        HorizontalOptions="Start" />
+                <Grid ColumnDefinitions="Auto,*" VerticalOptions="Center">
+                    <Image Source="reportlist.svg" HeightRequest="24" WidthRequest="24" VerticalOptions="Center" Margin="10,0,0,0"/>
+                    <Button Text="View Report" 
+                            Clicked="OnReportClicked" 
+                            BackgroundColor="Transparent" 
+                            TextColor="Black" 
+                            FontAttributes="Bold"
+                            HorizontalOptions="Start" 
+                            Grid.Column="1"/>
+                </Grid>
             </Frame>
 
-            <Frame Padding="10" BackgroundColor="White" HasShadow="True" CornerRadius="0">
-                <Button Text="Edit Fare Matrix" 
-                        Clicked="OnFareClicked" 
-                        BackgroundColor="Transparent" 
-                        TextColor="#007ACC" 
-                        HorizontalOptions="Start" />
+            <Frame BackgroundColor="#efbb6b" Padding="0" HasShadow="False" CornerRadius="0">
+                <StackLayout Spacing="10">
+                    <Label Text="Accessibility"
+                           FontSize="12" 
+                           FontAttributes="Bold"  
+                           Margin="20,5,0,5"
+                           TextColor="White" />
+                </StackLayout>
             </Frame>
 
+            <!-- Edit Fare Matrix Button -->
             <Frame Padding="10" BackgroundColor="White" HasShadow="True" CornerRadius="0">
-                <Button Text="Logout" 
-                        Clicked="OnLogoutClicked" 
-                        BackgroundColor="Transparent" 
-                        TextColor="#FF4136" 
-                        HorizontalOptions="Start" />
+                <Grid ColumnDefinitions="Auto,*" VerticalOptions="Center">
+                    <Image Source="fareprice.svg" HeightRequest="24" WidthRequest="24" VerticalOptions="Center" Margin="10,0,0,0"/>
+                    <Button Text="Edit Fare Matrix" 
+                            Clicked="OnFareClicked" 
+                            BackgroundColor="Transparent" 
+                            FontAttributes="Bold"
+                            TextColor="Black" 
+                            HorizontalOptions="Start" 
+                            Grid.Column="1"/>
+                </Grid>
+            </Frame>
+
+
+            <Frame BackgroundColor="#efbb6b" Padding="0" HasShadow="False" CornerRadius="0">
+                <StackLayout Spacing="10">
+                    <Label Text="Account Management"
+               FontSize="12" 
+               FontAttributes="Bold"  
+               Margin="20,5,0,5"
+               TextColor="White" />
+                </StackLayout>
+            </Frame>
+
+
+            <!-- Create Admin Account Button -->
+            <Frame Padding="10" BackgroundColor="White" HasShadow="True" CornerRadius="0">
+                <Grid ColumnDefinitions="Auto,*" VerticalOptions="Center">
+                    <Image Source="adminreg.svg" HeightRequest="24" WidthRequest="24" VerticalOptions="Center" Margin="10,0,0,0"/>
+                    <Button Text="Create Admin Account" 
+                            Clicked="OnCreateClicked" 
+                            BackgroundColor="Transparent" 
+                            TextColor="Black" 
+                            FontAttributes="Bold"
+                            HorizontalOptions="Start" 
+                            Grid.Column="1"/>
+                </Grid>
+            </Frame>
+
+            <!-- Logout Button -->
+            <Frame Padding="10" BackgroundColor="White" HasShadow="True" CornerRadius="0">
+                <Grid ColumnDefinitions="Auto,*" VerticalOptions="Center">
+                    <Image Source="logout.svg" HeightRequest="24" WidthRequest="24" VerticalOptions="Center" Margin="10,0,0,0"/>
+                    <Button Text="Logout" 
+                            Clicked="OnLogoutClicked" 
+                            BackgroundColor="Transparent" 
+                            TextColor="#FF4136" 
+                            HorizontalOptions="Start" 
+                            FontAttributes="Bold"
+                            Grid.Column="1"/>
+                </Grid>
             </Frame>
         </VerticalStackLayout>
     </ScrollView>

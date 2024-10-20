@@ -26,5 +26,8 @@ namespace OnDaGo.API.Models
         public string PasswordHash { get; set; }
         public string PhoneNumber { get; set; }
         public string Role { get; set; } = "User";
+
+        //public string DocumentImagePath { get; set; }
+        //public string FaceImagePath { get; set; }
     }
 }

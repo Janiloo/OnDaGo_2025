@@ -233,7 +233,7 @@ namespace OnDaGO.MAUI.Views
             }
         }
 
-        private async void OnFareMatrixClicked(object sender, EventArgs e)
+        /*private async void OnFareMatrixClicked(object sender, EventArgs e)
         {
             try
             {
@@ -261,6 +261,6 @@ namespace OnDaGO.MAUI.Views
                 return true;
             }
             return base.OnBackButtonPressed();
-        }
+        }*/
     }
 }

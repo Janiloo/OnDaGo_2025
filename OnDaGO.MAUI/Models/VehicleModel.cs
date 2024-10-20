@@ -18,5 +18,12 @@ namespace OnDaGO.MAUI.Models
 
         [BsonElement("puv_no")]
         public int PuvNo { get; set; }
+
+        // New fields
+        [BsonElement("maxPassengerCount")]
+        public int MaxPassengerCount { get; set; }
+
+        [BsonElement("passengerCount")]
+        public int PassengerCount { get; set; }
     }
 }

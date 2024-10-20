@@ -1,14 +1,43 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="OnDaGO.MAUI.Views.UserReportPage"
+             BackgroundColor="#33efbb6b"
              Title="Submit a Report">
-    <StackLayout Padding="10">
-        <Label Text="Report Subject" />
-        <Entry Placeholder="Subject" Text="{Binding Subject}" />
+    <ScrollView>
+        <StackLayout Padding="20" Spacing="15">
+            <!-- Header for the Page -->
+            <Label Text="Submit a Report"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
 
-        <Label Text="Description" />
-        <Editor Placeholder="Describe the issue..." Text="{Binding Description}" />
+            <!-- Frame wrapping the Entry for Report Subject -->
+            <Frame BackgroundColor="White" CornerRadius="5" Padding="0" HasShadow="False">
+                <Entry x:Name="SubjectEntry"
+                       Placeholder="Enter report subject"
+                       FontSize="16"
+                       Margin="5" />
+            </Frame>
 
-        <Button Text="Submit" Clicked="OnSubmitReportClicked" />
-    </StackLayout>
+            <!-- Frame wrapping the Editor for Report Description -->
+            <Frame BackgroundColor="White" CornerRadius="5" Padding="0" HasShadow="False">
+                <Editor x:Name="DescriptionEditor"
+                        Placeholder="Enter report description"
+                        AutoSize="TextChanges"
+                        HeightRequest="150"
+                        FontSize="16"
+                        Margin="5" />
+            </Frame>
+
+            <!-- Button to Submit Report -->
+            <Button x:Name="SubmitButton" 
+                    Text="Submit Report"
+                    Clicked="OnSubmitReportClicked"
+                    BackgroundColor="#efbb6b"
+                    TextColor="White"
+                    CornerRadius="25"
+                    Padding="15"
+                    HorizontalOptions="Center" />
+        </StackLayout>
+    </ScrollView>
 </ContentPage>

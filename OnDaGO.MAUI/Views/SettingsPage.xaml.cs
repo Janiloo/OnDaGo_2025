@@ -1,16 +1,22 @@
 using System;
+using OnDaGO.MAUI.Services;
 using OnDaGO.MAUI.Views;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Storage;
 
 namespace OnDaGO.MAUI.Views
 {
     public partial class SettingsPage : ContentPage
     {
+        private readonly ReportService _reportService;
+
         public SettingsPage()
         {
             InitializeComponent();
+            _reportService = new ReportService(); // Initialize ReportService
         }
 
-        private async void OnDeleteAccountClicked(object sender, EventArgs e)
+        /*private async void OnDeleteAccountClicked(object sender, EventArgs e)
         {
             bool confirmDelete = await DisplayAlert("Delete Account", "Are you sure you want to delete your account? This action cannot be undone.", "Yes", "No");
 
@@ -39,15 +45,20 @@ namespace OnDaGO.MAUI.Views
             {
                 await DisplayAlert("Error", $"An unexpected error occurred: {ex.Message}", "OK");
             }
-        }
+        }*/
 
         private async void OnReportIssueClicked(object sender, EventArgs e)
-    {
-        await Navigation.PushAsync(new UserReportPage());
-    }
+        {
+            // Pass the initialized ReportService to the UserReportPage
+            await Navigation.PushAsync(new UserReportPage(_reportService));
+        }
 
         private async void OnLogoutClicked(object sender, EventArgs e)
         {
+            bool confirmLogout = await DisplayAlert("Logout", "Are you sure you want to log out?", "Yes", "No");
+
+            if (!confirmLogout) return; // If the user selects "No", simply return and do nothing.
+
             try
             {
                 var response = await App.AuthApi.Logout();
@@ -56,8 +67,6 @@ namespace OnDaGO.MAUI.Views
                 {
                     // Clear the JWT token from SecureStorage
                     SecureStorage.Remove("jwt_token");
-
-                    await DisplayAlert("Logged Out", "You have been logged out successfully.", "OK");
                     Application.Current.MainPage = new NavigationPage(new LoginPage());
                 }
                 else
@@ -70,5 +79,6 @@ namespace OnDaGO.MAUI.Views
                 await DisplayAlert("Error", $"An unexpected error occurred: {ex.Message}", "OK");
             }
         }
+
     }
 }

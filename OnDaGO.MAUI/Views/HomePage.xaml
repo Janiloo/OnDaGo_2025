@@ -110,6 +110,7 @@
         <Grid x:Name="BottomSheet" BackgroundColor="White" HeightRequest="400" VerticalOptions="End" IsVisible="False" Opacity="0">
             <StackLayout>
                 <Label Text="Golden Arc Transport Cooperative" Padding="20" FontAttributes="Bold"/>
+                <Label x:Name="PuvNoLabel" Text="PUV No: " />
                 <ScrollView x:Name="ScrollableContent" HeightRequest="300" IsVisible="False">
                     <StackLayout>
                         <!-- Fare Matrix Grid -->

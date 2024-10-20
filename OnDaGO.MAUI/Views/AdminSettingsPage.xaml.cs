@@ -56,6 +56,10 @@ public partial class AdminSettingsPage : ContentPage
 
     private async void OnLogoutClicked(object sender, EventArgs e)
     {
+        bool confirmLogout = await DisplayAlert("Logout", "Are you sure you want to log out?", "Yes", "No");
+
+        if (!confirmLogout) return; // If the user selects "No", simply return and do nothing.
+
         try
         {
             var response = await App.AuthApi.Logout();
@@ -64,8 +68,6 @@ public partial class AdminSettingsPage : ContentPage
             {
                 // Clear the JWT token from SecureStorage
                 SecureStorage.Remove("jwt_token");
-
-                await DisplayAlert("Logged Out", "You have been logged out successfully.", "OK");
                 Application.Current.MainPage = new NavigationPage(new LoginPage());
             }
             else

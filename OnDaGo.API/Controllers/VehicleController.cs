@@ -23,7 +23,6 @@ namespace OnDaGo.API.Controllers
             return Ok(vehicles);
         }
 
-
         // GET: api/vehicles/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetVehicleById(string id)
@@ -39,14 +38,12 @@ namespace OnDaGo.API.Controllers
         }
 
         // POST: api/vehicles
-        // POST: api/vehicles
         [HttpPost]
         public async Task<IActionResult> CreateVehicle([FromBody] VehicleModel newVehicle)
         {
             await _vehicleService.CreateVehicleAsync(newVehicle);
-            return CreatedAtAction(nameof(GetVehicleById), new { id = newVehicle.Id }, newVehicle); // MongoDB will auto-assign the Id
+            return CreatedAtAction(nameof(GetVehicleById), new { id = newVehicle.Id }, newVehicle);
         }
-
 
         // PUT: api/vehicles/{id}
         [HttpPut("{id}")]

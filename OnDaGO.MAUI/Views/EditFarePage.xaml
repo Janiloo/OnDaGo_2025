@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="OnDaGO.MAUI.Views.EditFarePage"
              Title="Edit Fare Page"
-             BackgroundColor="White">
+             BackgroundColor="#33efbb6b">
 
     <ScrollView>
         <StackLayout Padding="20">

@@ -32,6 +32,8 @@ namespace OnDaGo.API.Controllers
                 string.IsNullOrWhiteSpace(userRequest.Name) ||
                 string.IsNullOrWhiteSpace(userRequest.Email) ||
                 string.IsNullOrWhiteSpace(userRequest.PasswordHash))
+                //string.IsNullOrWhiteSpace(userRequest.DocumentImagePath) ||
+                //string.IsNullOrWhiteSpace(userRequest.FaceImagePath))
             {
                 return BadRequest("Invalid user data. Name, email, and password are required.");
             }
@@ -42,7 +44,14 @@ namespace OnDaGo.API.Controllers
                 return Conflict("User with this email already exists.");
             }
 
-            // Default role to 'User' if not provided
+            // Verify ID using the ID Analyzer API
+            /*var verificationResult = await VerifyIdWithApi(userRequest.DocumentImagePath, userRequest.FaceImagePath);
+            if (!verificationResult.IsSuccess)
+            {
+                return BadRequest("ID verification failed: " + verificationResult.ErrorMessage);
+            }*/
+
+
             var role = string.IsNullOrWhiteSpace(userRequest.Role) ? "User" : userRequest.Role;
 
             var user = new UserItem
@@ -54,11 +63,24 @@ namespace OnDaGo.API.Controllers
                 Role = role,  // Assign the role
                 ResetToken = null,
                 ResetTokenExpiry = null
+                // Store verification information if needed
+                //VerificationStatus = verificationResult.Status, // Assuming you added this property
+                //VerificationData = verificationResult.Data // Store any additional verification data
             };
 
             await _userService.CreateUserAsync(user);
             return CreatedAtAction(nameof(Register), new { id = user.Id }, user);
         }
+
+        /*private async Task<VerificationResult> VerifyIdWithApi(string documentImagePath, string faceImagePath)
+        {
+            // Call the ID verification API (similar to the example you provided)
+            // Implement the logic to call the ID verification API, handle the response,
+            // and return a VerificationResult object containing the success status and data.
+            // This part should include the HttpClient logic and error handling.
+
+            return new VerificationResult { IsSuccess = true, Status = "Verified", Data = "Additional data here" };
+        }*/
 
 
         [HttpPost("logout")]
@@ -314,5 +336,12 @@ namespace OnDaGo.API.Controllers
         public string Name { get; set; }
         public string PhoneNumber { get; set; }
     }
+
+    /*public class VerificationResult
+    {
+        public bool IsSuccess { get; set; }
+        public string Status { get; set; } // e.g., "Verified", "Failed"
+        public string Data { get; set; } // Any additional information returned from the API
+    }*/
 
 }

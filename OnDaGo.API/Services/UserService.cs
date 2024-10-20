@@ -1,9 +1,9 @@
-﻿using MongoDB.Bson;
-using MongoDB.Driver;
-using OnDaGo.API.Models;
+﻿    using MongoDB.Bson;
+    using MongoDB.Driver;
+    using OnDaGo.API.Models;
 
-namespace OnDaGo.API.Services
-{
+    namespace OnDaGo.API.Services
+    {
     public class UserService
     {
         private readonly IMongoCollection<UserItem> _users;
@@ -55,5 +55,7 @@ namespace OnDaGo.API.Services
             await _users.DeleteOneAsync(user => user.Id == new ObjectId(id));
         }
 
+
+
     }
-}
+    }

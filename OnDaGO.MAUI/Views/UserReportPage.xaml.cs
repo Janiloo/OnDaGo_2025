@@ -1,65 +1,97 @@
-using OnDaGO.MAUI.Services;
 using OnDaGO.MAUI.Models;
+using OnDaGO.MAUI.Services;
+using System;
+using Microsoft.Maui.Controls;
+using Refit;
+using System.Threading.Tasks;
 
 namespace OnDaGO.MAUI.Views
 {
     public partial class UserReportPage : ContentPage
     {
-        private ReportItem _report;
-        private ReportService _reportService;
+        private readonly ReportService _reportService;
+        private string _userId;
 
-        public string Subject
-        {
-            get => _report.Subject;
-            set
-            {
-                _report.Subject = value;
-                OnPropertyChanged(nameof(Subject));
-            }
-        }
-
-        public string Description
-        {
-            get => _report.Description;
-            set
-            {
-                _report.Description = value;
-                OnPropertyChanged(nameof(Description));
-            }
-        }
-
-        public UserReportPage()
+        public UserReportPage(ReportService reportService)
         {
             InitializeComponent();
-
-            _report = new ReportItem();
-            _reportService = new ReportService();
-
-            BindingContext = this;
+            _reportService = reportService;
+            SubmitButton.IsEnabled = false; // Disable the submit button initially
+            GetUserProfile();  // Fetch the user profile on page load
         }
 
-        private async void OnSubmitReportClicked(object sender, EventArgs e)
+        // Method to retrieve the user profile, specifically the UserId
+        private async Task GetUserProfile()
         {
             try
             {
-                // Set the default status and inform the user to include contact information in the description
-                _report.Status = "Pending"; // Default status for a new report
+                var token = await SecureStorage.GetAsync("jwt_token");
 
-                // Ensure the description includes contact information
-                if (string.IsNullOrEmpty(_report.Description) || !_report.Description.Contains("@"))
+                if (!string.IsNullOrEmpty(token))
                 {
-                    await DisplayAlert("Error", "Please include your contact information in the description.", "OK");
-                    return;
+                    var client = HttpClientFactory.CreateClient();
+                    var authApi = RestService.For<IAuthApi>(client);
+                    var response = await authApi.GetUserProfile();
+
+                    if (response != null)
+                    {
+                        _userId = response.Id;  // Store the UserId for report submission
+                        SubmitButton.IsEnabled = true; // Enable the submit button once the user profile is loaded
+                    }
                 }
-
-                // Create the report
-                await _reportService.CreateReportAsync(_report);
-
-                await DisplayAlert("Success", "Report submitted!", "OK");
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"An error occurred: {ex.Message}", "OK");
+                Console.WriteLine($"Error fetching user profile: {ex.Message}");
+                await DisplayAlert("Error", "Unable to retrieve user profile. Please try again later.", "OK");
+            }
+        }
+
+        // Event handler for the Submit Report button
+        private async void OnSubmitReportClicked(object sender, EventArgs e)
+        {
+            // Validate input fields
+            if (string.IsNullOrWhiteSpace(SubjectEntry.Text) || string.IsNullOrWhiteSpace(DescriptionEditor.Text))
+            {
+                await DisplayAlert("Validation Error", "Please enter both subject and description.", "OK");
+                return;
+            }
+
+            // Ensure we have the UserId before submitting the report
+            if (string.IsNullOrEmpty(_userId))
+            {
+                await DisplayAlert("Error", "Failed to retrieve user information. Please try again.", "OK");
+                return;
+            }
+
+            // Create a new report with the user's ID and "Pending" status
+            var newReport = new ReportItem
+            {
+                UserId = _userId,  // Include the UserId
+                Subject = SubjectEntry.Text,
+                Description = DescriptionEditor.Text,
+                Status = "Pending",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            try
+            {
+                // Call the API service to create the report
+                await _reportService.CreateReportAsync(newReport);
+                await DisplayAlert("Success", "Your report has been submitted successfully.", "OK");
+
+                // Optionally, clear the fields or navigate away
+                SubjectEntry.Text = string.Empty;
+                DescriptionEditor.Text = string.Empty;
+            }
+            catch (ApiException apiEx)
+            {
+                // Display detailed API error if available
+                await DisplayAlert("Error", $"API error: {apiEx.Content}", "OK");
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error", $"An error occurred while submitting the report: {ex.Message}", "OK");
             }
         }
     }

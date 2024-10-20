@@ -57,24 +57,32 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Remove="Resources\Images\adminreg.svg" />
 	  <None Remove="Resources\Images\back.svg" />
 	  <None Remove="Resources\Images\bustop.png" />
+	  <None Remove="Resources\Images\fareprice.svg" />
 	  <None Remove="Resources\Images\homeon.svg" />
+	  <None Remove="Resources\Images\logout.svg" />
+	  <None Remove="Resources\Images\reportlist.svg" />
+	  <None Remove="Resources\Images\support.svg" />
 	  <None Remove="Resources\Raw\ondagologo.svg" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="CommonDialogs.Maui" Version="1.0.10" />
+		<PackageReference Include="AutoFixture" Version="5.0.0-preview0011" />
 		<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.91" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Maui.Controls.Maps" Version="8.0.91" />
+		<PackageReference Include="Microsoft.Maui.Maps" Version="8.0.91" />
 		<PackageReference Include="MongoDB.Bson" Version="2.28.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="Refit" Version="7.1.2" />
 		<PackageReference Include="CommunityToolkit.Maui" Version="9.0.2" />
-		<PackageReference Include="Microsoft.Maui.Controls.Maps" Version="8.0.80" />
-		<PackageReference Include="Microsoft.Maui.Maps" Version="8.0.80" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+		<PackageReference Include="CommunityToolkit.Maui.Maps" Version="2.0.2" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.2" />
 		<PackageReference Include="The49.Maui.BottomSheet" Version="8.0.3" />
 	</ItemGroup>

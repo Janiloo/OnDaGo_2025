@@ -1,25 +1,56 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="OnDaGO.MAUI.Views.AdminReportPage">
+             x:Class="OnDaGO.MAUI.Views.AdminReportPage"
+             Title="Reports"
+             BackgroundColor="#33efbb6b">
 
-    <StackLayout>
-        <Label Text="Reports"
-               FontSize="24"
-               HorizontalOptions="Center" />
+    <ScrollView>
+        <StackLayout Padding="20">
+            <!-- Header for Admin Reports -->
+            <Label Text="Admin Reports"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,20"/>
 
-        <CollectionView ItemsSource="{Binding Reports}" BackgroundColor="LightGray">
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <StackLayout Padding="10">
-                        <Label Text="{Binding Subject}" FontSize="20" />
-                        <Label Text="{Binding Description}" />
-                        <Label Text="{Binding Status}" />
-                        <Button Text="Mark as Completed"
-                                Command="{Binding Source={x:Reference Name=AdminReportPage}, Path=MarkAsCompletedCommand}"
-                                CommandParameter="{Binding .}" />
-                    </StackLayout>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-    </StackLayout>
+            <CollectionView x:Name="ReportCollection" Margin="0,10,0,0">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Padding="15" Margin="0,5" BackgroundColor="White" CornerRadius="10" HasShadow="True">
+                            <StackLayout Spacing="5">
+                                <Label Text="{Binding Subject}" 
+                                       FontSize="Medium" 
+                                       FontAttributes="Bold"
+                                       HorizontalOptions="Start" 
+                                       TextColor="Black" />
+                                <Label Text="{Binding Description}" 
+                                       FontSize="Small" 
+                                       LineBreakMode="TailTruncation"
+                                       MaxLines="2" 
+                                       VerticalOptions="Start" 
+                                       TextColor="Black" />
+                                <Label Text="{Binding Status}" 
+                                       FontSize="Small"
+                                       FontAttributes="Italic"
+                                       TextColor="{Binding StatusColor}" 
+                                       HorizontalOptions="End" 
+                                       VerticalOptions="End" />
+                            </StackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Optional: Button to Refresh Reports -->
+            <Button Text="Refresh Reports" 
+                    Clicked="OnRefreshReportsClicked"
+                    HorizontalOptions="Center"
+                    VerticalOptions="End"
+                    Margin="0,20,0,0"
+                    BackgroundColor="#efbb6b"
+                    TextColor="White"
+                    CornerRadius="25"
+                    Padding="10"/>
+        </StackLayout>
+    </ScrollView>
 </ContentPage>

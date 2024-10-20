@@ -26,9 +26,8 @@ namespace OnDaGo.API.Services
 
         public async Task CreateVehicleAsync(VehicleModel newVehicle)
         {
-            await _vehicles.InsertOneAsync(newVehicle); // MongoDB will generate the Id
+            await _vehicles.InsertOneAsync(newVehicle);
         }
-
 
         public async Task UpdateVehicleAsync(string id, VehicleModel updatedVehicle)
         {

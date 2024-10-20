@@ -32,6 +32,9 @@ public partial class ProfilePage : ContentPage
                     NameLabel.Text = $"{response.Name}";
                     EmailLabel.Text = $"Email: {response.Email}";
                     PhoneNumberLabel.Text = $"PhoneNumber: {response.PhoneNumber}";
+
+                    // Display the user ID
+                    UserIdLabel.Text = $"User ID: {response.Id}";
                 }
             }
         }
@@ -41,6 +44,7 @@ public partial class ProfilePage : ContentPage
             Console.WriteLine($"Error fetching user profile: {ex.Message}");
         }
     }
+
 
     private async void OnLogoutClicked(object sender, EventArgs e)
     {

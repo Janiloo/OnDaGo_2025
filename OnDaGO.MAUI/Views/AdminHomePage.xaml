@@ -30,6 +30,15 @@
             </x:Arguments>
         </maps:Map>
 
+        <!-- Overlaying profile button in the top-left corner -->
+        <VerticalStackLayout HorizontalOptions="Start" VerticalOptions="Start" Padding="10">
+            <ImageButton Source="profile.svg" Clicked="OnProfileClicked" WidthRequest="50" HeightRequest="50" BackgroundColor="Transparent">
+                <ImageButton.Shadow>
+                    <Shadow Brush="Gray" Offset="0, 0" Radius="10"/>
+                </ImageButton.Shadow>
+            </ImageButton>
+        </VerticalStackLayout>
+
         <!-- Overlaying buttons -->
         <VerticalStackLayout HorizontalOptions="End" VerticalOptions="Start" Padding="10">
             <ImageButton Source="settings.svg" Clicked="OnSettingsClicked" Margin="0,0,0,10"  WidthRequest="50" HeightRequest="50" BackgroundColor="Transparent">
@@ -38,7 +47,7 @@
                 </ImageButton.Shadow>
             </ImageButton>
 
-            <Button Text="Fare Matrix" Clicked="OnFareMatrixClicked" Margin="0,0,0,10" TextColor="White" CornerRadius="5" Padding="10" FontSize="16">
+            <!--<Button Text="Fare Matrix" Clicked="OnFareMatrixClicked" Margin="0,0,0,10" TextColor="White" CornerRadius="5" Padding="10" FontSize="16">
                 <Button.Shadow>
                     <Shadow Brush="Black" Offset="0, 0" Radius="10"/>
                 </Button.Shadow>
@@ -48,10 +57,10 @@
                 <ImageButton.Shadow>
                     <Shadow Brush="Gray" Offset="0, 0" Radius="10"/>
                 </ImageButton.Shadow>
-            </ImageButton>
+            </ImageButton>-->
         </VerticalStackLayout>
 
-        <!-- Fare Matrix Overlay -->
+        <!-- Fare Matrix Overlay
         <StackLayout IsVisible="False" x:Name="FareMatrixTable" BackgroundColor="#80000000" Padding="10" VerticalOptions="Center" HorizontalOptions="Center">
             <Frame BackgroundColor="White" Padding="10" CornerRadius="10">
                 <StackLayout>
@@ -98,6 +107,6 @@
                     </CollectionView>
                 </StackLayout>
             </Frame>
-        </StackLayout>
+        </StackLayout> -->
     </Grid>
 </ContentPage>

@@ -1,33 +1,62 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:OnDaGO.MAUI"
+             xmlns:maui="http://schemas.microsoft.com/dotnet/2021/maui"
              x:Class="OnDaGO.MAUI.Views.SettingsPage"
+             BackgroundColor="#33efbb6b"
              Title="Settings">
 
     <StackLayout Padding="0" Spacing="0">
 
-        <!-- Report an Issue Button -->
-        <Frame BackgroundColor="White" CornerRadius="0" HasShadow="True" Padding="10">
-            <Button Text="Report an Issue" 
-                    BackgroundColor="Transparent"
-                    TextColor="Black"
-                    Clicked="OnReportIssueClicked" />
+        <!-- Account Details Header Section -->
+        <Frame BackgroundColor="#efbb6b" Padding="0" HasShadow="False" CornerRadius="0">
+            <StackLayout Spacing="10">
+                <Label Text="Help and Support"
+                       FontSize="12" 
+                       FontAttributes="Bold"  
+                       Margin="20,5,0,5"
+                       TextColor="White" />
+            </StackLayout>
         </Frame>
 
-        <!-- Delete Account Button -->
-        <Frame BackgroundColor="White" CornerRadius="0" HasShadow="True" Padding="10">
-            <Button Text="Delete Account" 
-                    BackgroundColor="Transparent"
-                    TextColor="Red"
-                    Clicked="OnDeleteAccountClicked" />
+        <!-- Report an Issue Button -->
+        <Frame BackgroundColor="White" CornerRadius="0" HasShadow="True" Padding="10" >
+            <Grid ColumnDefinitions="Auto,*" VerticalOptions="Center">
+                <Image Source="support.svg" HeightRequest="24" WidthRequest="24" VerticalOptions="Center" Margin="10,0,0,0"/>
+                <Button Text="Contact Us" 
+                        BackgroundColor="Transparent"
+                        TextColor="Black"
+                        HorizontalOptions="Start"
+                        FontAttributes="Bold"
+                        Clicked="OnReportIssueClicked"
+                        Grid.Column="1" />
+            </Grid>
+        </Frame>
+
+        <!-- Account Details Header Section -->
+        <Frame BackgroundColor="#efbb6b" Padding="0" HasShadow="False" CornerRadius="0">
+            <StackLayout Spacing="10">
+                <Label Text="Account Management"
+                       FontSize="12" 
+                       FontAttributes="Bold"  
+                       Margin="20,5,0,5"
+                       TextColor="White" />
+            </StackLayout>
         </Frame>
 
         <!-- Logout Button -->
         <Frame BackgroundColor="White" CornerRadius="0" HasShadow="True" Padding="10">
-            <Button Text="Logout" 
-                    BackgroundColor="Transparent"
-                    TextColor="Black"
-                    Clicked="OnLogoutClicked" />
+            <Grid ColumnDefinitions="Auto,*" VerticalOptions="Center">
+                <Image Source="logout.svg" HeightRequest="24" WidthRequest="24" VerticalOptions="Center" Margin="10,0,0,0"/>
+                <Button Text="Logout" 
+                        BackgroundColor="Transparent"
+                        TextColor="Black"
+                        FontAttributes="Bold"
+                        HorizontalOptions="Start"
+                        Clicked="OnLogoutClicked"
+                        Grid.Column="1" />
+            </Grid>
         </Frame>
 
     </StackLayout>
