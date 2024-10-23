@@ -26,6 +26,10 @@
 		<!-- App Identifier -->
 		<ApplicationId>com.companyname.ondago.maui</ApplicationId>
 
+		<!---<EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>-->
+		
+		<AndroidPackageFormat>apk</AndroidPackageFormat>
+
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>

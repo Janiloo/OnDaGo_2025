@@ -43,7 +43,6 @@ namespace OnDaGO.MAUI.Views
                     // Check if the user is an admin and navigate to AdminHomePage
                     if (result.User.Role == "Admin")
                     {
-                    
                         await Navigation.PushAsync(new AdminHomePage());
                     }
                     else
@@ -59,11 +58,29 @@ namespace OnDaGO.MAUI.Views
             }
             catch (ApiException ex)
             {
-                ErrorLabel.Text = $"Login failed: {ex.Content}";
+                // Log the API error details
+                Console.WriteLine($"API Error: {ex.StatusCode} - {ex.Message} - Content: {ex.Content}");
+                ErrorLabel.Text = $"Login failed: {ex.Message}";
                 ErrorLabel.IsVisible = true;
+
+                // Optionally, display a user-friendly message based on the status code
+                if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    ErrorLabel.Text = "Invalid login credentials. Please try again.";
+                }
+                else if (ex.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                {
+                    ErrorLabel.Text = "Bad request. Please check your input.";
+                }
+                else
+                {
+                    ErrorLabel.Text = "An error occurred while logging in. Please try again later.";
+                }
             }
             catch (Exception ex)
             {
+                // Log unexpected errors
+                Console.WriteLine($"Unexpected Error: {ex.Message}");
                 ErrorLabel.Text = $"An unexpected error occurred: {ex.Message}";
                 ErrorLabel.IsVisible = true;
             }

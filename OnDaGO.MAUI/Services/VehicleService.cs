@@ -10,11 +10,19 @@ namespace OnDaGO.MAUI.Services
     {
         private readonly IVehicleApi _api;
 
-        public VehicleService()
+        /*public VehicleService()
         {
             string baseUrl = DeviceInfo.Platform == DevicePlatform.Android
                 ? "http://10.0.2.2:5147"
                 : "https://localhost:7140";
+
+            _api = RestService.For<IVehicleApi>(baseUrl);
+        }*/
+
+        public VehicleService()
+        {
+            // Set the base URL to your Azure backend URL
+            string baseUrl = "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net/api/";
 
             _api = RestService.For<IVehicleApi>(baseUrl);
         }

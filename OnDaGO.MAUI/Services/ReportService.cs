@@ -10,11 +10,19 @@ namespace OnDaGO.MAUI.Services
     {
         private readonly IReportApi _reportApi;
 
-        public ReportService()
+        /*public ReportService()
         {
             string baseUrl = DeviceInfo.Platform == DevicePlatform.Android
                 ? "http://10.0.2.2:5147"  // For Android Emulator
                 : "https://localhost:7140"; // For iOS/Windows/Mac
+
+            _reportApi = RestService.For<IReportApi>(baseUrl);
+        }*/
+
+        public ReportService()
+        {
+            // Set the base URL to your Azure backend URL
+            string baseUrl = "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net/api/";
 
             _reportApi = RestService.For<IReportApi>(baseUrl);
         }

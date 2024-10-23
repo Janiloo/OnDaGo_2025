@@ -28,11 +28,20 @@ namespace OnDaGO.MAUI.Services
     {
         private readonly IFareMatrixApi _api;
 
-        public FareMatrixService()
+        
+        /*public FareMatrixService()
         {
             string baseUrl = DeviceInfo.Platform == DevicePlatform.Android
                 ? "http://10.0.2.2:5147"
                 : "https://localhost:7140";
+
+            _api = RestService.For<IFareMatrixApi>(baseUrl);
+        }*/
+
+        public FareMatrixService()
+        {
+            // Set the base URL to your Azure backend URL
+            string baseUrl = "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net/api/";
 
             _api = RestService.For<IFareMatrixApi>(baseUrl);
         }
