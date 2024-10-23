@@ -26,7 +26,7 @@
 		<!-- App Identifier -->
 		<ApplicationId>com.companyname.ondago.maui</ApplicationId>
 
-		<!---<EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>-->
+		<EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
 		
 		<AndroidPackageFormat>apk</AndroidPackageFormat>
 

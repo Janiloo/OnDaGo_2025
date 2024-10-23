@@ -37,7 +37,7 @@ public static class HttpClientFactory
     public static HttpClient CreateClient()
     {
         // Set the base URL to your Azure backend URL
-        string baseUrl = "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net/api/";
+        string baseUrl = "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net";
 
         var handler = new HttpClientHandler
         {

@@ -22,7 +22,7 @@ namespace OnDaGO.MAUI.Services
         public ReportService()
         {
             // Set the base URL to your Azure backend URL
-            string baseUrl = "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net/api/";
+            string baseUrl = "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net";
 
             _reportApi = RestService.For<IReportApi>(baseUrl);
         }
