@@ -23,7 +23,7 @@ namespace OnDaGO.MAUI.Services
                 : "https://localhost:7140"; // For Windows and other platforms
         }*/
 
-        /*public ApiService(HttpClient httpClient, SecureStorageService secureStorage)
+        public ApiService(HttpClient httpClient, SecureStorageService secureStorage)
         {
             _httpClient = httpClient;
             _secureStorage = secureStorage;
@@ -34,7 +34,7 @@ namespace OnDaGO.MAUI.Services
             _baseUrl = isTestingLocally
                 ? (DeviceInfo.Platform == DevicePlatform.Android ? "http://10.0.2.2:5147" : "https://localhost:7140")
                 : "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net";
-        }*/
+        }
 
         public async Task<string> GetProtectedDataAsync()
         {
