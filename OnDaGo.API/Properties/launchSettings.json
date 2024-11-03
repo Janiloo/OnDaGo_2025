@@ -24,7 +24,7 @@
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "https://localhost:7140;http://localhost:5147",
+      "applicationUrl": "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net;http://localhost:5147",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

@@ -35,10 +35,11 @@ namespace OnDaGO.MAUI.Views
             {
                 var result = await App.AuthApi.Login(user);
 
-                // Store the token securely
+                // Store the token and user ID securely
                 if (result != null)
                 {
                     await SecureStorage.SetAsync("jwt_token", result.Token); // Store token securely
+                    await SecureStorage.SetAsync("user_id", result.User.Id); // Store user ID securely
 
                     // Check if the user is an admin and navigate to AdminHomePage
                     if (result.User.Role == "Admin")
@@ -85,6 +86,7 @@ namespace OnDaGO.MAUI.Views
                 ErrorLabel.IsVisible = true;
             }
         }
+
 
         private async void OnForgotPasswordClicked(object sender, EventArgs e)
         {

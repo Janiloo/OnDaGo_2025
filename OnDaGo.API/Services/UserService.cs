@@ -1,9 +1,9 @@
-﻿    using MongoDB.Bson;
-    using MongoDB.Driver;
-    using OnDaGo.API.Models;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
+using OnDaGo.API.Models;
 
-    namespace OnDaGo.API.Services
-    {
+namespace OnDaGo.API.Services
+{
     public class UserService
     {
         private readonly IMongoCollection<UserItem> _users;
@@ -58,4 +58,4 @@
 
 
     }
-    }
+}

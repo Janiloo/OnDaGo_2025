@@ -53,11 +53,33 @@
                 </ImageButton.Shadow>
             </ImageButton>
 
-            <ImageButton Source="Images/maps.svg" Clicked="OnToggleBottomSheetClicked" WidthRequest="50" HeightRequest="50" BackgroundColor="Transparent" HorizontalOptions="Start" VerticalOptions="Start" Margin="0,0,0,15">
-                <ImageButton.Shadow>
+            <!-- Outer Frame acts as the thicker border -->
+            <Frame x:Name="OuterFrame"
+                    WidthRequest="57"
+                    HeightRequest="57"
+                    CornerRadius="35"
+                    Padding="10"
+                    BorderColor="{Binding StrokeColor}"
+                    HasShadow="True">
+                <Frame.Shadow>
                     <Shadow Brush="Gray" Offset="0, 0" Radius="10"/>
-                </ImageButton.Shadow>
-            </ImageButton>
+                </Frame.Shadow>
+                <Frame x:Name="ToggleBottomSheetFrame"
+                       WidthRequest="55"
+                       HeightRequest="55"
+                       Padding="0"
+                       CornerRadius="30"
+                       HasShadow="False">
+                    <ImageButton Source="Images/goldenlogo.png"
+                                 Clicked="OnToggleBottomSheetClicked"
+                                 WidthRequest="50"
+                                 HeightRequest="50">    
+                    </ImageButton>
+                </Frame>
+            </Frame>
+
+
+
 
         </VerticalStackLayout>
 
@@ -91,76 +113,98 @@
         </VerticalStackLayout>
 
         <!-- Frame with StackLayout for immersive view -->
-        <Frame x:Name="FrameLayout" CornerRadius="10" HasShadow="True" BackgroundColor="White" Padding="15" Margin="0, 0, 0, 60" VerticalOptions="End" HorizontalOptions="FillAndExpand" IsClippedToBounds="True" IsVisible="{Binding IsSearchVisible}">
-            <StackLayout x:Name="SearchFieldsStackLayout" Orientation="Vertical" Padding="10" Spacing="10" VerticalOptions="End">
-                <Button Text="Close" Clicked="OnCloseButtonClicked" HorizontalOptions="End" WidthRequest="60" HeightRequest="30"/>
-                <Label x:Name="FarePrice" Text="Fare Price: " />
-                <Label x:Name="DiscountedPrice" Text="Discounted Price: " />
-                <Picker x:Name="StartLocationPicker" Title="Select start location"/>
-                <Picker x:Name="EndLocationPicker" Title="Select destination"/>
-                <Button Text="Get Directions" Clicked="OnGetDirectionsClicked">
+        <Frame x:Name="FrameLayout" CornerRadius="15" HasShadow="True" BackgroundColor="#f8f9fa" Padding="20" Margin="0" VerticalOptions="End" HorizontalOptions="FillAndExpand" IsClippedToBounds="True" IsVisible="{Binding IsSearchVisible}">
+            <StackLayout x:Name="SearchFieldsStackLayout" Orientation="Vertical" Padding="10" Spacing="15" VerticalOptions="End">
+                <Button Text="Close" Clicked="OnCloseButtonClicked" HorizontalOptions="End" WidthRequest="70" HeightRequest="35" BackgroundColor="Red" TextColor="White"/>
+                <Label x:Name="FarePriceLabel" Text="Regular Price: " FontSize="Medium" TextColor="#343a40" />
+                <Label x:Name="DiscountedFarePriceLabel" Text="Student/Senior/PWD: " FontSize="Medium" TextColor="#343a40" />
+                <Picker x:Name="StartLocationPicker" Title="Select start location" />
+                <Picker x:Name="EndLocationPicker" Title="Select destination" />
+                <Button Text="Calculate Fare" Clicked="OnGetDirectionsClicked" BackgroundColor="#efbb6b" TextColor="White">
                     <Button.Shadow>
-                        <Shadow Brush="Gray" Offset="0,0" Radius="10"/>
+                        <Shadow Brush="Gray" Offset="0,2" Radius="10"/>
                     </Button.Shadow>
                 </Button>
             </StackLayout>
         </Frame>
 
         <!-- Bottom Sheet with Fare Matrix -->
-        <Grid x:Name="BottomSheet" BackgroundColor="White" HeightRequest="400" VerticalOptions="End" IsVisible="False" Opacity="0">
-            <StackLayout>
-                <Label Text="Golden Arc Transport Cooperative" Padding="20" FontAttributes="Bold"/>
-                <Label x:Name="PuvNoLabel" Text="PUV No: " />
-                <ScrollView x:Name="ScrollableContent" HeightRequest="300" IsVisible="False">
-                    <StackLayout>
-                        <!-- Fare Matrix Grid -->
-                        <Grid ColumnSpacing="5" RowSpacing="5" BackgroundColor="LightGray" Padding="5">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
+        <Grid x:Name="BottomSheet" BackgroundColor="White" HeightRequest="500" VerticalOptions="End" IsVisible="False" Opacity="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-                            <Label Text="Origin" FontAttributes="Bold" Grid.Row="0" Grid.Column="0" HorizontalOptions="Center"/>
-                            <Label Text="Destination" FontAttributes="Bold" Grid.Row="0" Grid.Column="1" HorizontalOptions="Center"/>
-                            <Label Text="Fare" FontAttributes="Bold" Grid.Row="0" Grid.Column="2" HorizontalOptions="Center"/>
-                            <Label Text="Discounted Fare" FontAttributes="Bold" Grid.Row="0" Grid.Column="3" HorizontalOptions="Center"/>
-                        </Grid>
+            <BoxView HeightRequest="5" BackgroundColor="Gray" HorizontalOptions="Center" VerticalOptions="Start" Margin="0,10" WidthRequest="40" />
 
-                        <CollectionView x:Name="FareMatrixCollection" Margin="0,10,0,0">
-                            <CollectionView.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid ColumnSpacing="5" RowSpacing="5" Padding="5">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <Label Text="{Binding Origin}" Grid.Row="0" Grid.Column="0" HorizontalOptions="Center"/>
-                                        <Label Text="{Binding Destination}" Grid.Row="0" Grid.Column="1" HorizontalOptions="Center"/>
-                                        <Label Text="{Binding Fare}" Grid.Row="0" Grid.Column="2" HorizontalOptions="Center"/>
-                                        <Label Text="{Binding DiscountedFare}" Grid.Row="0" Grid.Column="3" HorizontalOptions="Center"/>
-                                    </Grid>
-                                </DataTemplate>
-                            </CollectionView.ItemTemplate>
-                        </CollectionView>
-                    </StackLayout>
-                </ScrollView>
-                <Button Text="Close" Clicked="OnCloseBottomSheetClicked" />
+            <StackLayout Padding="5" Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,0">
+                <Image Source="goldenlogo.png" HeightRequest="100" WidthRequest="100" VerticalOptions="Center" Margin="10,10,0,0" />
+                <StackLayout Padding="10" Grid.Row="0" Orientation="Vertical">
+                    <Label Text="Golden Arc Transport Cooperative" Margin="10,20,0,0" FontAttributes="Bold" FontSize="Medium"/>
+                    <Label x:Name="PuvNoLabel" Text="PUV No: " Margin="10,5,0,0"/>
+                </StackLayout>
+                
             </StackLayout>
+
+            <ScrollView x:Name="ScrollableContent" HeightRequest="300" IsVisible="True" Grid.Row="1">
+                <StackLayout>
+                    <Label x:Name="ETALabel" FontSize="Medium" TextColor="#343a40" Margin="20,10,0,0" />
+
+                    <Label x:Name="PassengerCountLabel" Margin="20,10,0,0" Text="{Binding SelectedVehicle.PassengerCount, StringFormat='Passenger Count: {0}'}" />
+                    <!--<Label x:Name="MaxPassengerCountLabel" Margin="20,10,0,0" Text="{Binding SelectedVehicle.MaxPassengerCount, StringFormat='Max Passenger Count: {0}'}" />-->
+                    <Label x:Name="StandingPassengerCountLabel" Margin="20,10,0,10" />
+                    <!-- Fare Matrix Grid -->
+                    <Grid ColumnSpacing="5" RowSpacing="5" BackgroundColor="#efbb6b" Padding="5">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Label Text="Origin" FontAttributes="Bold" Grid.Row="0" Grid.Column="0" HorizontalOptions="Center" TextColor="White"/>
+                        <Label Text="Destination" FontAttributes="Bold" Grid.Row="0" Grid.Column="1" HorizontalOptions="Center" TextColor="White"/>
+                        <Label Text="Fare" FontAttributes="Bold" Grid.Row="0" Grid.Column="2" HorizontalOptions="Center" TextColor="White"/>
+                        <Label Text="Discounted Fare" FontAttributes="Bold" Grid.Row="0" Grid.Column="3" HorizontalOptions="Center" TextColor="White"/>
+                    </Grid>
+
+                    <CollectionView x:Name="FareMatrixCollection" Margin="0,10,0,0">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnSpacing="5" RowSpacing="5" Padding="5">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Label Text="{Binding Origin}" Grid.Row="0" Grid.Column="0" HorizontalOptions="Center" />
+                                    <Label Text="{Binding Destination}" Grid.Row="0" Grid.Column="1" HorizontalOptions="Center" />
+                                    <Label Text="{Binding Fare}" Grid.Row="0" Grid.Column="2" HorizontalOptions="Center" />
+                                    <Label Text="{Binding DiscountedFare}" Grid.Row="0" Grid.Column="3" HorizontalOptions="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </StackLayout>
+            </ScrollView>
+
+            <Button Text="Close" Clicked="OnCloseBottomSheetClicked" BackgroundColor="#efbb6b" TextColor="White" Grid.Row="2" Margin="10" />
+
             <Grid.GestureRecognizers>
                 <PanGestureRecognizer PanUpdated="OnBottomSheetPanUpdated"/>
             </Grid.GestureRecognizers>
         </Grid>
+
+
 
     </Grid>
 

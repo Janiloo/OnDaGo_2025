@@ -16,68 +16,133 @@ namespace OnDaGO.MAUI.Views
 {
     public partial class HomePage : ContentPage
     {
+        private System.Timers.Timer locationUpdateTimer;
         private GoogleMapsApiService _googleMapsApiService;
         private bool _isSearchVisible;
-        private VehicleService _vehicleService; // Declare the VehicleService
-        private System.Timers.Timer _vehicleRefreshTimer; // Fully qualify the Timer
-        private List<Pin> _currentPins = new List<Pin>(); // Store current pins to compare updates
+        private VehicleService _vehicleService;
+        private System.Timers.Timer _vehicleRefreshTimer;
+        private List<Pin> _currentPins = new List<Pin>();
+        private int passengerCount = 0;
+        private System.Timers.Timer passengerCountCheckTimer;
 
-        // Define the LocationItem class
+        public VehicleModel SelectedVehicle { get; set; }
+
         public class LocationItem
         {
             public string Name { get; set; }
             public Location Coordinates { get; set; }
         }
 
-
-        // Initialize all locations
         private List<LocationItem> allLocations = new List<LocationItem>
         {
             new LocationItem { Name = "Montalban Highway", Coordinates = new Location(14.7288, 121.1441) },
-            new LocationItem { Name = "Montaña", Coordinates = new Location(14.7151, 121.1360) },
             new LocationItem { Name = "Maly", Coordinates = new Location(14.7114, 121.1337) },
-            new LocationItem { Name = "Dulong Bayan", Coordinates = new Location(14.7010, 121.1253) },
-            new LocationItem { Name = "San Mateo Bayan", Coordinates = new Location(14.6968, 121.1205) },
-            new LocationItem { Name = "San Mateo Doctors Hospital", Coordinates = new Location(14.6936, 121.1174) },
-            new LocationItem { Name = "Ampid", Coordinates = new Location(14.6845, 121.1159) },
-            new LocationItem { Name = "Banaba", Coordinates = new Location(14.6793, 121.1128) },
+            new LocationItem { Name = "San Mateo Bayan", Coordinates = new Location(14.6967, 121.1205) },
             new LocationItem { Name = "Nangka", Coordinates = new Location(14.6737, 121.1094) },
-            new LocationItem { Name = "Fairlane", Coordinates = new Location(14.6628, 121.1061) },
-            new LocationItem { Name = "Tumana", Coordinates = new Location(14.6584, 121.1040) },
-            new LocationItem { Name = "Bantayog", Coordinates = new Location(14.6537, 121.1043) },
-            new LocationItem { Name = "Conception", Coordinates = new Location(14.6505, 121.1035) },
-            new LocationItem { Name = "Golden Valley", Coordinates = new Location(14.6467, 121.1017) },
-            new LocationItem { Name = "Home Owners Dr", Coordinates = new Location(14.6402, 121.0986) },
+            new LocationItem { Name = "Concepcion", Coordinates = new Location(14.6505, 121.1035) },
             new LocationItem { Name = "Savemore Bayan", Coordinates = new Location(14.6372, 121.0973) },
-            new LocationItem { Name = "Tañong", Coordinates = new Location(14.6361, 121.0925) },
             new LocationItem { Name = "Marikina Riverbanks", Coordinates = new Location(14.6329, 121.0828) },
-            new LocationItem { Name = "Katipunan", Coordinates = new Location(14.6310, 121.0725) },
-            new LocationItem { Name = "J.P Rizal", Coordinates = new Location(14.6294, 121.0692) },
-            new LocationItem { Name = "Anonas Ave.", Coordinates = new Location(14.6278, 121.0631) },
-            new LocationItem { Name = "LTO 20th Ave.", Coordinates = new Location(14.6265, 121.0604) },
-            new LocationItem { Name = "Daily Supermarket 20th Ave.", Coordinates = new Location(14.6248, 121.0572) },
-            new LocationItem { Name = "Alimall", Coordinates = new Location(14.6232, 121.0541) },
-            new LocationItem { Name = "Araneta Center Terminal", Coordinates = new Location(14.6212, 121.0553) }
+            new LocationItem { Name = "Cubao", Coordinates = new Location(14.6212, 121.0553) }
         };
+
+        private readonly Dictionary<(string, string), (int Regular, int Discounted)> fareMatrix = new()
+        {
+            { ("Montalban Highway", "Montalban Highway"), (15, 13) },
+            { ("Montalban Highway", "Maly"), (20, 16) },
+            { ("Montalban Highway", "San Mateo Bayan"), (25, 20) },
+            { ("Montalban Highway", "Nangka"), (30, 25) },
+            { ("Montalban Highway", "Concepcion"), (35, 30) },
+            { ("Montalban Highway", "Savemore Bayan"), (40, 35) },
+            { ("Montalban Highway", "Marikina Riverbanks"), (45, 40) },
+            { ("Montalban Highway", "Cubao"), (50, 45) },
+
+            { ("Maly", "Montalban Highway"), (20, 16) },
+            { ("Maly", "Maly"), (15, 13) },
+            { ("Maly", "San Mateo Bayan"), (20, 16) },
+            { ("Maly", "Nangka"), (25, 20) },
+            { ("Maly", "Concepcion"), (30, 25) },
+            { ("Maly", "Savemore Bayan"), (35, 30) },
+            { ("Maly", "Marikina Riverbanks"), (40, 35) },
+            { ("Maly", "Cubao"), (45, 30) },
+
+            { ("San Mateo Bayan", "Montalban Highway"), (25, 20) },
+            { ("San Mateo Bayan", "Maly"), (20, 16) },
+            { ("San Mateo Bayan", "San Mateo Bayan"), (15, 13) },
+            { ("San Mateo Bayan", "Nangka"), (20, 16) },
+            { ("San Mateo Bayan", "Concepcion"), (25, 20) },
+            { ("San Mateo Bayan", "Savemore Bayan"), (30, 25) },
+            { ("San Mateo Bayan", "Marikina Riverbanks"), (35, 30) },
+            { ("San Mateo Bayan", "Cubao"), (40, 35) },
+
+            { ("Nangka", "Montalban Highway"), (30, 25) },
+            { ("Nangka", "Maly"), (25, 20) },
+            { ("Nangka", "San Mateo Bayan"), (20, 16) },
+            { ("Nangka", "Nangka"), (15, 13) },
+            { ("Nangka", "Concepcion"), (20, 16) },
+            { ("Nangka", "Savemore Bayan"), (25, 20) },
+            { ("Nangka", "Marikina Riverbanks"), (30, 25) },
+            { ("Nangka", "Cubao"), (35, 30) },
+
+            { ("Concepcion", "Montalban Highway"), (35, 30) },
+            { ("Concepcion", "Maly"), (30, 25) },
+            { ("Concepcion", "San Mateo Bayan"), (25, 20) },
+            { ("Concepcion", "Nangka"), (20, 16) },
+            { ("Concepcion", "Concepcion"), (15, 13) },
+            { ("Concepcion", "Savemore Bayan"), (20, 16) },
+            { ("Concepcion", "Marikina Riverbanks"), (25, 20) },
+            { ("Concepcion", "Cubao"), (30, 25) },
+
+            { ("Savemore Bayan", "Montalban Highway"), (40, 35) },
+            { ("Savemore Bayan", "Maly"), (35, 30) },
+            { ("Savemore Bayan", "San Mateo Bayan"), (30, 25) },
+            { ("Savemore Bayan", "Nangka"), (25, 20) },
+            { ("Savemore Bayan", "Concepcion"), (20, 16) },
+            { ("Savemore Bayan", "Savemore Bayan"), (15, 13) },
+            { ("Savemore Bayan", "Marikina Riverbanks"), (20, 16) },
+            { ("Savemore Bayan", "Cubao"), (25, 20) },
+
+            { ("Marikina Riverbanks", "Montalban Highway"), (45, 40) },
+            { ("Marikina Riverbanks", "Maly"), (40, 35) },
+            { ("Marikina Riverbanks", "San Mateo Bayan"), (35, 30) }, 
+            { ("Marikina Riverbanks", "Nangka"), (30, 25) },
+            { ("Marikina Riverbanks", "Concepcion"), (25, 20) },
+            { ("Marikina Riverbanks", "Savemore Bayan"), (20, 16) },
+            { ("Marikina Riverbanks", "Marikina Riverbanks"), (15, 16) },
+            { ("Marikina Riverbanks", "Cubao"), (20, 16) },
+
+            { ("Cubao", "Montalban Highway"), (50, 45) },
+            { ("Cubao", "Maly"), (45, 40) },
+            { ("Cubao", "San Mateo Bayan"), (40, 35) }, 
+            { ("Cubao", "Nangka"), (35, 30) },
+            { ("Cubao", "Concepcion"), (30, 25) },
+            { ("Cubao", "Savemore Bayan"), (25, 20) }, 
+            { ("Cubao", "Marikina Riverbanks"), (20, 16) },
+            { ("Cubao", "Cubao"), (15, 13) }
+        };
+
+
 
         public HomePage()
         {
             InitializeComponent();
             _googleMapsApiService = new GoogleMapsApiService("YOUR_GOOGLE_MAPS_API_KEY");
-            _vehicleService = new VehicleService(); // Initialize the VehicleService
-            //UpdateMapToUserLocation();
-            // Increase timer interval to 5000 ms (5 seconds)
+            _vehicleService = new VehicleService();
             _vehicleRefreshTimer = new System.Timers.Timer(1000);
             _vehicleRefreshTimer.Elapsed += OnVehicleRefreshTimerElapsed;
             _vehicleRefreshTimer.Start();
+            StartLocationUpdates();
             _isSearchVisible = false;
             FrameLayout.IsVisible = false;
+            StartPassengerCountMonitor();
             FrameLayout.TranslationY = FrameLayout.Height;
             LoadVehicles();
-
             var tapGestureRecognizer = new TapGestureRecognizer();
             tapGestureRecognizer.Tapped += OnOverlayTapped;
             Overlay.GestureRecognizers.Add(tapGestureRecognizer);
+
+            StartLocationPicker.SelectedIndexChanged += (s, e) => UpdateFare();
+            EndLocationPicker.SelectedIndexChanged += (s, e) => UpdateFare();
+
 
             foreach (var loc in allLocations)
             {
@@ -86,19 +151,87 @@ namespace OnDaGO.MAUI.Views
             }
             EndLocationPicker.Items.Reverse();
 
-            // Initialize the map with the default toggle value
-            OnLocationToggled(null, new ToggledEventArgs(true)); // Assume the default is Cubao
+            OnLocationToggled(null, new ToggledEventArgs(true));
+
+            UpdateMapToUserLocation();
         }
+
+        private void UpdateFare()
+        {
+            if (StartLocationPicker.SelectedIndex == -1 || EndLocationPicker.SelectedIndex == -1)
+            {
+                return;
+            }
+
+            string startLocation = StartLocationPicker.SelectedItem.ToString();
+            string endLocation = EndLocationPicker.SelectedItem.ToString();
+
+            // Check if there's a direct match in fareMatrix, even for the same location
+            if (fareMatrix.TryGetValue((startLocation, endLocation), out var fare) ||
+                fareMatrix.TryGetValue((endLocation, startLocation), out fare)) // Check both directions
+            {
+                FarePriceLabel.Text = $"Regular Price: {fare.Regular}";
+                DiscountedFarePriceLabel.Text = $"Student/Senior/PWD: {fare.Discounted}";
+            }
+            else
+            {
+                FarePriceLabel.Text = "Regular Price: N/A";
+                DiscountedFarePriceLabel.Text = "Student/Senior/PWD: N/A";
+            }
+        }
+
+
+
+        private void StartLocationUpdates()
+        {
+            locationUpdateTimer = new System.Timers.Timer(3000); // Set interval in milliseconds (e.g., 3000ms = 3 seconds)
+            locationUpdateTimer.Elapsed += async (sender, e) => await UpdateMapToUserLocation();
+            locationUpdateTimer.AutoReset = true;
+            locationUpdateTimer.Enabled = true;
+        }
+
+        private bool initialLocationSet = false;  // Flag to check if the map was centered initially
+
+        private async Task UpdateMapToUserLocation()
+        {
+            try
+            {
+                var userLocation = await Geolocation.GetLocationAsync(new GeolocationRequest
+                {
+                    DesiredAccuracy = GeolocationAccuracy.Best,
+                    Timeout = TimeSpan.FromSeconds(10)
+                });
+
+                if (userLocation != null)
+                {
+                    Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        // Only set the map region once, at the start
+                        if (!initialLocationSet)
+                        {
+                            map.MoveToRegion(MapSpan.FromCenterAndRadius(
+                                new Location(userLocation.Latitude, userLocation.Longitude),
+                                new Microsoft.Maui.Maps.Distance(500)));
+
+                            initialLocationSet = true;
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error", $"An error occurred while retrieving location: {ex.Message}", "OK");
+            }
+        }
+
+
 
         private async void LoadVehicles()
         {
             try
             {
                 Console.WriteLine("Attempting to load vehicles...");
-
-                // Fetch vehicle data
                 List<VehicleModel> vehicles = await _vehicleService.GetVehiclesAsync();
-
                 if (vehicles == null || vehicles.Count == 0)
                 {
                     Console.WriteLine("No vehicles found.");
@@ -106,10 +239,9 @@ namespace OnDaGO.MAUI.Views
                     return;
                 }
 
-                // Optimize UI updates using Device.BeginInvokeOnMainThread for safe UI thread access
+
                 Device.BeginInvokeOnMainThread(() =>
                 {
-                    // Get updated pins based on changed vehicle locations
                     UpdatePins(vehicles);
                 });
             }
@@ -123,46 +255,89 @@ namespace OnDaGO.MAUI.Views
 
         private void OnVehicleRefreshTimerElapsed(object sender, ElapsedEventArgs e)
         {
-            // Refresh the vehicle data
             LoadVehicles();
         }
 
 
-        private void UpdatePins(List<VehicleModel> vehicles)
+        private async void UpdatePins(List<VehicleModel> vehicles)
         {
-            // Clear existing vehicle pins from the map, but keep allLocations pins intact
-            var vehiclePins = map.Pins.Where(pin => pin.Label.StartsWith("PUV No:")).ToList(); // Assuming vehicle pins start with "PUV No:"
-            foreach (var pin in vehiclePins)
+            //var userLocation = new Location(14.7288, 121.1441);
+            var userLocation = await Geolocation.GetLastKnownLocationAsync();
+            if (userLocation == null)
             {
-                map.Pins.Remove(pin);
+                await DisplayAlert("Error", "User location could not be determined.", "OK");
+                return;
             }
 
-            // Add new pins for each vehicle
-            foreach (var vehicle in vehicles)
+            bool isUserWithinYellowCircle = false;
+
+            // Check if the user is within any yellow-circled locations
+            foreach (var location in allLocations)
             {
-                var pin = new Pin
+                var distanceToLocation = userLocation.CalculateDistance(location.Coordinates, DistanceUnits.Kilometers);
+                if (distanceToLocation <= 0.01) // Adjust radius as needed (0.01 km = 10 meters)
                 {
-                    Label = $"PUV No: {vehicle.PuvNo}",
-                    Location = new Location(vehicle.CurrentLat, vehicle.CurrentLong),
-                    Type = PinType.Place
-                };
-
-                // Handle the pin click event to show the bottom sheet
-                pin.MarkerClicked += (s, args) =>
-                {
-                    args.HideInfoWindow = true; // Hide default info window
-
-                    // Show the bottom sheet
-                    BottomSheet.IsVisible = true;
-                    PuvNoLabel.Text = $"PUV No: {vehicle.PuvNo}";
-                    // You can update more information in the bottom sheet here
-                };
-
-                // Add the pin to the map
-                map.Pins.Add(pin);
+                    isUserWithinYellowCircle = true;
+                    break;
+                }
             }
 
-            Console.WriteLine($"Updated {vehicles.Count} vehicle pins.");
+            // If the user is within a yellow circle, draw a 2 km circle around the user location
+            if (isUserWithinYellowCircle)
+            {
+                // Clear any previous 2 km radius circle if needed
+                map.MapElements.Clear();
+
+                // Draw the 2 km radius circle around the user
+                var userRadiusCircle = new Circle
+                {
+                    Center = new Location(userLocation.Latitude, userLocation.Longitude),
+                    Radius = new Microsoft.Maui.Maps.Distance(2000), // 2 km radius
+                    StrokeColor = Colors.Green, // Customize color
+                    StrokeWidth = 3,
+                    FillColor = Colors.Green.WithAlpha(0.2f) // Adjust fill color opacity
+                };
+                map.MapElements.Add(userRadiusCircle);
+
+                const double maxDisplayRadius = 2.0; // 2 km radius for displaying vehicles
+
+                foreach (var vehicle in vehicles)
+                {
+                    var vehicleLocation = new Location(vehicle.CurrentLat, vehicle.CurrentLong);
+                    var distance = userLocation.CalculateDistance(vehicleLocation, DistanceUnits.Kilometers);
+
+                    if (distance <= maxDisplayRadius)
+                    {
+                        // Calculate ETA in minutes
+                        const double averageSpeedKmH = 20.0;
+                        double etaMinutes = (distance / averageSpeedKmH) * 60;
+
+                        var pin = new Pin
+                        {
+                            Label = $"Plate No: {vehicle.PuvNo} | ETA: {etaMinutes:F1} mins | Passengers: {vehicle.PassengerCount}/{vehicle.MaxPassengerCount}",
+                            Location = vehicleLocation,
+                            Type = PinType.Place,
+                            BindingContext = vehicle
+                        };
+                        map.Pins.Add(pin);
+                    }
+                }
+            }
+        }
+
+
+
+        private void UpdateStandingPassengerCount(int currentPassengerCount, int maxPassengerCount)
+        {
+            int standingPassengers = 0;
+
+            if (currentPassengerCount > maxPassengerCount)
+            {
+                standingPassengers = Math.Min(currentPassengerCount - maxPassengerCount, 10); // Limit to 10 standing passengers
+            }
+
+            // Update the standing passenger label
+            StandingPassengerCountLabel.Text = $"Standing Passengers: {standingPassengers}/10";
         }
 
         private async void LoadFareMatrixInBottomSheet()
@@ -171,8 +346,8 @@ namespace OnDaGO.MAUI.Views
             {
                 var fareMatrixService = new FareMatrixService();
                 var fareMatrixList = await fareMatrixService.GetFareMatrixAsync();
-                FareMatrixCollection.ItemsSource = fareMatrixList;  // Bind the fetched data to the CollectionView
-                ScrollableContent.IsVisible = true;  // Make sure the content is visible
+                FareMatrixCollection.ItemsSource = fareMatrixList;
+                ScrollableContent.IsVisible = true;
             }
             catch (Exception ex)
             {
@@ -188,7 +363,7 @@ namespace OnDaGO.MAUI.Views
                 await SlideDown(FrameLayout);
                 _isSearchVisible = false;
                 FrameLayout.IsVisible = false;
-                Overlay.IsVisible = false; // Hide the overlay after closing FrameLayout
+                Overlay.IsVisible = false;
 
             }
         }
@@ -197,13 +372,10 @@ namespace OnDaGO.MAUI.Views
 
         private async void OnLocationToggled(object sender, EventArgs e)
         {
-            // Toggle the state
             isToggled = !isToggled;
 
-            // Update the image source
             ToggleImage.Source = isToggled ? "Images/toggleon.svg" : "Images/toggleoff.svg";
 
-            // Clear existing pins and map elements
             map.Pins.Clear();
             map.MapElements.Clear();
             LocationLabel.Text = isToggled ? "Cubao" : "Montalban";
@@ -219,9 +391,8 @@ namespace OnDaGO.MAUI.Views
             }
             else
             {
-                DrawMontalbanPolyline(); // Placeholder for Montalban
+                DrawMontalbanPolyline();
             }
-            // Add pins and circles to the map
             foreach (var loc in filteredLocations)
             {
                 var pin = new Pin
@@ -243,16 +414,15 @@ namespace OnDaGO.MAUI.Views
                 var yellowCircle = new Circle
                 {
                     Center = loc.Coordinates,
-                    Radius = new Microsoft.Maui.Maps.Distance(10), // 10 meters
-                    StrokeColor = Microsoft.Maui.Graphics.Colors.Yellow, // Yellow color
+                    Radius = new Microsoft.Maui.Maps.Distance(15),
+                    StrokeColor = Microsoft.Maui.Graphics.Colors.Yellow,
                     StrokeWidth = 5,
-                    FillColor = Microsoft.Maui.Graphics.Colors.Yellow.WithAlpha(0.5f) // 50% opacity
+                    FillColor = Microsoft.Maui.Graphics.Colors.Yellow.WithAlpha(0.5f)
                 };
                 map.MapElements.Add(yellowCircle);
             }
-            // Center the map to show both Rodriguez Rizal and Quezon City
-            var centerLocation = new Location(14.658330, 121.103572); // Center between Rodriguez and Quezon City
-            map.MoveToRegion(MapSpan.FromCenterAndRadius(centerLocation, new Microsoft.Maui.Maps.Distance(6000))); // Adjust the distance for zoom level
+            var centerLocation = new Location(14.658330, 121.103572);
+            map.MoveToRegion(MapSpan.FromCenterAndRadius(centerLocation, new Microsoft.Maui.Maps.Distance(6000)));
 
         }
 
@@ -260,11 +430,10 @@ namespace OnDaGO.MAUI.Views
         {
             var cubaoPolyline = new Polyline
             {
-                StrokeColor = Colors.Blue, // Set the polyline color
-                StrokeWidth = 20 // Set the stroke width
+                StrokeColor = Colors.Blue,
+                StrokeWidth = 20
             };
 
-            // Add all the coordinates for Cubao
             cubaoPolyline.Geopath.Add(new Location(14.729193, 121.142264));
             cubaoPolyline.Geopath.Add(new Location(14.728758, 121.144023));
             cubaoPolyline.Geopath.Add(new Location(14.727637, 121.143701));
@@ -521,109 +690,6 @@ namespace OnDaGO.MAUI.Views
             public string Icon { get; set; }
         }
 
-        /*private async void OnGetDirectionsClicked(object sender, EventArgs e)
-        {
-            map.IsTrafficEnabled = false;
-
-            if (StartLocationPicker.SelectedIndex == -1 || EndLocationPicker.SelectedIndex == -1)
-            {
-                await DisplayAlert("Error", "Please select both start and end locations.", "OK");
-                return;
-            }
-
-            string startLocationName = StartLocationPicker.SelectedItem.ToString();
-            string endLocationName = EndLocationPicker.SelectedItem.ToString();
-
-            if (startLocationName == endLocationName)
-            {
-                await DisplayAlert("Error", "Start and end locations cannot be the same.", "OK");
-                return;
-            }
-
-            // Get directions and display them
-            await GetDirectionsAsync(startLocationName, endLocationName);
-        }
-
-
-        private async Task GetDirectionsAsync(string startLocationName, string endLocationName)
-        {
-            // Retrieve the selected LocationItems
-            var startLocationItem = allLocations.FirstOrDefault(loc => loc.Name == startLocationName);
-            var endLocationItem = allLocations.FirstOrDefault(loc => loc.Name == endLocationName);
-
-            if (startLocationItem == null || endLocationItem == null)
-            {
-                await DisplayAlert("Error", "Selected locations are invalid.", "OK");
-                return;
-            }
-
-            var start = startLocationItem.Coordinates;
-            var end = endLocationItem.Coordinates;
-
-            try
-            {
-                var directions = await _googleMapsApiService.GetDirectionsAsync(start.Latitude, start.Longitude, end.Latitude, end.Longitude);
-
-                // Log the full response for debugging
-                string responseContent = directions.ToString();
-                await DisplayAlert("API Response", responseContent, "OK"); // Show the API response (you can remove this later)
-
-                var status = directions["status"]?.ToString();
-                if (status != "OK")
-                {
-                    await DisplayAlert("Error", $"Directions API returned status: {status}", "OK");
-                    return;
-                }
-
-                if (directions != null && directions["routes"]?.Any() == true)
-                {
-                    var route = directions["routes"].First();
-                    var encodedPoints = route["overview_polyline"]?["points"]?.ToString();
-
-                    if (!string.IsNullOrEmpty(encodedPoints))
-                    {
-                        var points = DecodePolyline(encodedPoints);
-
-                        // Filter points to limit the route between the two pins
-                        var filteredPoints = points.Where(p => IsPointWithinRange(p, start, end)).ToList();
-
-                        var polyline = new Polyline
-                        {
-                            StrokeColor = Color.FromArgb("#efbb6b"), // Updated color
-                            StrokeWidth = 30,
-                        };
-
-                        foreach (var point in filteredPoints)
-                        {
-                            polyline.Geopath.Add(new Location(point.Latitude, point.Longitude));
-                        }
-
-                        // Clear existing polylines
-                        map.MapElements.Clear();
-
-                        // Add the new polyline
-                        map.MapElements.Add(polyline);
-
-                        // Adjust the map to show the route between the two pins
-                        var region = CalculateMapRegion(filteredPoints);
-                        map.MoveToRegion(region);
-                    }
-                    else
-                    {
-                        await DisplayAlert("Error", "Unable to retrieve route information. Encoded points missing.", "OK");
-                    }
-                }
-                else
-                {
-                    await DisplayAlert("Error", "No routes found in the response.", "OK");
-                }
-            }
-            catch (Exception ex)
-            {
-                await DisplayAlert("Exception", $"An error occurred: {ex.Message}", "OK");
-            }
-        }*/
-
         private List<Pin> savedPins = new List<Pin>(); // To store the pins
 
         private async void OnGetDirectionsClicked(object sender, EventArgs e)
@@ -678,22 +744,15 @@ namespace OnDaGO.MAUI.Views
             // Add the straight line polyline
             map.MapElements.Add(polyline);
 
-            // Adjust the map to show the line between the two points
             var region = CalculateMapRegion(new List<Location> { start, end });
             map.MoveToRegion(region);
         }
 
-
-
-        // Helper function to filter points within the straight path between start and end
         private bool IsPointWithinRange(Location point, Location start, Location end)
         {
-            // Implement logic to check if point is within a reasonable range between start and end
-            // You can calculate distance from the line formed by start and end locations
             return true;
         }
 
-        // Helper function to calculate the map region
         private MapSpan CalculateMapRegion(List<Location> points)
         {
             var minLat = points.Min(p => p.Latitude);
@@ -704,7 +763,7 @@ namespace OnDaGO.MAUI.Views
             var centerLat = (minLat + maxLat) / 2;
             var centerLng = (minLng + maxLng) / 2;
 
-            var spanLat = Math.Abs(maxLat - minLat) * 1.2; // Add some padding
+            var spanLat = Math.Abs(maxLat - minLat) * 1.2;
             var spanLng = Math.Abs(maxLng - minLng) * 1.2;
 
             return new MapSpan(new Location(centerLat, centerLng), spanLat, spanLng);
@@ -713,7 +772,6 @@ namespace OnDaGO.MAUI.Views
 
         private void ClearPolylines()
         {
-            // Clear existing polylines and elements from the map
             map.MapElements.Clear();
         }
 
@@ -810,35 +868,96 @@ namespace OnDaGO.MAUI.Views
             // Toggle the visibility flag
             _isSearchVisible = !_isSearchVisible;
         }
-
+        //var userLocation = new Location(14.6505, 121.1035);//var userLocation = await Geolocation.GetLastKnownLocationAsync();
         private async void OnToggleBottomSheetClicked(object sender, EventArgs e)
         {
+            // Use a default location for testing (or use Geolocation if available)
+            var userLocation = await Geolocation.GetLastKnownLocationAsync();
+            //var userLocation = new Location(14.7288, 121.1441);
+            if (userLocation == null)
+            {
+                await DisplayAlert("Error", "User location could not be determined.", "OK");
+                return;
+            }
+
+            // Fetch the list of vehicles
+            List<VehicleModel> vehicles = await _vehicleService.GetVehiclesAsync();
+            if (vehicles == null || vehicles.Count == 0)
+            {
+                await DisplayAlert("Info", "No vehicles available.", "OK");
+                // Reset stroke color when no vehicles are available
+                OuterFrame.BorderColor = Colors.Transparent;
+                ToggleBottomSheetFrame.BorderColor = Colors.Transparent;
+                return;
+            }
+
+            // Identify the closest vehicle to the user’s location
+            SelectedVehicle = vehicles
+                .OrderBy(vehicle => userLocation.CalculateDistance(new Location(vehicle.CurrentLat, vehicle.CurrentLong), DistanceUnits.Kilometers))
+                .FirstOrDefault();
+
+            if (SelectedVehicle == null)
+            {
+                await DisplayAlert("Info", "No vehicle found within range.", "OK");
+                OuterFrame.BorderColor = Colors.Transparent; // Reset stroke color
+                ToggleBottomSheetFrame.BorderColor = Colors.Transparent;
+                return;
+            }
+
+            // Check if the selected vehicle is within the 2 km radius of the user's location
+            var vehicleLocation = new Location(SelectedVehicle.CurrentLat, SelectedVehicle.CurrentLong);
+            const double maxDisplayRadius = 2.0; // 2 km radius for displaying vehicle details
+            var distanceToVehicle = userLocation.CalculateDistance(vehicleLocation, DistanceUnits.Kilometers);
+
+            if (distanceToVehicle > maxDisplayRadius)
+            {
+                await DisplayAlert("Info", "The closest vehicle is not within the 2 km radius.", "OK");
+                OuterFrame.BorderColor = Colors.Transparent; // Reset stroke color
+                ToggleBottomSheetFrame.BorderColor = Colors.Transparent;
+                return;
+            }
+
             if (!BottomSheet.IsVisible)
             {
-                BottomSheet.IsVisible = true; // Show the Bottom Sheet
-                await BottomSheet.FadeTo(1, 250); // Fade in
-
+                // Show the BottomSheet
+                BottomSheet.IsVisible = true;
+                await BottomSheet.FadeTo(1, 250);
                 await SlideDown(FrameLayout);
-
-
-                // Start off-screen (just above the bottom)
                 map.IsTrafficEnabled = false;
-                BottomSheet.TranslationY = this.Height; // Adjust to fit the screen size
-                await BottomSheet.TranslateTo(0, 0, 300, Easing.CubicInOut); // Slide up to reveal
-                ScrollableContent.IsVisible = true; // Show the scrollable content
+                BottomSheet.TranslationY = this.Height;
+                await BottomSheet.TranslateTo(0, 0, 300, Easing.CubicInOut);
+                ScrollableContent.IsVisible = true;
                 LoadFareMatrixInBottomSheet();
+
+                // Calculate ETA for the closest vehicle
+                const double averageSpeedKmH = 20.0;
+                double etaMinutes = (distanceToVehicle / averageSpeedKmH) * 60;
+
+                // Update the BottomSheet labels with vehicle information
+                ETALabel.Text = $"ETA: {etaMinutes:F1} mins";
+                PuvNoLabel.Text = $"PUV No: {SelectedVehicle.PuvNo}";
+                PassengerCountLabel.Text = $"Passenger Count: {SelectedVehicle.PassengerCount}/{SelectedVehicle.MaxPassengerCount}";
+
+                // Update the stroke color based on the vehicle's passenger count
+                SetButtonStrokeColor(SelectedVehicle.PassengerCount);
             }
             else
             {
-                await BottomSheet.TranslateTo(0, this.Height, 300, Easing.CubicInOut); // Slide down
-                await BottomSheet.FadeTo(0, 250); // Fade out
+                // Hide the BottomSheet if it’s already visible
+                await BottomSheet.TranslateTo(0, this.Height, 300, Easing.CubicInOut);
+                await BottomSheet.FadeTo(0, 250);
                 map.IsTrafficEnabled = true;
-                BottomSheet.IsVisible = false; // Hide the Bottom Sheet
-                ScrollableContent.IsVisible = false; // Hide the scrollable content
+                BottomSheet.IsVisible = false;
+                ScrollableContent.IsVisible = false;
 
-
+                // Reset stroke color when hiding the BottomSheet
+                OuterFrame.BorderColor = Colors.Transparent;
+                ToggleBottomSheetFrame.BorderColor = Colors.Transparent;
             }
         }
+
+
+
 
         private async void OnCloseBottomSheetClicked(object sender, EventArgs e)
         {
@@ -888,7 +1007,62 @@ namespace OnDaGO.MAUI.Views
         }
 
 
+        private void StartPassengerCountMonitor()
+        {
+            passengerCountCheckTimer = new System.Timers.Timer(1000); // Set interval (e.g., 1 second)
+            passengerCountCheckTimer.Elapsed += OnPassengerCountCheck;
+            passengerCountCheckTimer.AutoReset = true;
+            passengerCountCheckTimer.Enabled = true;
+        }
 
+        private void OnPassengerCountCheck(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            // Assuming SelectedVehicle is an existing property with a PassengerCount
+            passengerCount = SelectedVehicle?.PassengerCount ?? 0;
+
+            UpdateStandingPassengerCount(passengerCount, SelectedVehicle?.MaxPassengerCount ?? 0);
+
+            // Use the MainThread to update UI elements as timers run on a background thread
+            Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+            {
+                SetButtonStrokeColor(passengerCount);
+            });
+        }
+
+        private void SetButtonStrokeColor(int count)
+        {
+            Color strokeColor;
+
+            if (count >= 0 && count <= 15)
+            {
+                strokeColor = Colors.LimeGreen;
+            }
+            else if (count >= 16 && count <= 25)
+            {
+                strokeColor = Colors.Orange;
+            }
+            else if (count >= 26 && count <=30)
+            {
+                strokeColor = Colors.Red;
+            }
+            else
+            {
+                strokeColor = Colors.DarkRed; // Default for zero passengers
+            }
+
+            // Set the border color of the frame
+            // Set the border color of the outer frame
+            OuterFrame.BorderColor = strokeColor;
+
+            ToggleBottomSheetFrame.BorderColor = strokeColor;
+        }
+
+        protected override void OnDisappearing()
+        {
+            // Stop the timer when the page is no longer visible
+            passengerCountCheckTimer?.Stop();
+            base.OnDisappearing();
+        }
 
 
         private async void OnSettingsClicked(object sender, EventArgs e)
@@ -917,52 +1091,7 @@ namespace OnDaGO.MAUI.Views
             }
         }
 
-        private async Task UpdateMapToUserLocation()
-        {
-            try
-            {
-                var userLocation = await Geolocation.Default.GetLastKnownLocationAsync();
-
-                if (userLocation != null)
-                {
-                    // Set the map's region to the user's location with a closer zoom level
-                    map.MoveToRegion(MapSpan.FromCenterAndRadius(
-                        new Location(userLocation.Latitude, userLocation.Longitude),
-                        new Microsoft.Maui.Maps.Distance(0.1))); // Zoom level is closer to the user
-
-                    // Optionally, add a pin at the user's location
-                    var userPin = new Pin
-                    {
-                        Label = "You are here",
-                        Location = new Location(userLocation.Latitude, userLocation.Longitude),
-                        Type = PinType.Place
-                    };
-                    map.Pins.Add(userPin);
-
-                    // Add a circle around the user's location
-                    var userCircle = new Circle
-                    {
-                        Center = new Location(userLocation.Latitude, userLocation.Longitude),
-                        Radius = new Microsoft.Maui.Maps.Distance(50), // 50 meters
-                        StrokeColor = Colors.Blue,
-                        StrokeWidth = 2,
-                        FillColor = Colors.Blue.WithAlpha(0.5f)
-                    };
-                    map.MapElements.Add(userCircle);
-
-                    // Check the user's proximity to the predefined locations
-                    await CheckUserProximity();
-                }
-                else
-                {
-                    await DisplayAlert("Error", "Unable to retrieve user location.", "OK");
-                }
-            }
-            catch (Exception ex)
-            {
-                await DisplayAlert("Error", $"An error occurred while retrieving user location: {ex.Message}", "OK");
-            }
-        }
+        
 
         protected override bool OnBackButtonPressed()
         {
@@ -983,19 +1112,6 @@ namespace OnDaGO.MAUI.Views
 
             return true; // Return true to prevent default back navigation behavior
         }
-
-        //private async void OnProfileClickes(object sender, EventArgs e)
-        //{
-        // Navigate to ProfilePage
-        //    await Navigation.PushAsync(new ProfilePage());
-        //}
-
-        //private async void OnHomeClicked(object sender, EventArgs e)
-        //{
-        // Optionally refresh or perform some action for Home tab
-        //}
-
-
 
         private async void OnSettingsClickes(object sender, EventArgs e)
         {

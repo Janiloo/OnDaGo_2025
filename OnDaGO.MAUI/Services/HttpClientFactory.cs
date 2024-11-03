@@ -39,11 +39,8 @@ public static class HttpClientFactory
         // Set the base URL to your Azure backend URL
         string baseUrl = "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net";
 
-        var handler = new HttpClientHandler
-        {
-            // Bypass SSL certificate validation (consider removing this in production)
-            ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true
-        };
+        var handler = new HttpClientHandler();
+        
 
         var client = new HttpClient(handler)
         {

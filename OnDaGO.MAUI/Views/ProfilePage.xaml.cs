@@ -20,8 +20,10 @@ public partial class ProfilePage : ContentPage
         try
         {
             var token = await SecureStorage.GetAsync("jwt_token");
+            var userId = await SecureStorage.GetAsync("user_id");
 
-            if (!string.IsNullOrEmpty(token))
+            if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(userId))
+
             {
                 var client = HttpClientFactory.CreateClient();
                 var authApi = RestService.For<IAuthApi>(client);
@@ -30,11 +32,8 @@ public partial class ProfilePage : ContentPage
                 if (response != null)
                 {
                     NameLabel.Text = $"{response.Name}";
-                    EmailLabel.Text = $"Email: {response.Email}";
-                    PhoneNumberLabel.Text = $"PhoneNumber: {response.PhoneNumber}";
-
-                    // Display the user ID
-                    UserIdLabel.Text = $"User ID: {response.Id}";
+                    EmailLabel.Text = $"{response.Email}";
+                    PhoneNumberLabel.Text = $"{response.PhoneNumber}";
                 }
             }
         }

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿﻿using Microsoft.AspNetCore.Mvc;
 using OnDaGo.API.Models;
 using OnDaGo.API.Services;
 using System;
@@ -9,6 +9,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using Newtonsoft.Json.Linq;
 
 namespace OnDaGo.API.Controllers
 {
@@ -18,12 +19,16 @@ namespace OnDaGo.API.Controllers
     {
         private readonly UserService _userService;
         private readonly EmailService _emailService;
+        private readonly IdAnalyzerClient _idAnalyzerClient;
+        private readonly ILogger<UsersController> _logger;
 
-        public UsersController(UserService userService, EmailService emailService)
+        public UsersController(UserService userService, EmailService emailService, IdAnalyzerClient idAnalyzerClient)
         {
             _userService = userService;
             _emailService = emailService;
+            _idAnalyzerClient = idAnalyzerClient;
         }
+
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegistrationRequest userRequest)
@@ -31,28 +36,19 @@ namespace OnDaGo.API.Controllers
             if (userRequest == null ||
                 string.IsNullOrWhiteSpace(userRequest.Name) ||
                 string.IsNullOrWhiteSpace(userRequest.Email) ||
-                string.IsNullOrWhiteSpace(userRequest.PasswordHash))
-                //string.IsNullOrWhiteSpace(userRequest.DocumentImagePath) ||
-                //string.IsNullOrWhiteSpace(userRequest.FaceImagePath))
+                string.IsNullOrWhiteSpace(userRequest.PasswordHash) ||
+                string.IsNullOrWhiteSpace(userRequest.DocumentImageBase64) ||
+                string.IsNullOrWhiteSpace(userRequest.SelfieImage))
             {
-                return BadRequest("Invalid user data. Name, email, and password are required.");
+                return BadRequest("Name, email, and password are required.");
             }
 
+            // Check for existing user by email
             var existingUser = await _userService.FindByEmailAsync(userRequest.Email);
             if (existingUser != null)
             {
                 return Conflict("User with this email already exists.");
             }
-
-            // Verify ID using the ID Analyzer API
-            /*var verificationResult = await VerifyIdWithApi(userRequest.DocumentImagePath, userRequest.FaceImagePath);
-            if (!verificationResult.IsSuccess)
-            {
-                return BadRequest("ID verification failed: " + verificationResult.ErrorMessage);
-            }*/
-
-
-            var role = string.IsNullOrWhiteSpace(userRequest.Role) ? "User" : userRequest.Role;
 
             var user = new UserItem
             {
@@ -60,27 +56,68 @@ namespace OnDaGo.API.Controllers
                 Email = userRequest.Email,
                 PasswordHash = HashPassword(userRequest.PasswordHash),
                 PhoneNumber = userRequest.PhoneNumber,
-                Role = role,  // Assign the role
-                ResetToken = null,
-                ResetTokenExpiry = null
-                // Store verification information if needed
-                //VerificationStatus = verificationResult.Status, // Assuming you added this property
-                //VerificationData = verificationResult.Data // Store any additional verification data
+                Role = userRequest.Role ?? "User",
+                DocumentImageBase64 = userRequest.DocumentImageBase64,
+                SelfieImage = userRequest.SelfieImage,
             };
 
+            // Save user to database
             await _userService.CreateUserAsync(user);
+
             return CreatedAtAction(nameof(Register), new { id = user.Id }, user);
         }
 
-        /*private async Task<VerificationResult> VerifyIdWithApi(string documentImagePath, string faceImagePath)
+        [HttpPost("verify-id")]
+        public async Task<IActionResult> VerifyId([FromBody] VerifyIdRequest verifyRequest)
         {
-            // Call the ID verification API (similar to the example you provided)
-            // Implement the logic to call the ID verification API, handle the response,
-            // and return a VerificationResult object containing the success status and data.
-            // This part should include the HttpClient logic and error handling.
+            if (verifyRequest == null ||
+                string.IsNullOrWhiteSpace(verifyRequest.DocumentImageBase64) ||
+                string.IsNullOrWhiteSpace(verifyRequest.SelfieImage))
+            {
+                return BadRequest("Document image and selfie are required.");
+            }
 
-            return new VerificationResult { IsSuccess = true, Status = "Verified", Data = "Additional data here" };
-        }*/
+            JObject verificationResult;
+            try
+            {
+                // Verify ID with ID Analyzer
+                verificationResult = await _idAnalyzerClient.AnalyzeIdAsync(
+                    verifyRequest.DocumentImageBase64,
+                    verifyRequest.SelfieImage
+                );
+
+                if (verificationResult == null)
+                {
+                    _logger.LogError("ID verification service returned a null response.");
+                    return StatusCode(500, "ID verification service returned null response.");
+                }
+
+                string decision = verificationResult["decision"]?.ToString();
+                if (decision != "accept")
+                {
+                    return BadRequest("ID verification failed. Decision: " + decision);
+                }
+
+                // Update user's verification status in database, assuming user is authenticated
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var user = await _userService.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return NotFound("User not found.");
+                }
+
+                user.IsVerified = true; // Assume you add an IsVerified property to UserItem
+                await _userService.UpdateUserAsync(user);
+
+                return Ok("ID verification successful.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error during ID verification: {Message}", ex.Message);
+                return StatusCode(500, "ID verification service unavailable.");
+            }
+        }
+
 
 
         [HttpPost("logout")]
@@ -306,6 +343,13 @@ namespace OnDaGo.API.Controllers
 
     }
 
+    public class VerifyIdRequest
+    {
+        public string DocumentImageBase64 { get; set; }
+        public string SelfieImage { get; set; }
+    }
+
+
     public class LoginResponse
     {
         public string Token { get; set; }
@@ -337,11 +381,6 @@ namespace OnDaGo.API.Controllers
         public string PhoneNumber { get; set; }
     }
 
-    /*public class VerificationResult
-    {
-        public bool IsSuccess { get; set; }
-        public string Status { get; set; } // e.g., "Verified", "Failed"
-        public string Data { get; set; } // Any additional information returned from the API
-    }*/
+
 
 }

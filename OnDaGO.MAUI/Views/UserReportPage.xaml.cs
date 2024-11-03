@@ -48,26 +48,25 @@ namespace OnDaGO.MAUI.Views
         }
 
         // Event handler for the Submit Report button
+        // Event handler for the Submit Report button
         private async void OnSubmitReportClicked(object sender, EventArgs e)
         {
+            // Retrieve the UserId from the entry field
+            _userId = UserIdEntry.Text;
+
             // Validate input fields
-            if (string.IsNullOrWhiteSpace(SubjectEntry.Text) || string.IsNullOrWhiteSpace(DescriptionEditor.Text))
+            if (string.IsNullOrWhiteSpace(UserIdEntry.Text) ||
+                string.IsNullOrWhiteSpace(SubjectEntry.Text) ||
+                string.IsNullOrWhiteSpace(DescriptionEditor.Text))
             {
-                await DisplayAlert("Validation Error", "Please enter both subject and description.", "OK");
+                await DisplayAlert("Validation Error", "Please enter your User ID, subject, and description.", "OK");
                 return;
             }
 
-            // Ensure we have the UserId before submitting the report
-            if (string.IsNullOrEmpty(_userId))
-            {
-                await DisplayAlert("Error", "Failed to retrieve user information. Please try again.", "OK");
-                return;
-            }
-
-            // Create a new report with the user's ID and "Pending" status
+            // Create a new report with the provided UserId and "Pending" status
             var newReport = new ReportItem
             {
-                UserId = _userId,  // Include the UserId
+                UserId = _userId,
                 Subject = SubjectEntry.Text,
                 Description = DescriptionEditor.Text,
                 Status = "Pending",
@@ -81,12 +80,12 @@ namespace OnDaGO.MAUI.Views
                 await DisplayAlert("Success", "Your report has been submitted successfully.", "OK");
 
                 // Optionally, clear the fields or navigate away
+                UserIdEntry.Text = string.Empty;
                 SubjectEntry.Text = string.Empty;
                 DescriptionEditor.Text = string.Empty;
             }
             catch (ApiException apiEx)
             {
-                // Display detailed API error if available
                 await DisplayAlert("Error", $"API error: {apiEx.Content}", "OK");
             }
             catch (Exception ex)
@@ -94,5 +93,6 @@ namespace OnDaGO.MAUI.Views
                 await DisplayAlert("Error", $"An error occurred while submitting the report: {ex.Message}", "OK");
             }
         }
+
     }
 }

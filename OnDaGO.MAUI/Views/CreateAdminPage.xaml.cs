@@ -43,6 +43,12 @@ namespace OnDaGO.MAUI.Views
             await Navigation.PopAsync(); // Go back to the previous page (AdminSettingsPage)
         }
 
+        private void OnShowPasswordCheckedChanged(object sender, CheckedChangedEventArgs e)
+        {
+            // Toggle password visibility based on the CheckBox state
+            PasswordEntry.IsPassword = !e.Value;
+        }
+
         private string HashPassword(string password)
         {
             // Replace this with actual password hashing logic

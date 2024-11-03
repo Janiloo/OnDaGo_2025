@@ -2,23 +2,103 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="OnDaGO.MAUI.Views.CreateAdminPage"
-             Title="Create Admin">
+             Title="Create Admin"
+             NavigationPage.HasNavigationBar="False">
 
-    <StackLayout Padding="10">
-        <Label Text="Name" />
-        <Entry x:Name="NameEntry" Placeholder="Enter admin name" />
+    <Grid RowDefinitions="*, Auto">
+        <!-- Background Gradient -->
+        <Image Grid.RowSpan="2" Aspect="AspectFill" Source="gradient.png"/>
 
-        <Label Text="Email" />
-        <Entry x:Name="EmailEntry" Placeholder="Enter admin email" Keyboard="Email" />
+        <!-- Logo -->
+        <Image 
+            Grid.Row="0"
+            Source="ondagologonobg.png" 
+            HorizontalOptions="Center"
+            HeightRequest="210"
+            WidthRequest="260"/>
 
-        <Label Text="Password" />
-        <Entry x:Name="PasswordEntry" Placeholder="Enter password" IsPassword="True" />
+        <!-- Bottom Sheet for Admin Creation Form -->
+        <Border Grid.Row="1"
+                BackgroundColor="White"
+                StrokeThickness="0"
+                Margin="0, -40, 0, 0"
+                HeightRequest="650">
 
-        <Label Text="Phone Number" />
-        <Entry x:Name="PhoneNumberEntry" Placeholder="Enter phone number" Keyboard="Telephone" />
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="30,30,0,0"/>
+                <!-- Top corners rounded, bottom corners square -->
+            </Border.StrokeShape>
 
-        <Button Text="Create Admin" Clicked="OnCreateAdminClicked" />
+            <ScrollView>
+                <StackLayout Padding="30" Spacing="20">
+                    <Label Text="Create Admin Account" 
+                           FontSize="32" 
+                           FontAttributes="Bold" 
+                           HorizontalOptions="Center"
+                           TextColor="#333"/>
 
-        <Button Text="Back to Settings" Clicked="OnBackClicked" />
-    </StackLayout>
+                    <Entry Placeholder="Name" 
+                           x:Name="NameEntry" 
+                           TextColor="#333"
+                           PlaceholderColor="#999"
+                           FontSize="18"/>
+
+                    <Entry Placeholder="Email" 
+                           x:Name="EmailEntry" 
+                           Keyboard="Email"
+                           TextColor="#333"
+                           PlaceholderColor="#999"
+                           FontSize="18"/>
+
+                    <Entry Placeholder="Phone Number" 
+                           x:Name="PhoneNumberEntry" 
+                           Keyboard="Telephone"
+                           TextColor="#333"
+                           PlaceholderColor="#999"
+                           FontSize="18"/>
+
+                    <Entry Placeholder="Password" 
+                           x:Name="PasswordEntry" 
+                           IsPassword="True"
+                           TextColor="#333"
+                           PlaceholderColor="#999"
+                           FontSize="18"/>
+
+                    <!-- Show Password Toggle -->
+                    <StackLayout Orientation="Horizontal" HorizontalOptions="End">
+                        <CheckBox x:Name="ShowPasswordCheckBox" CheckedChanged="OnShowPasswordCheckedChanged"/>
+                        <Label Text="Show Password" VerticalOptions="Center"/>
+                    </StackLayout>
+
+                    <!-- Error Label -->
+                    <Label x:Name="ErrorLabel"
+                           TextColor="Red"
+                           FontSize="14"
+                           HorizontalOptions="Center"
+                           IsVisible="False"/>
+
+                    <!-- Create Admin Button -->
+                    <Button Text="Create Admin"
+                            Clicked="OnCreateAdminClicked"
+                            BackgroundColor="#efbb6b"
+                            TextColor="White"
+                            CornerRadius="20"
+                            HeightRequest="50"
+                            FontSize="18"
+                            FontAttributes="Bold"
+                            HorizontalOptions="FillAndExpand"/>
+
+                    <!-- Footer for Back to Settings Link -->
+                    <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Margin="0,20,0,0">
+                        <Button Text="Back to Settings"
+                                Clicked="OnBackClicked"
+                                TextColor="#efbb6b"
+                                BackgroundColor="Transparent"
+                                FontAttributes="Bold"
+                                FontSize="14"/>
+                    </StackLayout>
+                </StackLayout>
+            </ScrollView>
+        </Border>
+    </Grid>
 </ContentPage>

@@ -37,13 +37,25 @@ namespace OnDaGo.API.Controllers
 
         // Create a new report (User side)
         [HttpPost]
-        public async Task<ActionResult> CreateReport([FromBody] ReportItem report)
+        public async Task<ActionResult> CreateReport([FromBody] CreateReportDto reportDto)
         {
-            // Automatically generate a new ObjectId for the report
-            report.Id = ObjectId.GenerateNewId();
+            var report = new ReportItem
+            {
+                Id = ObjectId.GenerateNewId(), // Generate Id server-side
+                UserId = reportDto.UserId,
+                Subject = reportDto.Subject,
+                Description = reportDto.Description,
+                Status = reportDto.Status,
+                IsImportant = reportDto.IsImportant,
+                CreatedAt = DateTime.UtcNow,
+                DeletedAt = null
+            };
+
             await _reportService.CreateReportAsync(report);
-            return CreatedAtAction(nameof(GetReportById), new { id = report.Id }, report);
+            return CreatedAtAction(nameof(GetReportById), new { id = report.Id.ToString() }, report);
         }
+
+
 
         // Update report status (Admin side)
         [HttpPatch("{id}/status")]

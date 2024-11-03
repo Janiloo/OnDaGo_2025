@@ -37,10 +37,6 @@
                                    FontAttributes="Bold" 
                                    TextColor="Black" />
 
-                            <Label x:Name="UserIdLabel"
-                                   FontSize="14" 
-                                   TextColor="Gray" />  
-
                             <!-- Edit Profile Button -->
                             <Button Text="Edit Profile"
                                     BackgroundColor="Transparent"

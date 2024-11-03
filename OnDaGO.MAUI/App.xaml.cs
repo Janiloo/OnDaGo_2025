@@ -14,12 +14,29 @@ public partial class App : Application
     {
         InitializeComponent();
 
-        // Use DeviceInfo.Platform to set the base URL
+        // Set the new Azure domain URL
         string baseUrl = DeviceInfo.Platform == DevicePlatform.Android
-            ? "http://10.0.2.2:5147" // For Android emulator
-            : "https://localhost:7140"; // For Windows and other platforms
+            ? "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net" // Use Azure domain for Android
+            : "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net"; // Use Azure domain for Windows and other platforms
 
         AuthApi = RestService.For<IAuthApi>(baseUrl);
+
+        // Check for developer options if in release mode
+#if RELEASE && ANDROID
+        if (AreDeveloperOptionsEnabled())
+        {
+            MainPage = new ContentPage
+            {
+                Content = new Label
+                {
+                    Text = "Please disable developer options to use this app.",
+                    HorizontalOptions = LayoutOptions.Center,
+                    VerticalOptions = LayoutOptions.Center
+                }
+            };
+            return; // Exit early if developer options are enabled
+        }
+#endif
 
         // Check if the user is already logged in
         var token = SecureStorage.GetAsync("jwt_token").Result;
@@ -33,7 +50,7 @@ public partial class App : Application
             {
                 MainPage = new NavigationPage(new AdminHomePage());
             }
-            if (userRole == "User")
+            else if (userRole == "User")
             {
                 MainPage = new NavigationPage(new HomePage());
             }
@@ -54,4 +71,15 @@ public partial class App : Application
         var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "role");
         return roleClaim?.Value;
     }
+
+#if ANDROID // Define the method only for Android
+    private bool AreDeveloperOptionsEnabled()
+    {
+        // Import the Android namespace at the top of your file
+        //using Android.Provider;
+
+        var adbEnabled = Android.Provider.Settings.Global.GetInt(Android.App.Application.Context.ContentResolver, Android.Provider.Settings.Global.DevelopmentSettingsEnabled, 0);
+        return adbEnabled == 1;
+    }
+#endif
 }

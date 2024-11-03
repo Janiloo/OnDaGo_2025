@@ -31,7 +31,11 @@ public class Startup
         services.AddScoped<EmailService>(); // Add EmailService
         services.AddScoped<FareMatrixService>();  // Register FareMatrixService
         services.AddScoped<ReportService>();
+        services.AddControllers();
+        services.AddScoped<IdAnalyzerClient>();
+        services.AddHttpClient<IdAnalyzerClient>();
         services.AddScoped<VehicleService>();     // Register Vehicle service
+        services.AddLogging();
 
         // JSON serialization
         services.AddControllers().AddNewtonsoftJson();
@@ -46,6 +50,7 @@ public class Startup
                        .AllowAnyHeader();
             });
         });
+
 
         // JWT Authentication
         var key = Encoding.ASCII.GetBytes("Yxg/R2jDGHJpLz0LeU8s9y8RcY3ThVwB9yZ9V6n1yQI="); // Replace with your secret key

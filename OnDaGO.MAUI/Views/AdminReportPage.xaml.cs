@@ -10,7 +10,6 @@ namespace OnDaGO.MAUI.Views
     {
         private readonly ReportService _reportService;
 
-        // Constructor that accepts ReportService as a parameter
         public AdminReportPage(ReportService reportService)
         {
             InitializeComponent();
@@ -20,7 +19,7 @@ namespace OnDaGO.MAUI.Views
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-            await LoadReports(); // Call method to load reports when the page appears
+            await LoadReports();
         }
 
         private async Task LoadReports()
@@ -28,7 +27,7 @@ namespace OnDaGO.MAUI.Views
             try
             {
                 var reports = await _reportService.GetReportsAsync();
-                ReportCollection.ItemsSource = reports; // Binding data to CollectionView
+                ReportCollection.ItemsSource = reports;
             }
             catch (Exception ex)
             {
@@ -36,10 +35,41 @@ namespace OnDaGO.MAUI.Views
             }
         }
 
-        // Event handler for the refresh button
+        private async void OnReportTapped(object sender, EventArgs e)
+        {
+            if (sender is Frame reportFrame && reportFrame.BindingContext is ReportItem report)
+            {
+                await DisplayAlert("Report Details", report.Description, "OK");
+            }
+        }
+
+        private void OnPendingClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button)
+            {
+                button.BackgroundColor = button.BackgroundColor == Colors.White ? Colors.LightBlue : Colors.White;
+            }
+        }
+
+        private void OnImportantClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button)
+            {
+                button.BackgroundColor = button.BackgroundColor == Colors.White ? Colors.Red : Colors.White;
+            }
+        }
+
+        private void OnCompletedClicked(object sender, EventArgs e)
+        {
+            if (sender is Button button)
+            {
+                button.BackgroundColor = button.BackgroundColor == Colors.White ? Colors.LightGreen : Colors.White;
+            }
+        }
+
         private async void OnRefreshReportsClicked(object sender, EventArgs e)
         {
-            await LoadReports(); // Reload the reports
+            await LoadReports();
         }
     }
 }

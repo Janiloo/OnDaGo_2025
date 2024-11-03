@@ -11,6 +11,14 @@
                    FontAttributes="Bold"
                    HorizontalOptions="Center" />
 
+            <!-- Frame wrapping the Entry for UserId -->
+            <Frame BackgroundColor="White" CornerRadius="5" Padding="0" HasShadow="False">
+                <Entry x:Name="UserIdEntry"
+                       Placeholder="Enter your user ID"
+                       FontSize="16"
+                       Margin="5" />
+            </Frame>
+
             <!-- Frame wrapping the Entry for Report Subject -->
             <Frame BackgroundColor="White" CornerRadius="5" Padding="0" HasShadow="False">
                 <Entry x:Name="SubjectEntry"

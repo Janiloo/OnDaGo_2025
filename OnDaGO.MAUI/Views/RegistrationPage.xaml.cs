@@ -1,20 +1,87 @@
 using OnDaGO.MAUI.Models;
 using Refit;
 using System;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
+using OnDaGO.MAUI.Services;
+using System.Threading.Tasks;
+using Microsoft.Maui.ApplicationModel;
 
 namespace OnDaGO.MAUI.Views
 {
     public partial class RegistrationPage : ContentPage
     {
+        private string DocumentImageBase64 { get; set; }
+        private string SelfieImage { get; set; }
+
         public RegistrationPage()
         {
             InitializeComponent();
         }
 
+        private async void OnDocumentFrontClicked(object sender, EventArgs e)
+        {
+            if (await RequestCameraPermissionAsync())
+            {
+                await CaptureImageAsync((image) =>
+                {
+                    DocumentImageBase64 = image;
+                    DocumentImageFrontPreview.Source = ImageSource.FromStream(() => new MemoryStream(Convert.FromBase64String(image)));
+                    DocumentImageFrontPreview.IsVisible = true;
+                });
+            }
+        }
+
+        private async void OnSelfieImageClicked(object sender, EventArgs e)
+        {
+            if (await RequestCameraPermissionAsync())
+            {
+                await CaptureImageAsync((image) =>
+                {
+                    SelfieImage = image;
+                    SelfieImagePreview.Source = ImageSource.FromStream(() => new MemoryStream(Convert.FromBase64String(image)));
+                    SelfieImagePreview.IsVisible = true;
+                });
+            }
+        }
+
+        private async Task<bool> RequestCameraPermissionAsync()
+        {
+            var status = await Permissions.CheckStatusAsync<Permissions.Camera>();
+            if (status != PermissionStatus.Granted)
+            {
+                status = await Permissions.RequestAsync<Permissions.Camera>();
+            }
+            return status == PermissionStatus.Granted;
+        }
+
+        private async Task CaptureImageAsync(Action<string> onImageCaptured)
+        {
+            try
+            {
+                var result = await MediaPicker.CapturePhotoAsync(); // Opens the camera for capturing a photo
+                if (result != null)
+                {
+                    var imageBase64 = await ConvertToBase64(result.FullPath);
+                    onImageCaptured(imageBase64);
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowErrorMessage($"Error capturing image: {ex.Message}");
+            }
+        }
+
+        private async Task<string> ConvertToBase64(string filePath)
+        {
+            var imageBytes = await File.ReadAllBytesAsync(filePath);
+            return Convert.ToBase64String(imageBytes);
+        }
+
         private async void OnRegisterClicked(object sender, EventArgs e)
         {
-            // Clear the error message before attempting registration
             ErrorLabel.IsVisible = false;
             ErrorLabel.Text = string.Empty;
 
@@ -22,24 +89,25 @@ namespace OnDaGO.MAUI.Views
             {
                 Name = NameEntry.Text,
                 Email = EmailEntry.Text,
-                PasswordHash = HashPassword(PasswordEntry.Text), // Hash password before sending
-                PhoneNumber = PhoneNumberEntry.Text // Include Phone Number
+                PasswordHash = HashPassword(PasswordEntry.Text),
+                PhoneNumber = PhoneNumberEntry.Text,
+                DocumentImageBase64 = DocumentImageBase64,
+                SelfieImage = SelfieImage
             };
 
             // Input validation
-            if (string.IsNullOrWhiteSpace(user.Name))
+            if (string.IsNullOrWhiteSpace(user.Name) ||
+                string.IsNullOrWhiteSpace(user.Email) ||
+                string.IsNullOrWhiteSpace(user.PhoneNumber) ||
+                string.IsNullOrWhiteSpace(user.DocumentImageBase64) ||
+                string.IsNullOrWhiteSpace(user.SelfieImage))
             {
-                ShowErrorMessage("Name is required.");
+                ShowErrorMessage("All fields must be filled out.");
                 return;
             }
 
-            if (!IsValidEmail(user.Email))
-            {
-                ShowErrorMessage("Invalid email address.");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(user.PasswordHash) || user.PasswordHash.Length < 6)
+            // Validate password
+            if (string.IsNullOrWhiteSpace(PasswordEntry.Text) || PasswordEntry.Text.Length < 6)
             {
                 ShowErrorMessage("Password must be at least 6 characters long.");
                 return;
@@ -53,7 +121,7 @@ namespace OnDaGO.MAUI.Views
 
             if (!IsValidPhoneNumber(user.PhoneNumber))
             {
-                ShowErrorMessage("Phone number must be exactly 11 digits.");
+                ShowErrorMessage("Phone number must be 11 digits.");
                 return;
             }
 
@@ -73,58 +141,42 @@ namespace OnDaGO.MAUI.Views
             }
         }
 
-        private async void OnLoginClicked(object sender, EventArgs e)
-        {
-            await Navigation.PushAsync(new LoginPage());
-        }
-
         private string HashPassword(string password)
         {
-            // Replace this with actual password hashing logic
-            return password;
+            // Hashing the password securely
+            using (var sha256 = SHA256.Create())
+            {
+                var bytes = Encoding.UTF8.GetBytes(password);
+                var hash = sha256.ComputeHash(bytes);
+                return Convert.ToBase64String(hash);
+            }
         }
 
-        // Helper method to display error messages
         private void ShowErrorMessage(string message)
         {
             ErrorLabel.Text = message;
             ErrorLabel.IsVisible = true;
         }
 
-        // Email validation method
-        private bool IsValidEmail(string email)
-        {
-            if (string.IsNullOrWhiteSpace(email))
-                return false;
+        private bool IsValidEmail(string email) =>
+            !string.IsNullOrWhiteSpace(email) &&
+            new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$").IsMatch(email);
 
-            try
-            {
-                var addr = new System.Net.Mail.MailAddress(email);
-                return addr.Address == email;
-            }
-            catch
-            {
-                return false;
-            }
-        }
+        private bool IsValidPhoneNumber(string phoneNumber) =>
+            Regex.IsMatch(phoneNumber, @"^\d{11}$");
 
-        // Phone number validation (11 digits)
-        private bool IsValidPhoneNumber(string phoneNumber)
-        {
-            return Regex.IsMatch(phoneNumber, @"^\d{11}$");
-        }
+        private bool PasswordsMatch(string password, string confirmPassword) =>
+            password == confirmPassword;
 
-        // Password matching validation
-        private bool PasswordsMatch(string password, string confirmPassword)
-        {
-            return password == confirmPassword;
-        }
-
-        // Show/Hide Password toggle
         private void OnShowPasswordCheckedChanged(object sender, CheckedChangedEventArgs e)
         {
-            PasswordEntry.IsPassword = !e.Value; // If checked, password will be shown
-            ConfirmPasswordEntry.IsPassword = !e.Value; // Same for confirm password
+            PasswordEntry.IsPassword = !e.Value;
+            ConfirmPasswordEntry.IsPassword = !e.Value;
+        }
+
+        private async void OnLoginClicked(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new LoginPage());
         }
     }
 }

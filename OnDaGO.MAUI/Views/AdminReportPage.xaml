@@ -16,8 +16,17 @@
             <CollectionView x:Name="ReportCollection" Margin="0,10,0,0">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Frame Padding="15" Margin="0,5" BackgroundColor="White" CornerRadius="10" HasShadow="True">
+                        <Frame x:Name="ReportFrame" Padding="15" Margin="0,5" BackgroundColor="White" CornerRadius="10" HasShadow="True">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnReportTapped" />
+                            </Frame.GestureRecognizers>
                             <StackLayout Spacing="5">
+                                <!-- UserId Display -->
+                                <Label Text="{Binding UserId}" 
+                                       FontSize="Small" 
+                                       TextColor="Gray"
+                                       FontAttributes="Italic" 
+                                       HorizontalOptions="Start" />
                                 <Label Text="{Binding Subject}" 
                                        FontSize="Medium" 
                                        FontAttributes="Bold"
@@ -29,12 +38,25 @@
                                        MaxLines="2" 
                                        VerticalOptions="Start" 
                                        TextColor="Black" />
-                                <Label Text="{Binding Status}" 
-                                       FontSize="Small"
-                                       FontAttributes="Italic"
-                                       TextColor="{Binding StatusColor}" 
-                                       HorizontalOptions="End" 
-                                       VerticalOptions="End" />
+
+                                <!-- Status Buttons -->
+                                <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="10">
+                                    <Button x:Name="PendingButton" Text="Pending" 
+                                            Clicked="OnPendingClicked" 
+                                            BackgroundColor="White" 
+                                            TextColor="Blue" 
+                                            CornerRadius="15"/>
+                                    <Button x:Name="ImportantButton" Text="Important" 
+                                            Clicked="OnImportantClicked" 
+                                            BackgroundColor="White" 
+                                            TextColor="Red" 
+                                            CornerRadius="15"/>
+                                    <Button x:Name="CompletedButton" Text="Completed" 
+                                            Clicked="OnCompletedClicked" 
+                                            BackgroundColor="White" 
+                                            TextColor="Green" 
+                                            CornerRadius="15"/>
+                                </StackLayout>
                             </StackLayout>
                         </Frame>
                     </DataTemplate>

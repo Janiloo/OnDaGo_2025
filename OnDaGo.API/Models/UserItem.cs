@@ -13,7 +13,10 @@ namespace OnDaGo.API.Models
         public string PasswordHash { get; set; }
         public string PhoneNumber { get; set; }
         public string Role { get; set; } = "User";
+        public string DocumentImageBase64 { get; set; } // Base64 string for front image
+        public string SelfieImage { get; set; }        // Base64 string for selfie image
         public string? ResetToken { get; set; }
+        public bool IsVerified { get; set; } = false;
         public DateTime? ResetTokenExpiry { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -27,7 +30,7 @@ namespace OnDaGo.API.Models
         public string PhoneNumber { get; set; }
         public string Role { get; set; } = "User";
 
-        //public string DocumentImagePath { get; set; }
-        //public string FaceImagePath { get; set; }
+        public string DocumentImageBase64 { get; set; } // Base64 string for front image
+        public string SelfieImage { get; set; }
     }
 }
