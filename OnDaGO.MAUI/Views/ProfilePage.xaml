@@ -37,7 +37,7 @@
                                    FontAttributes="Bold" 
                                    TextColor="Black" />
 
-                            <!-- Edit Profile Button -->
+                            <!-- Edit Profile Button
                             <Button Text="Edit Profile"
                                     BackgroundColor="Transparent"
                                     HorizontalOptions="Start"
@@ -45,7 +45,7 @@
                                     FontAttributes="Bold"
                                     Padding="0,0,0,0" 
                                     Margin = "0,0,0,0"
-                                    Clicked="OnEditProfileClicked"/>
+                                    Clicked="OnEditProfileClicked"/>-->
                         </StackLayout>
                     </Frame>
 

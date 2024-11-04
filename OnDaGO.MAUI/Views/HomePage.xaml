@@ -115,7 +115,7 @@
         <!-- Frame with StackLayout for immersive view -->
         <Frame x:Name="FrameLayout" CornerRadius="15" HasShadow="True" BackgroundColor="#f8f9fa" Padding="20" Margin="0" VerticalOptions="End" HorizontalOptions="FillAndExpand" IsClippedToBounds="True" IsVisible="{Binding IsSearchVisible}">
             <StackLayout x:Name="SearchFieldsStackLayout" Orientation="Vertical" Padding="10" Spacing="15" VerticalOptions="End">
-                <Button Text="Close" Clicked="OnCloseButtonClicked" HorizontalOptions="End" WidthRequest="70" HeightRequest="35" BackgroundColor="Red" TextColor="White"/>
+                <Button Text="Close" Clicked="OnCloseButtonClicked" HorizontalOptions="End" WidthRequest="70" HeightRequest="35" BackgroundColor="#efbb6b" TextColor="White"/>
                 <Label x:Name="FarePriceLabel" Text="Regular Price: " FontSize="Medium" TextColor="#343a40" />
                 <Label x:Name="DiscountedFarePriceLabel" Text="Student/Senior/PWD: " FontSize="Medium" TextColor="#343a40" />
                 <Picker x:Name="StartLocationPicker" Title="Select start location" />
@@ -138,22 +138,21 @@
 
             <BoxView HeightRequest="5" BackgroundColor="Gray" HorizontalOptions="Center" VerticalOptions="Start" Margin="0,10" WidthRequest="40" />
 
-            <StackLayout Padding="5" Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,0">
-                <Image Source="goldenlogo.png" HeightRequest="100" WidthRequest="100" VerticalOptions="Center" Margin="10,10,0,0" />
-                <StackLayout Padding="10" Grid.Row="0" Orientation="Vertical">
-                    <Label Text="Golden Arc Transport Cooperative" Margin="10,20,0,0" FontAttributes="Bold" FontSize="Medium"/>
-                    <Label x:Name="PuvNoLabel" Text="PUV No: " Margin="10,5,0,0"/>
-                </StackLayout>
-                
+            <StackLayout Padding="10" Orientation="Vertical" Grid.Column="0">
+                <Label Text="Golden Arc Transport Cooperative" Margin="10,35,10,0" FontAttributes="Bold" FontSize="Medium"/>
+                <Label x:Name="PuvNoLabel" Text="PUV No: " Margin="10,5,10,0"/>
             </StackLayout>
+
+            <!-- Right side: Logo -->
+            <Image Source="goldenlogo.png" HeightRequest="100" WidthRequest="100" VerticalOptions="Center" HorizontalOptions="End" Margin="0,25,20,0" Grid.Column="1"/>
 
             <ScrollView x:Name="ScrollableContent" HeightRequest="300" IsVisible="True" Grid.Row="1">
                 <StackLayout>
-                    <Label x:Name="ETALabel" FontSize="Medium" TextColor="#343a40" Margin="20,10,0,0" />
+                    <Label x:Name="ETALabel" TextColor="#343a40" Margin="20,5,0,0" FontAttributes="Bold"/>
 
-                    <Label x:Name="PassengerCountLabel" Margin="20,10,0,0" Text="{Binding SelectedVehicle.PassengerCount, StringFormat='Passenger Count: {0}'}" />
+                    <Label x:Name="PassengerCountLabel" FontAttributes="Bold" Margin="20,10,0,0" Text="{Binding SelectedVehicle.PassengerCount, StringFormat='Passenger Count: {0}'}" />
                     <!--<Label x:Name="MaxPassengerCountLabel" Margin="20,10,0,0" Text="{Binding SelectedVehicle.MaxPassengerCount, StringFormat='Max Passenger Count: {0}'}" />-->
-                    <Label x:Name="StandingPassengerCountLabel" Margin="20,10,0,10" />
+                    <Label x:Name="StandingPassengerCountLabel" FontAttributes="Bold" Margin="20,10,0,20" />
                     <!-- Fare Matrix Grid -->
                     <Grid ColumnSpacing="5" RowSpacing="5" BackgroundColor="#efbb6b" Padding="5">
                         <Grid.RowDefinitions>
@@ -203,6 +202,19 @@
                 <PanGestureRecognizer PanUpdated="OnBottomSheetPanUpdated"/>
             </Grid.GestureRecognizers>
         </Grid>
+
+        <ImageButton Source="Images/mylocation1.png"
+             Clicked="OnZoomToUserLocationClicked"
+             WidthRequest="50"
+             HeightRequest="50"
+             BackgroundColor="Transparent"
+             HorizontalOptions="End"
+             VerticalOptions="End"
+             Margin="0,0,15,15">
+            <ImageButton.Shadow>
+                <Shadow Brush="Gray" Offset="0, 0" Radius="10"/>
+            </ImageButton.Shadow>
+        </ImageButton>
 
 
 

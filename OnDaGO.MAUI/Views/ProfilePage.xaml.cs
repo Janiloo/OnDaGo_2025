@@ -71,8 +71,8 @@ public partial class ProfilePage : ContentPage
     }
 
 
-    private async void OnEditProfileClicked(object sender, EventArgs e)
+    /*private async void OnEditProfileClicked(object sender, EventArgs e)
     {
         await Navigation.PushAsync(new EditProfilePage());
-    }
+    }*/
 }

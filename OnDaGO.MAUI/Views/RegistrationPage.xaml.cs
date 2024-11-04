@@ -85,6 +85,40 @@ namespace OnDaGO.MAUI.Views
             ErrorLabel.IsVisible = false;
             ErrorLabel.Text = string.Empty;
 
+            // Check if any fields are empty
+            if (string.IsNullOrWhiteSpace(NameEntry.Text) ||
+                string.IsNullOrWhiteSpace(EmailEntry.Text) ||
+                string.IsNullOrWhiteSpace(PhoneNumberEntry.Text) ||
+                string.IsNullOrWhiteSpace(PasswordEntry.Text) ||
+                string.IsNullOrWhiteSpace(ConfirmPasswordEntry.Text) ||
+                string.IsNullOrWhiteSpace(DocumentImageBase64) ||
+                string.IsNullOrWhiteSpace(SelfieImage))
+            {
+                ShowErrorMessage("All fields must be filled out.");
+                return;
+            }
+
+            // Validate password length
+            if (PasswordEntry.Text.Length < 6)
+            {
+                ShowErrorMessage("Password must be at least 6 characters long.");
+                return;
+            }
+
+            // Check if passwords match
+            if (!PasswordsMatch(PasswordEntry.Text, ConfirmPasswordEntry.Text))
+            {
+                ShowErrorMessage("Passwords do not match.");
+                return;
+            }
+
+            // Validate phone number format
+            if (!IsValidPhoneNumber(PhoneNumberEntry.Text))
+            {
+                ShowErrorMessage("Phone number must be 11 digits.");
+                return;
+            }
+
             var user = new UserItem
             {
                 Name = NameEntry.Text,
@@ -94,36 +128,6 @@ namespace OnDaGO.MAUI.Views
                 DocumentImageBase64 = DocumentImageBase64,
                 SelfieImage = SelfieImage
             };
-
-            // Input validation
-            if (string.IsNullOrWhiteSpace(user.Name) ||
-                string.IsNullOrWhiteSpace(user.Email) ||
-                string.IsNullOrWhiteSpace(user.PhoneNumber) ||
-                string.IsNullOrWhiteSpace(user.DocumentImageBase64) ||
-                string.IsNullOrWhiteSpace(user.SelfieImage))
-            {
-                ShowErrorMessage("All fields must be filled out.");
-                return;
-            }
-
-            // Validate password
-            if (string.IsNullOrWhiteSpace(PasswordEntry.Text) || PasswordEntry.Text.Length < 6)
-            {
-                ShowErrorMessage("Password must be at least 6 characters long.");
-                return;
-            }
-
-            if (!PasswordsMatch(PasswordEntry.Text, ConfirmPasswordEntry.Text))
-            {
-                ShowErrorMessage("Passwords do not match.");
-                return;
-            }
-
-            if (!IsValidPhoneNumber(user.PhoneNumber))
-            {
-                ShowErrorMessage("Phone number must be 11 digits.");
-                return;
-            }
 
             try
             {
@@ -140,6 +144,7 @@ namespace OnDaGO.MAUI.Views
                 ShowErrorMessage($"An unexpected error occurred: {ex.Message}");
             }
         }
+
 
         private string HashPassword(string password)
         {

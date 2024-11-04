@@ -14,10 +14,12 @@ public partial class App : Application
     {
         InitializeComponent();
 
+        Application.Current.UserAppTheme = AppTheme.Light;
+
         // Set the new Azure domain URL
         string baseUrl = DeviceInfo.Platform == DevicePlatform.Android
-            ? "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net" // Use Azure domain for Android
-            : "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net"; // Use Azure domain for Windows and other platforms
+            ? "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net"
+            : "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net";
 
         AuthApi = RestService.For<IAuthApi>(baseUrl);
 

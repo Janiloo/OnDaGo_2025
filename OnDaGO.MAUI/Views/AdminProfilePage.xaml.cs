@@ -68,8 +68,8 @@ public partial class AdminProfilePage : ContentPage
         }
     }
 
-    private async void OnEditProfileClicked(object sender, EventArgs e)
+    /*private async void OnEditProfileClicked(object sender, EventArgs e)
     {
         await Navigation.PushAsync(new EditProfilePage());
-    }
+    }*/
 }

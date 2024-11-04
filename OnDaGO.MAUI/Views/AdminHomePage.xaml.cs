@@ -42,7 +42,7 @@ namespace OnDaGO.MAUI.Views
             new LocationItem { Name = "Concepcion", Coordinates = new Location(14.6505, 121.1035) },
             new LocationItem { Name = "Savemore Bayan", Coordinates = new Location(14.6372, 121.0973) },
             new LocationItem { Name = "Marikina Riverbanks", Coordinates = new Location(14.6329, 121.0828) },
-            new LocationItem { Name = "Cubao", Coordinates = new Location(14.6212, 121.0553) }
+            new LocationItem { Name = "Cubao", Coordinates = new Location(14.621360, 121.055222) }
         };
 
         private readonly Dictionary<(string, string), (int Regular, int Discounted)> fareMatrix = new()
@@ -272,7 +272,7 @@ namespace OnDaGO.MAUI.Views
                 if (userLocation != null)
                 {
                     var distance = userLocation.CalculateDistance(vehicleLocation, DistanceUnits.Kilometers);
-                    const double averageSpeedKmH = 20.0;
+                    const double averageSpeedKmH = 18.0;
                     double etaMinutes = (distance / averageSpeedKmH) * 60;
 
                     // Create a pin with ETA, PUV number, and passenger count
@@ -846,6 +846,29 @@ namespace OnDaGO.MAUI.Views
             // Toggle the visibility flag
             _isSearchVisible = !_isSearchVisible;
         }
+
+        private async void OnZoomToUserLocationClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                var userLocation = await Geolocation.GetLastKnownLocationAsync();
+                if (userLocation != null)
+                {
+                    // Define a map span with a smaller zoom level to focus on user's location
+                    var mapSpan = MapSpan.FromCenterAndRadius(new Location(userLocation.Latitude, userLocation.Longitude), Distance.FromMiles(0.5));
+                    map.MoveToRegion(mapSpan);
+                }
+                else
+                {
+                    await DisplayAlert("Location Error", "Unable to retrieve your location. Please check your location settings.", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error", $"An error occurred while getting your location: {ex.Message}", "OK");
+            }
+        }
+
         //var userLocation = new Location(14.6505, 121.1035);//var userLocation = await Geolocation.GetLastKnownLocationAsync();
         private async void OnToggleBottomSheetClicked(object sender, EventArgs e)
         {
@@ -885,7 +908,7 @@ namespace OnDaGO.MAUI.Views
                 // Calculate ETA for the closest vehicle
                 var vehicleLocation = new Location(SelectedVehicle.CurrentLat, SelectedVehicle.CurrentLong);
                 var distance = userLocation.CalculateDistance(vehicleLocation, DistanceUnits.Kilometers);
-                const double averageSpeedKmH = 20.0;
+                const double averageSpeedKmH = 18.0;
                 double etaMinutes = (distance / averageSpeedKmH) * 60;
 
                 // Update the BottomSheet labels with vehicle information

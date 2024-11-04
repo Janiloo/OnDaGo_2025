@@ -5,22 +5,34 @@
              Title="Submit a Report">
     <ScrollView>
         <StackLayout Padding="20" Spacing="15">
-            <!-- Header for the Page -->
-            <Label Text="Submit a Report"
-                   FontSize="24"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center" />
+
+            <Image
+                Source="feedbacklogo.png"
+                HorizontalOptions="Center"
+                HeightRequest="210"
+                WidthRequest="260" />
+
+                <!-- Header for the Page -->
+            <Label 
+                Text="What can we do for you?"
+                FontFamily="NunitoRegular"
+                FontAttributes="Bold"
+                TextColor="#421502"
+                FontSize="32"
+                HorizontalOptions="Center"
+                VerticalOptions="Center" />
 
             <!-- Frame wrapping the Entry for UserId -->
-            <Frame BackgroundColor="White" CornerRadius="5" Padding="0" HasShadow="False">
+            <Frame BackgroundColor="White" CornerRadius="20" Padding="0" HasShadow="False">
                 <Entry x:Name="UserIdEntry"
-                       Placeholder="Enter your user ID"
+                       Placeholder="Enter your Email"
                        FontSize="16"
-                       Margin="5" />
+                       Margin="5"
+                       TextChanged="OnUserIdEntryTextChanged" />    
             </Frame>
 
             <!-- Frame wrapping the Entry for Report Subject -->
-            <Frame BackgroundColor="White" CornerRadius="5" Padding="0" HasShadow="False">
+            <Frame BackgroundColor="White" CornerRadius="20" Padding="0" HasShadow="False">
                 <Entry x:Name="SubjectEntry"
                        Placeholder="Enter report subject"
                        FontSize="16"
@@ -28,7 +40,7 @@
             </Frame>
 
             <!-- Frame wrapping the Editor for Report Description -->
-            <Frame BackgroundColor="White" CornerRadius="5" Padding="0" HasShadow="False">
+            <Frame BackgroundColor="White" CornerRadius="20" Padding="0" HasShadow="False">
                 <Editor x:Name="DescriptionEditor"
                         Placeholder="Enter report description"
                         AutoSize="TextChanges"

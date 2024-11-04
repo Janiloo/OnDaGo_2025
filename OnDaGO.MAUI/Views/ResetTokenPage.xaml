@@ -32,6 +32,7 @@
                 <StackLayout Padding="30" Spacing="20">
                     <Label Text="Reset Your Password" 
                            FontSize="32" 
+                           FontFamily="NunitoRegular"
                            FontAttributes="Bold" 
                            HorizontalOptions="Center"
                            TextColor="#333"/>

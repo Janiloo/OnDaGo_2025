@@ -4,6 +4,7 @@ using System;
 using Microsoft.Maui.Controls;
 using Refit;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace OnDaGO.MAUI.Views
 {
@@ -45,6 +46,23 @@ namespace OnDaGO.MAUI.Views
                 Console.WriteLine($"Error fetching user profile: {ex.Message}");
                 await DisplayAlert("Error", "Unable to retrieve user profile. Please try again later.", "OK");
             }
+        }
+
+
+        private void OnUserIdEntryTextChanged(object sender, TextChangedEventArgs e)
+        {
+            SubmitButton.IsEnabled = IsValidEmail(UserIdEntry.Text);
+        }
+
+        // Helper method to validate email format
+        private bool IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            // Basic email pattern matching
+            var emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+            return Regex.IsMatch(email, emailPattern, RegexOptions.IgnoreCase);
         }
 
         // Event handler for the Submit Report button

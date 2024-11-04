@@ -5,28 +5,31 @@
              BackgroundColor="#33efbb6b">
 
     <ScrollView>
-        <StackLayout Padding="20">
+        <StackLayout Padding="10">
             <!-- Header for Admin Reports -->
             <Label Text="Admin Reports"
-                   FontSize="28"
+                   FontFamily="NunitoRegular"
                    FontAttributes="Bold"
                    HorizontalOptions="Center"
-                   Margin="0,0,0,20"/>
+                   Margin="0,0,0,10"/>
 
-            <CollectionView x:Name="ReportCollection" Margin="0,10,0,0">
+            <CollectionView x:Name="ReportCollection" Margin="0,0,0,0">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Frame x:Name="ReportFrame" Padding="15" Margin="0,5" BackgroundColor="White" CornerRadius="10" HasShadow="True">
+                        <Frame x:Name="ReportFrame" Padding="20" Margin="0,5" BackgroundColor="White" HasShadow="False" CornerRadius="0">
                             <Frame.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnReportTapped" />
                             </Frame.GestureRecognizers>
                             <StackLayout Spacing="5">
+                                  
                                 <!-- UserId Display -->
                                 <Label Text="{Binding UserId}" 
                                        FontSize="Small" 
                                        TextColor="Gray"
                                        FontAttributes="Italic" 
                                        HorizontalOptions="Start" />
+                                
+
                                 <Label Text="{Binding Subject}" 
                                        FontSize="Medium" 
                                        FontAttributes="Bold"
@@ -39,7 +42,13 @@
                                        VerticalOptions="Start" 
                                        TextColor="Black" />
 
-                                <!-- Status Buttons -->
+                                <!-- CreatedAt Date Display -->
+                                <Label Text="{Binding CreatedAt, StringFormat='{0:MMMM dd, yyyy}'}"
+                                       FontSize="Small"
+                                       TextColor="Gray"
+                                       HorizontalOptions="End" />   
+
+                                <!-- Status Buttons 
                                 <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="10">
                                     <Button x:Name="PendingButton" Text="Pending" 
                                             Clicked="OnPendingClicked" 
@@ -56,7 +65,7 @@
                                             BackgroundColor="White" 
                                             TextColor="Green" 
                                             CornerRadius="15"/>
-                                </StackLayout>
+                                </StackLayout> -->
                             </StackLayout>
                         </Frame>
                     </DataTemplate>

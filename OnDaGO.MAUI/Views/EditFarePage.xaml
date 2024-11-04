@@ -3,21 +3,30 @@
              x:Class="OnDaGO.MAUI.Views.EditFarePage"
              Title="Edit Fare Page"
              BackgroundColor="#33efbb6b">
+    <!-- Lighter background for contrast -->
 
     <ScrollView>
         <StackLayout Padding="20">
             <!-- Header for Fare Matrix -->
             <Label Text="Fare Matrix"
-                   FontSize="24"
+                   FontSize="28"
+                   FontFamily="NunitoRegular"
                    FontAttributes="Bold"
                    HorizontalOptions="Center"
+                   TextColor="#333333"
                    Margin="0,0,0,20"/>
 
             <!-- CollectionView to display fare matrix in a card-style format -->
             <CollectionView x:Name="FareMatrixCollection" Margin="0,10,0,0">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Frame Padding="10" Margin="0,5" BackgroundColor="LightGray" CornerRadius="10" HasShadow="True">
+                        <Frame Padding="15" 
+                               Margin="0,5" 
+                               BackgroundColor="#efbb6b" 
+                               CornerRadius="15" 
+                               HasShadow="True" 
+                               BorderColor="#E0E0E0" >
+                            <!-- Add border for emphasis -->
                             <Grid ColumnSpacing="10" RowSpacing="5">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -30,10 +39,28 @@
                                 </Grid.ColumnDefinitions>
 
                                 <!-- Display Fare Matrix Data -->
-                                <Label Text="{Binding Origin}" Grid.Row="0" Grid.Column="0" HorizontalOptions="Center" FontSize="Medium"/>
-                                <Label Text="{Binding Destination}" Grid.Row="0" Grid.Column="1" HorizontalOptions="Center" FontSize="Medium"/>
-                                <Entry Text="{Binding Fare, Mode=TwoWay}" Grid.Row="0" Grid.Column="2" Keyboard="Numeric" Placeholder="Fare" Margin="5" />
-                                <Entry Text="{Binding DiscountedFare, Mode=TwoWay}" Grid.Row="0" Grid.Column="3" Keyboard="Numeric" Placeholder="Discounted Fare" Margin="5" />
+                                <Label Text="{Binding Origin}" Grid.Row="0" Grid.Column="0" HorizontalOptions="Center" FontSize="Medium" TextColor="#fff" FontAttributes="Bold"/>
+                                <Label Text="{Binding Destination}" Grid.Row="0" Grid.Column="1" HorizontalOptions="Center" FontSize="Medium" TextColor="#fff" FontAttributes="Bold"/>
+
+                                <Entry Text="{Binding Fare, Mode=TwoWay}" 
+                                       Grid.Row="0" Grid.Column="2" 
+                                       Keyboard="Numeric" 
+                                       Placeholder="Fare" 
+                                       PlaceholderColor="#efbb6b" 
+                                       Margin="5" 
+                                       BackgroundColor="#efbb6b" 
+
+                                       TextColor="#fff" />
+
+                                <Entry Text="{Binding DiscountedFare, Mode=TwoWay}" 
+                                       Grid.Row="0" Grid.Column="3" 
+                                       Keyboard="Numeric" 
+                                       Placeholder="Discounted Fare" 
+                                       PlaceholderColor="#efbb6b" 
+                                       Margin="5" 
+                                       BackgroundColor="#efbb6b" 
+
+                                       TextColor="#fff" />
                             </Grid>
                         </Frame>
                     </DataTemplate>
@@ -49,7 +76,8 @@
                     BackgroundColor="#007ACC"
                     TextColor="White"
                     CornerRadius="25"
-                    Padding="10"/>
+                    Padding="10"
+                    FontSize="Medium" />
         </StackLayout>
     </ScrollView>
 </ContentPage>

@@ -83,6 +83,8 @@
 	  <None Remove="Resources\Images\goldenlogo.png" />
 	  <None Remove="Resources\Images\homeon.svg" />
 	  <None Remove="Resources\Images\logout.svg" />
+	  <None Remove="Resources\Images\mylocation.svg" />
+	  <None Remove="Resources\Images\mylocation1.png" />
 	  <None Remove="Resources\Images\reportlist.svg" />
 	  <None Remove="Resources\Images\support.svg" />
 	  <None Remove="Resources\Raw\ondagologo.svg" />

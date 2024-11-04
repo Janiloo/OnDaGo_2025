@@ -42,7 +42,7 @@ namespace OnDaGO.MAUI.Views
             new LocationItem { Name = "Concepcion", Coordinates = new Location(14.6505, 121.1035) },
             new LocationItem { Name = "Savemore Bayan", Coordinates = new Location(14.6372, 121.0973) },
             new LocationItem { Name = "Marikina Riverbanks", Coordinates = new Location(14.6329, 121.0828) },
-            new LocationItem { Name = "Cubao", Coordinates = new Location(14.6212, 121.0553) }
+            new LocationItem { Name = "Cubao", Coordinates = new Location(14.621360, 121.055222) }
         };
 
         private readonly Dictionary<(string, string), (int Regular, int Discounted)> fareMatrix = new()
@@ -261,7 +261,7 @@ namespace OnDaGO.MAUI.Views
 
         private async void UpdatePins(List<VehicleModel> vehicles)
         {
-            //var userLocation = new Location(14.7288, 121.1441);
+            //var userLocation = new Location(14.621360, 121.055222);
             var userLocation = await Geolocation.GetLastKnownLocationAsync();
             if (userLocation == null)
             {
@@ -275,7 +275,7 @@ namespace OnDaGO.MAUI.Views
             foreach (var location in allLocations)
             {
                 var distanceToLocation = userLocation.CalculateDistance(location.Coordinates, DistanceUnits.Kilometers);
-                if (distanceToLocation <= 0.01) // Adjust radius as needed (0.01 km = 10 meters)
+                if (distanceToLocation <= 0.015) // Adjust radius as needed (0.01 km = 10 meters)
                 {
                     isUserWithinYellowCircle = true;
                     break;
@@ -309,7 +309,7 @@ namespace OnDaGO.MAUI.Views
                     if (distance <= maxDisplayRadius)
                     {
                         // Calculate ETA in minutes
-                        const double averageSpeedKmH = 20.0;
+                        const double averageSpeedKmH = 18.0;
                         double etaMinutes = (distance / averageSpeedKmH) * 60;
 
                         var pin = new Pin
@@ -868,15 +868,32 @@ namespace OnDaGO.MAUI.Views
             // Toggle the visibility flag
             _isSearchVisible = !_isSearchVisible;
         }
-        //var userLocation = new Location(14.6505, 121.1035);//var userLocation = await Geolocation.GetLastKnownLocationAsync();
+        //var userLocation = new Location(14.621360, 121.055222);//var userLocation = await Geolocation.GetLastKnownLocationAsync();
         private async void OnToggleBottomSheetClicked(object sender, EventArgs e)
         {
-            // Use a default location for testing (or use Geolocation if available)
+            //var userLocation = new Location(14.621360, 121.055222);
             var userLocation = await Geolocation.GetLastKnownLocationAsync();
-            //var userLocation = new Location(14.7288, 121.1441);
             if (userLocation == null)
             {
                 await DisplayAlert("Error", "User location could not be determined.", "OK");
+                return;
+            }
+
+            // Check if the user is within any yellow-circled locations
+            bool isUserWithinYellowCircle = false;
+            foreach (var location in allLocations)
+            {
+                var distanceToLocation = userLocation.CalculateDistance(location.Coordinates, DistanceUnits.Kilometers);
+                if (distanceToLocation <= 0.015) // Adjust this radius as needed
+                {
+                    isUserWithinYellowCircle = true;
+                    break;
+                }
+            }
+
+            if (!isUserWithinYellowCircle)
+            {
+                await DisplayAlert("Info", "You are not within a designated yellow area.", "OK");
                 return;
             }
 
@@ -885,41 +902,27 @@ namespace OnDaGO.MAUI.Views
             if (vehicles == null || vehicles.Count == 0)
             {
                 await DisplayAlert("Info", "No vehicles available.", "OK");
-                // Reset stroke color when no vehicles are available
                 OuterFrame.BorderColor = Colors.Transparent;
                 ToggleBottomSheetFrame.BorderColor = Colors.Transparent;
                 return;
             }
 
-            // Identify the closest vehicle to the user’s location
+            // Find the closest vehicle within a 2 km radius
             SelectedVehicle = vehicles
                 .OrderBy(vehicle => userLocation.CalculateDistance(new Location(vehicle.CurrentLat, vehicle.CurrentLong), DistanceUnits.Kilometers))
-                .FirstOrDefault();
+                .FirstOrDefault(vehicle => userLocation.CalculateDistance(new Location(vehicle.CurrentLat, vehicle.CurrentLong), DistanceUnits.Kilometers) <= 2.0);
 
             if (SelectedVehicle == null)
             {
-                await DisplayAlert("Info", "No vehicle found within range.", "OK");
-                OuterFrame.BorderColor = Colors.Transparent; // Reset stroke color
+                await DisplayAlert("Info", "No vehicle found within the 2 km radius.", "OK");
+                OuterFrame.BorderColor = Colors.Transparent;
                 ToggleBottomSheetFrame.BorderColor = Colors.Transparent;
                 return;
             }
 
-            // Check if the selected vehicle is within the 2 km radius of the user's location
-            var vehicleLocation = new Location(SelectedVehicle.CurrentLat, SelectedVehicle.CurrentLong);
-            const double maxDisplayRadius = 2.0; // 2 km radius for displaying vehicle details
-            var distanceToVehicle = userLocation.CalculateDistance(vehicleLocation, DistanceUnits.Kilometers);
-
-            if (distanceToVehicle > maxDisplayRadius)
-            {
-                await DisplayAlert("Info", "The closest vehicle is not within the 2 km radius.", "OK");
-                OuterFrame.BorderColor = Colors.Transparent; // Reset stroke color
-                ToggleBottomSheetFrame.BorderColor = Colors.Transparent;
-                return;
-            }
-
+            // Show the BottomSheet with vehicle information
             if (!BottomSheet.IsVisible)
             {
-                // Show the BottomSheet
                 BottomSheet.IsVisible = true;
                 await BottomSheet.FadeTo(1, 250);
                 await SlideDown(FrameLayout);
@@ -930,7 +933,8 @@ namespace OnDaGO.MAUI.Views
                 LoadFareMatrixInBottomSheet();
 
                 // Calculate ETA for the closest vehicle
-                const double averageSpeedKmH = 20.0;
+                const double averageSpeedKmH = 18.0;
+                double distanceToVehicle = userLocation.CalculateDistance(new Location(SelectedVehicle.CurrentLat, SelectedVehicle.CurrentLong), DistanceUnits.Kilometers);
                 double etaMinutes = (distanceToVehicle / averageSpeedKmH) * 60;
 
                 // Update the BottomSheet labels with vehicle information
@@ -956,7 +960,27 @@ namespace OnDaGO.MAUI.Views
             }
         }
 
-
+        private async void OnZoomToUserLocationClicked(object sender, EventArgs e)
+        {
+            try
+            {
+                var userLocation = await Geolocation.GetLastKnownLocationAsync();
+                if (userLocation != null)
+                {
+                    // Define a map span with a smaller zoom level to focus on user's location
+                    var mapSpan = MapSpan.FromCenterAndRadius(new Location(userLocation.Latitude, userLocation.Longitude), Distance.FromMiles(0.5));
+                    map.MoveToRegion(mapSpan);
+                }
+                else
+                {
+                    await DisplayAlert("Location Error", "Unable to retrieve your location. Please check your location settings.", "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error", $"An error occurred while getting your location: {ex.Message}", "OK");
+            }
+        }
 
 
         private async void OnCloseBottomSheetClicked(object sender, EventArgs e)

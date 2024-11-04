@@ -33,6 +33,7 @@
                 <StackLayout Padding="30" Spacing="20">
                     <Label Text="Welcome!" 
                            FontSize="32" 
+                           FontFamily="NunitoRegular"
                            FontAttributes="Bold" 
                            HorizontalOptions="Center"
                            TextColor="#333"/>

@@ -33,7 +33,8 @@
                 <StackLayout Padding="30" Spacing="20">
                     <Label Text="Create Your Account" 
                            FontSize="32" 
-                           FontAttributes="Bold" 
+                           FontFamily="NunitoRegular"
+                           FontAttributes="Bold"
                            HorizontalOptions="Center"
                            TextColor="#333"/>
 
@@ -78,11 +79,11 @@
                     </StackLayout>
 
                     <!-- Upload Document Front -->
-                    <Button Text="Upload Document Front Image" Clicked="OnDocumentFrontClicked"/>
+                    <Button Text="Upload Document Front Image" Clicked="OnDocumentFrontClicked" CornerRadius="20" FontAttributes="Bold"/>
                     <Image x:Name="DocumentImageFrontPreview" HeightRequest="100" IsVisible="False"/>
 
                     <!-- Upload Selfie -->
-                    <Button Text="Upload Selfie" Clicked="OnSelfieImageClicked"/>
+                    <Button Text="Upload Selfie" Clicked="OnSelfieImageClicked" CornerRadius="20" FontAttributes="Bold"/>
                     <Image x:Name="SelfieImagePreview" HeightRequest="100" IsVisible="False"/>
 
                     <!-- Error Label -->
@@ -104,7 +105,7 @@
                             HorizontalOptions="FillAndExpand"/>
 
                     <!-- Footer for Login Link -->
-                    <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Margin="0,20,0,0">
+                    <StackLayout Orientation="Vertical" HorizontalOptions="Center" Margin="0,5,0,0">
                         <Label Text="Already have an account?" FontSize="14" TextColor="#999"/>
                         <Button Text="Login"
                                 Clicked="OnLoginClicked"

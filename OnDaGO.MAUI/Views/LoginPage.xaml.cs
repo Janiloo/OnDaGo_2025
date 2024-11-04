@@ -41,7 +41,23 @@ namespace OnDaGO.MAUI.Views
                     await SecureStorage.SetAsync("jwt_token", result.Token); // Store token securely
                     await SecureStorage.SetAsync("user_id", result.User.Id); // Store user ID securely
 
-                    // Check if the user is an admin and navigate to AdminHomePage
+                    // Request location permission
+                    var locationPermissionStatus = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+                    if (locationPermissionStatus != PermissionStatus.Granted)
+                    {
+                        // If permission has not been granted, request it
+                        locationPermissionStatus = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+                    }
+
+                    // Check if location permission is granted
+                    if (locationPermissionStatus != PermissionStatus.Granted)
+                    {
+                        // Optionally, show a message or handle accordingly
+                        await DisplayAlert("Location Permission", "Location permission is required to access location features.", "OK");
+                        return; // Exit or handle the denied permission scenario
+                    }
+
+                    // Proceed to the appropriate home page after permission is granted
                     if (result.User.Role == "Admin")
                     {
                         await Navigation.PushAsync(new AdminHomePage());
@@ -86,6 +102,7 @@ namespace OnDaGO.MAUI.Views
                 ErrorLabel.IsVisible = true;
             }
         }
+
 
 
         private async void OnForgotPasswordClicked(object sender, EventArgs e)
