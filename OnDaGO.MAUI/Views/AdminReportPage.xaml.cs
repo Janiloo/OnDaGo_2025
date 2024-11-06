@@ -1,6 +1,7 @@
 using OnDaGO.MAUI.Models;
 using OnDaGO.MAUI.Services;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 
@@ -14,19 +15,39 @@ namespace OnDaGO.MAUI.Views
         {
             InitializeComponent();
             _reportService = reportService;
+            // Initialize the subject list for the Picker
+            SubjectList = new[]
+            {
+                "All", "Lost Item", "Harassment", "Crime", "Accident", "Traffic Issue",
+                "Road Damage", "Petty Theft", "Emergency Assistance", "Other"
+            };
+            SubjectPicker.ItemsSource = SubjectList;
+            SubjectPicker.SelectedIndex = 0;  // Default to "All"
         }
+
+        public string[] SubjectList { get; set; }
 
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-            await LoadReports();
+            await LoadReports();  // Default to "Newest First"
         }
 
-        private async Task LoadReports()
+        private async Task LoadReports(string subjectFilter = null)
         {
             try
             {
                 var reports = await _reportService.GetReportsAsync();
+
+                // Filter by subject if selected
+                if (!string.IsNullOrEmpty(subjectFilter) && subjectFilter != "All")
+                {
+                    reports = reports.Where(r => r.Subject == subjectFilter).ToList();
+                }
+
+                // Sort reports by "Newest First" (most recent first)
+                reports = reports.OrderByDescending(r => r.CreatedAt).ToList();
+
                 ReportCollection.ItemsSource = reports;
             }
             catch (Exception ex)
@@ -43,33 +64,15 @@ namespace OnDaGO.MAUI.Views
             }
         }
 
-        private void OnPendingClicked(object sender, EventArgs e)
-        {
-            if (sender is Button button)
-            {
-                button.BackgroundColor = button.BackgroundColor == Colors.White ? Colors.LightBlue : Colors.White;
-            }
-        }
-
-        private void OnImportantClicked(object sender, EventArgs e)
-        {
-            if (sender is Button button)
-            {
-                button.BackgroundColor = button.BackgroundColor == Colors.White ? Colors.Red : Colors.White;
-            }
-        }
-
-        private void OnCompletedClicked(object sender, EventArgs e)
-        {
-            if (sender is Button button)
-            {
-                button.BackgroundColor = button.BackgroundColor == Colors.White ? Colors.LightGreen : Colors.White;
-            }
-        }
-
         private async void OnRefreshReportsClicked(object sender, EventArgs e)
         {
-            await LoadReports();
+            await LoadReports();  // Reload reports when refresh button is clicked
+        }
+
+        private async void OnSubjectChanged(object sender, EventArgs e)
+        {
+            var selectedSubject = SubjectPicker.SelectedItem as string;
+            await LoadReports(selectedSubject);  // Filter reports by selected subject
         }
     }
 }

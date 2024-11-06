@@ -33,7 +33,9 @@ public class Startup
         services.AddScoped<ReportService>();
         services.AddControllers();
         services.AddScoped<IdAnalyzerClient>();
+        services.AddScoped<IdAnalyzerService>();
         services.AddHttpClient<IdAnalyzerClient>();
+        services.AddHttpClient<IdAnalyzerService>();
         services.AddScoped<VehicleService>();     // Register Vehicle service
         services.AddLogging();
 

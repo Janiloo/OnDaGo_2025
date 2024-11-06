@@ -918,7 +918,7 @@ namespace OnDaGO.MAUI.Views
             }
             else
             {
-                // Hide the BottomSheet if it’s already visible
+                // Hide the BottomSheet if it?s already visible
                 await BottomSheet.TranslateTo(0, this.Height, 300, Easing.CubicInOut);
                 await BottomSheet.FadeTo(0, 250);
                 map.IsTrafficEnabled = true;
@@ -1003,7 +1003,7 @@ namespace OnDaGO.MAUI.Views
         private void SetButtonStrokeColor(int count)
         {
             Color strokeColor;
-            
+
             if (count >= 0 && count <= 15)
             {
                 strokeColor = Colors.LimeGreen;

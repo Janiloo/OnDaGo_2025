@@ -12,7 +12,7 @@
                 HeightRequest="210"
                 WidthRequest="260" />
 
-                <!-- Header for the Page -->
+            <!-- Header for the Page -->
             <Label 
                 Text="What can we do for you?"
                 FontFamily="NunitoRegular"
@@ -22,22 +22,74 @@
                 HorizontalOptions="Center"
                 VerticalOptions="Center" />
 
+            <Label 
+Text="Email: "
+FontFamily="NunitoRegular"
+FontAttributes="Bold"
+TextColor="#421502"
+FontSize="16"
+HorizontalOptions="Start"
+VerticalOptions="Center" />
+
             <!-- Frame wrapping the Entry for UserId -->
             <Frame BackgroundColor="White" CornerRadius="20" Padding="0" HasShadow="False">
                 <Entry x:Name="UserIdEntry"
-                       Placeholder="Enter your Email"
+                       Placeholder="Your Email"
                        FontSize="16"
                        Margin="5"
-                       TextChanged="OnUserIdEntryTextChanged" />    
+                       IsReadOnly="True" />
+                <!-- Make it read-only -->
             </Frame>
 
-            <!-- Frame wrapping the Entry for Report Subject -->
+            <Label 
+        Text="Select a Subject:"
+        FontFamily="NunitoRegular"
+        FontAttributes="Bold"
+        TextColor="#421502"
+        FontSize="16"
+        HorizontalOptions="Start"
+        VerticalOptions="Center" />
+            <!-- Frame wrapping the Picker for Report Subject -->
             <Frame BackgroundColor="White" CornerRadius="20" Padding="0" HasShadow="False">
-                <Entry x:Name="SubjectEntry"
-                       Placeholder="Enter report subject"
+                <Picker x:Name="SubjectPicker"
+                        SelectedIndexChanged="OnSubjectChanged"
+                        FontSize="16"
+                        Margin="5">
+                    <!-- Placeholder item that is not selectable -->
+                    <Picker.Items>
+                        <!-- Placeholder item -->
+                        <x:String>Select an Item</x:String>
+                        <x:String>Lost Item</x:String>
+                        <x:String>Harassment</x:String>
+                        <x:String>Crime</x:String>
+                        <x:String>Accident</x:String>
+                        <x:String>Traffic Issue</x:String>
+                        <x:String>Road Damage</x:String>
+                        <x:String>Petty Theft</x:String>
+                        <x:String>Emergency Assistance</x:String>
+                        <x:String>Other</x:String>
+                    </Picker.Items>
+                </Picker>
+            </Frame>
+
+            
+            <!-- Frame wrapping the Entry for Custom Subject if 'Other' is selected -->
+            <Frame BackgroundColor="White" CornerRadius="20" Padding="0" HasShadow="False" IsVisible="False" x:Name="CustomSubjectFrame">
+                
+                <Entry x:Name="CustomSubjectEntry" Text="Select a Subject"
+                       Placeholder="Enter custom subject"
                        FontSize="16"
                        Margin="5" />
             </Frame>
+
+            <Label 
+Text="Description: "
+FontFamily="NunitoRegular"
+FontAttributes="Bold"
+TextColor="#421502"
+FontSize="16"
+HorizontalOptions="Start"
+VerticalOptions="Center" />
 
             <!-- Frame wrapping the Editor for Report Description -->
             <Frame BackgroundColor="White" CornerRadius="20" Padding="0" HasShadow="False">

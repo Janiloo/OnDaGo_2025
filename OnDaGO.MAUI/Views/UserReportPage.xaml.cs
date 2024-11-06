@@ -1,10 +1,9 @@
 using OnDaGO.MAUI.Models;
 using OnDaGO.MAUI.Services;
-using System;
 using Microsoft.Maui.Controls;
 using Refit;
+using System;
 using System.Threading.Tasks;
-using System.Text.RegularExpressions;
 
 namespace OnDaGO.MAUI.Views
 {
@@ -12,6 +11,7 @@ namespace OnDaGO.MAUI.Views
     {
         private readonly ReportService _reportService;
         private string _userId;
+        private string _userEmail;
 
         public UserReportPage(ReportService reportService)
         {
@@ -21,7 +21,6 @@ namespace OnDaGO.MAUI.Views
             GetUserProfile();  // Fetch the user profile on page load
         }
 
-        // Method to retrieve the user profile, specifically the UserId
         private async Task GetUserProfile()
         {
             try
@@ -37,6 +36,11 @@ namespace OnDaGO.MAUI.Views
                     if (response != null)
                     {
                         _userId = response.Id;  // Store the UserId for report submission
+                        _userEmail = response.Email;  // Store the user's email
+
+                        // Automatically populate the UserIdEntry with the user's email
+                        UserIdEntry.Text = _userEmail;
+
                         SubmitButton.IsEnabled = true; // Enable the submit button once the user profile is loaded
                     }
                 }
@@ -48,44 +52,58 @@ namespace OnDaGO.MAUI.Views
             }
         }
 
-
-        private void OnUserIdEntryTextChanged(object sender, TextChangedEventArgs e)
+        // Event handler for when the subject is changed (for "Other" option)
+        // Event handler for when the subject is changed (for "Other" option)
+        private void OnSubjectChanged(object sender, EventArgs e)
         {
-            SubmitButton.IsEnabled = IsValidEmail(UserIdEntry.Text);
+            // Show the custom subject entry field only if "Other" is selected
+            if (SubjectPicker.SelectedIndex == 0) // "Select a subject" is the 1st item (index 0)
+            {
+                CustomSubjectFrame.IsVisible = false;  // Hide the custom subject field
+                SubmitButton.IsEnabled = false; // Disable submit until valid option is selected
+            }
+            else if (SubjectPicker.SelectedIndex == 8) // "Other" is the 9th item (index 8)
+            {
+                CustomSubjectFrame.IsVisible = false; // Hide the custom subject entry field
+                SubmitButton.IsEnabled = true; // Enable submit button if "Other" is selected
+            }
+            else
+            {
+                CustomSubjectFrame.IsVisible = false; // Hide the custom subject entry field for any other selection
+                SubmitButton.IsEnabled = true; // Enable submit button if valid subject is selected
+            }
         }
 
-        // Helper method to validate email format
-        private bool IsValidEmail(string email)
-        {
-            if (string.IsNullOrWhiteSpace(email))
-                return false;
-
-            // Basic email pattern matching
-            var emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
-            return Regex.IsMatch(email, emailPattern, RegexOptions.IgnoreCase);
-        }
 
         // Event handler for the Submit Report button
         // Event handler for the Submit Report button
         private async void OnSubmitReportClicked(object sender, EventArgs e)
         {
-            // Retrieve the UserId from the entry field
-            _userId = UserIdEntry.Text;
+            // Use the user's email (retrieved from the profile) for the report
+            _userId = _userEmail;
 
             // Validate input fields
             if (string.IsNullOrWhiteSpace(UserIdEntry.Text) ||
-                string.IsNullOrWhiteSpace(SubjectEntry.Text) ||
-                string.IsNullOrWhiteSpace(DescriptionEditor.Text))
+                string.IsNullOrWhiteSpace(SubjectPicker.SelectedItem?.ToString()) ||
+                string.IsNullOrWhiteSpace(DescriptionEditor.Text) ||
+                SubjectPicker.SelectedItem.ToString() == "Select a subject")
             {
-                await DisplayAlert("Validation Error", "Please enter your User ID, subject, and description.", "OK");
+                await DisplayAlert("Validation Error", "Please select a valid subject and enter a description.", "OK");
                 return;
+            }
+
+            // Get the selected subject or custom subject
+            string subject = SubjectPicker.SelectedItem.ToString();
+            if (subject == "Other")
+            {
+                subject = "Other"; // Treat "Other" as the subject without needing the custom input field
             }
 
             // Create a new report with the provided UserId and "Pending" status
             var newReport = new ReportItem
             {
                 UserId = _userId,
-                Subject = SubjectEntry.Text,
+                Subject = subject,
                 Description = DescriptionEditor.Text,
                 Status = "Pending",
                 CreatedAt = DateTime.UtcNow
@@ -98,8 +116,8 @@ namespace OnDaGO.MAUI.Views
                 await DisplayAlert("Success", "Your report has been submitted successfully.", "OK");
 
                 // Optionally, clear the fields or navigate away
-                UserIdEntry.Text = string.Empty;
-                SubjectEntry.Text = string.Empty;
+                SubjectPicker.SelectedIndex = -1;
+                CustomSubjectEntry.Text = string.Empty;
                 DescriptionEditor.Text = string.Empty;
             }
             catch (ApiException apiEx)

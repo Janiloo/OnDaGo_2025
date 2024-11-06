@@ -1,0 +1,137 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="OnDaGO.MAUI.Views.TermsPage"
+             Title="Terms and Conditions">
+    
+    <ScrollView>
+        <StackLayout Padding="20" Spacing="15">
+
+            <Label Text="Terms and Conditions" 
+                   FontSize="26" 
+                   FontAttributes="Bold" 
+                   TextColor="#333" 
+                   HorizontalOptions="Center" />
+
+            <Label Text="Effective Date: November 6, 2024" 
+                   FontSize="14" 
+                   TextColor="#888" 
+                   HorizontalOptions="Center" />
+
+
+            <StackLayout Spacing="10">
+
+                <Label Text="1. Personal Information Collection" 
+                       FontSize="18" 
+                       FontAttributes="Bold" 
+                       TextColor="#333"/>
+                <Label Text="We collect the following personal information:" 
+                       FontSize="16" 
+                       TextColor="#666"/>
+                <StackLayout Padding="20,0,0,0">
+                    <Label Text=" Name" FontSize="16" TextColor="#666"/>
+                    <Label Text=" Phone Number" FontSize="16" TextColor="#666"/>
+                    <Label Text=" Email Address" FontSize="16" TextColor="#666"/>
+                    <Label Text=" Password" FontSize="16" TextColor="#666"/>
+                    <Label Text=" Age" FontSize="16" TextColor="#666"/>
+                    <Label Text=" ID" FontSize="16" TextColor="#666"/>
+                </StackLayout>
+
+                <Label Text="2. Forgot Password" 
+                       FontSize="18" 
+                       FontAttributes="Bold" 
+                       TextColor="#333"/>
+                <Label Text="If you forget your password, we may send an email to your registered email address to assist with the reset process." 
+                       FontSize="16" 
+                       TextColor="#666"/>
+
+
+                <Label Text="3. Analytics and Tracking Technologies" 
+                       FontSize="18" 
+                       FontAttributes="Bold" 
+                       TextColor="#333"/>
+                <Label Text="We use the following tools to gather data on user interactions and enhance your experience:" 
+                       FontSize="16" 
+                       TextColor="#666"/>
+                <StackLayout Padding="20,0,0,0">
+                    <Label Text=" Google Analytics" FontSize="16" TextColor="#666"/>
+                    <Label Text=" Google Maps API" FontSize="16" TextColor="#666"/>
+                    <Label Text=" Local Storage" FontSize="16" TextColor="#666"/>
+                    <Label Text=" Sessions" FontSize="16" TextColor="#666"/>
+                </StackLayout>
+
+
+                <Label Text="4. Ad-Free Platform" 
+                       FontSize="18" 
+                       FontAttributes="Bold" 
+                       TextColor="#333"/>
+                <Label Text="OnDaGo does not show ads, use Facebook Pixel, or employ any ads that redirect users to external services." 
+                       FontSize="16" 
+                       TextColor="#666"/>
+
+                <Label Text="5. No Social Media Integration" 
+                       FontSize="18" 
+                       FontAttributes="Bold" 
+                       TextColor="#333"/>
+                <Label Text="Our App does not use or integrate with any social media providers." 
+                       FontSize="16" 
+                       TextColor="#666"/>
+
+
+                <Label Text="6. Age Requirement" 
+                       FontSize="18" 
+                       FontAttributes="Bold" 
+                       TextColor="#333"/>
+                <Label Text="OnDaGo is intended for users aged 13 and above. By using the App, you confirm that you meet this age requirement." 
+                       FontSize="16" 
+                       TextColor="#666"/>
+
+                <Label Text="7. User Permissions and Access" 
+                       FontSize="18" 
+                       FontAttributes="Bold" 
+                       TextColor="#333"/>
+                <Label Text="The App may request access to the following services on your device:" 
+                       FontSize="16" 
+                       TextColor="#666"/>
+                <StackLayout Padding="20,0,0,0">
+                    <Label Text=" Geolocation" FontSize="16" TextColor="#666"/>
+                    <Label Text=" Camera Access" FontSize="16" TextColor="#666"/>
+                    <Label Text=" Photo Gallery Access" FontSize="16" TextColor="#666"/>
+                </StackLayout>
+
+                <Label Text="8. Payments" 
+                       FontSize="18" 
+                       FontAttributes="Bold" 
+                       TextColor="#333"/>
+                <Label Text="We do not accept or process online payments in the App." 
+                       FontSize="16" 
+                       TextColor="#666"/>
+
+   
+                <Label Text="9. Contact Information" 
+                       FontSize="18" 
+                       FontAttributes="Bold" 
+                       TextColor="#333"/>
+                <Label Text="For any inquiries, feedback, or concerns, you may reach out to our development team at avancena.johnilo@gmail.com." 
+                       FontSize="16" 
+                       TextColor="#666"/>
+
+                <Label Text="10. Changes to Terms and Conditions" 
+                       FontSize="18" 
+                       FontAttributes="Bold" 
+                       TextColor="#333"/>
+                <Label Text="OnDaGo reserves the right to modify these Terms and Conditions at any time. Updates will be communicated through the App, and the effective date will be revised accordingly." 
+                       FontSize="16" 
+                       TextColor="#666"/>
+
+
+                <Label Text="11. Governing Law" 
+                       FontSize="18" 
+                       FontAttributes="Bold" 
+                       TextColor="#333"/>
+                <Label Text="These Terms and Conditions are governed by the laws of the Philippines. Any disputes arising from the use of our App will be subject to the exclusive jurisdiction of the courts in the Philippines." 
+                       FontSize="16" 
+                       TextColor="#666"/>
+            </StackLayout>
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

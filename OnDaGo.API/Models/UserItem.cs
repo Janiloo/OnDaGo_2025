@@ -13,10 +13,10 @@ namespace OnDaGo.API.Models
         public string PasswordHash { get; set; }
         public string PhoneNumber { get; set; }
         public string Role { get; set; } = "User";
-        public string DocumentImageBase64 { get; set; } // Base64 string for front image
-        public string SelfieImage { get; set; }        // Base64 string for selfie image
+        public string DocumentImageBase64 { get; set; } // Base64 string for ID document
+        public string FaceImageBase64 { get; set; } // Base64 string for selfie image
+
         public string? ResetToken { get; set; }
-        public bool IsVerified { get; set; } = false;
         public DateTime? ResetTokenExpiry { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -29,8 +29,26 @@ namespace OnDaGo.API.Models
         public string PasswordHash { get; set; }
         public string PhoneNumber { get; set; }
         public string Role { get; set; } = "User";
-
-        public string? DocumentImageBase64 { get; set; } // Base64 string for front image
-        public string? SelfieImage { get; set; }
+        public string DocumentImageBase64 { get; set; } // Base64 string for ID document
+        public string FaceImageBase64 { get; set; } // Base64 string for selfie image
     }
+
+
+    public class UserRegistrationModel
+    {
+        public string DocumentImageBase64 { get; set; } // Base64 string for ID document
+        public string FaceImageBase64 { get; set; } // Base64 string for selfie image
+    }
+
+
+    public class IdAnalyzerResponse
+    {
+        // Define the fields based on the IdAnalyzer API response structure.
+        public bool Success { get; set; }
+        public string Result { get; set; }
+        public string Message { get; set; }
+        // Add other fields as per the API documentation.
+    }
+
+
 }

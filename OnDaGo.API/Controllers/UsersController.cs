@@ -21,12 +21,14 @@ namespace OnDaGo.API.Controllers
         private readonly EmailService _emailService;
         private readonly IdAnalyzerClient _idAnalyzerClient;
         private readonly ILogger<UsersController> _logger;
+        private readonly IdAnalyzerService _idAnalyzerService;
 
-        public UsersController(UserService userService, EmailService emailService, IdAnalyzerClient idAnalyzerClient)
+        public UsersController(UserService userService, EmailService emailService, IdAnalyzerClient idAnalyzerClient, IdAnalyzerService idAnalyzerService)
         {
             _userService = userService;
             _emailService = emailService;
             _idAnalyzerClient = idAnalyzerClient;
+            _idAnalyzerService = idAnalyzerService;
         }
 
 
@@ -36,20 +38,34 @@ namespace OnDaGo.API.Controllers
             if (userRequest == null ||
                 string.IsNullOrWhiteSpace(userRequest.Name) ||
                 string.IsNullOrWhiteSpace(userRequest.Email) ||
-                string.IsNullOrWhiteSpace(userRequest.PasswordHash) ||
-                string.IsNullOrWhiteSpace(userRequest.DocumentImageBase64) ||
-                string.IsNullOrWhiteSpace(userRequest.SelfieImage))
+                string.IsNullOrWhiteSpace(userRequest.PasswordHash))
             {
-                return BadRequest("Name, email, and password are required.");
+                return BadRequest(new { Success = false, Message = "Name, email, and password are required." });
             }
 
             // Check for existing user by email
             var existingUser = await _userService.FindByEmailAsync(userRequest.Email);
             if (existingUser != null)
             {
-                return Conflict("User with this email already exists.");
+                return Conflict(new { Success = false, Message = "User with this email already exists." });
             }
 
+            // Analyze document and face images if provided
+            if (!string.IsNullOrWhiteSpace(userRequest.DocumentImageBase64) && !string.IsNullOrWhiteSpace(userRequest.FaceImageBase64))
+            {
+                var analysisResult = await _idAnalyzerService.AnalyzeDocumentAsync(
+                    userRequest.DocumentImageBase64,
+                    userRequest.FaceImageBase64
+                );
+
+                // If document analysis fails, return a bad request and prevent user creation
+                if (!analysisResult.Success)
+                {
+                    return BadRequest(new { Success = false, Message = "Document analysis failed: " + analysisResult.Message });
+                }
+            }
+
+            // Create and save user in database if document analysis is successful
             var user = new UserItem
             {
                 Name = userRequest.Name,
@@ -58,65 +74,20 @@ namespace OnDaGo.API.Controllers
                 PhoneNumber = userRequest.PhoneNumber,
                 Role = userRequest.Role ?? "User",
                 DocumentImageBase64 = userRequest.DocumentImageBase64,
-                SelfieImage = userRequest.SelfieImage,
+                FaceImageBase64 = userRequest.FaceImageBase64,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
-            // Save user to database
             await _userService.CreateUserAsync(user);
 
-            return CreatedAtAction(nameof(Register), new { id = user.Id }, user);
+            return CreatedAtAction(nameof(Register), new { id = user.Id }, new { Success = true, User = user });
         }
 
-        [HttpPost("verify-id")]
-        public async Task<IActionResult> VerifyId([FromBody] VerifyIdRequest verifyRequest)
-        {
-            if (verifyRequest == null ||
-                string.IsNullOrWhiteSpace(verifyRequest.DocumentImageBase64) ||
-                string.IsNullOrWhiteSpace(verifyRequest.SelfieImage))
-            {
-                return BadRequest("Document image and selfie are required.");
-            }
 
-            JObject verificationResult;
-            try
-            {
-                // Verify ID with ID Analyzer
-                verificationResult = await _idAnalyzerClient.AnalyzeIdAsync(
-                    verifyRequest.DocumentImageBase64,
-                    verifyRequest.SelfieImage
-                );
 
-                if (verificationResult == null)
-                {
-                    _logger.LogError("ID verification service returned a null response.");
-                    return StatusCode(500, "ID verification service returned null response.");
-                }
 
-                string decision = verificationResult["decision"]?.ToString();
-                if (decision != "accept")
-                {
-                    return BadRequest("ID verification failed. Decision: " + decision);
-                }
 
-                // Update user's verification status in database, assuming user is authenticated
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var user = await _userService.FindByIdAsync(userId);
-                if (user == null)
-                {
-                    return NotFound("User not found.");
-                }
-
-                user.IsVerified = true; // Assume you add an IsVerified property to UserItem
-                await _userService.UpdateUserAsync(user);
-
-                return Ok("ID verification successful.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("Error during ID verification: {Message}", ex.Message);
-                return StatusCode(500, "ID verification service unavailable.");
-            }
-        }
 
 
 

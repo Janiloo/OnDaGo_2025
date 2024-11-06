@@ -1,18 +1,22 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="OnDaGO.MAUI.Views.AdminReportPage"
-             Title="Reports"
+             Title="Passenger Reports"
              BackgroundColor="#33efbb6b">
 
     <ScrollView>
         <StackLayout Padding="10">
             <!-- Header for Admin Reports -->
-            <Label Text="Admin Reports"
-                   FontFamily="NunitoRegular"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center"
-                   Margin="0,0,0,10"/>
 
+            <!-- Subject Filter Picker -->
+            <Picker x:Name="SubjectPicker" 
+                    SelectedIndexChanged="OnSubjectChanged"
+                    Title="Select a Subject" 
+                    FontSize="Medium"
+                    ItemsSource="{Binding SubjectList}"
+                    Margin="0, 0, 0, 10"/>
+
+            <!-- Reports CollectionView -->
             <CollectionView x:Name="ReportCollection" Margin="0,0,0,0">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
@@ -21,14 +25,13 @@
                                 <TapGestureRecognizer Tapped="OnReportTapped" />
                             </Frame.GestureRecognizers>
                             <StackLayout Spacing="5">
-                                  
+
                                 <!-- UserId Display -->
                                 <Label Text="{Binding UserId}" 
                                        FontSize="Small" 
                                        TextColor="Gray"
                                        FontAttributes="Italic" 
                                        HorizontalOptions="Start" />
-                                
 
                                 <Label Text="{Binding Subject}" 
                                        FontSize="Medium" 
@@ -43,29 +46,11 @@
                                        TextColor="Black" />
 
                                 <!-- CreatedAt Date Display -->
-                                <Label Text="{Binding CreatedAt, StringFormat='{0:MMMM dd, yyyy}'}"
+                                <Label Text="{Binding CreatedAt, StringFormat='{0:MMMM dd, yyyy hh:mm tt}'}"
                                        FontSize="Small"
                                        TextColor="Gray"
-                                       HorizontalOptions="End" />   
+                                       HorizontalOptions="End" />
 
-                                <!-- Status Buttons 
-                                <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="10">
-                                    <Button x:Name="PendingButton" Text="Pending" 
-                                            Clicked="OnPendingClicked" 
-                                            BackgroundColor="White" 
-                                            TextColor="Blue" 
-                                            CornerRadius="15"/>
-                                    <Button x:Name="ImportantButton" Text="Important" 
-                                            Clicked="OnImportantClicked" 
-                                            BackgroundColor="White" 
-                                            TextColor="Red" 
-                                            CornerRadius="15"/>
-                                    <Button x:Name="CompletedButton" Text="Completed" 
-                                            Clicked="OnCompletedClicked" 
-                                            BackgroundColor="White" 
-                                            TextColor="Green" 
-                                            CornerRadius="15"/>
-                                </StackLayout> -->
                             </StackLayout>
                         </Frame>
                     </DataTemplate>

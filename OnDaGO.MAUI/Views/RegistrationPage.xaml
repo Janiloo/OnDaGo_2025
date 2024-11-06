@@ -26,74 +26,44 @@
 
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="30,30,0,0"/>
-                <!-- Top corners rounded, bottom corners square -->
             </Border.StrokeShape>
 
             <ScrollView>
                 <StackLayout Padding="30" Spacing="20">
-                    <Label Text="Create Your Account" 
-                           FontSize="32" 
-                           FontFamily="NunitoRegular"
-                           FontAttributes="Bold"
-                           HorizontalOptions="Center"
-                           TextColor="#333"/>
+                    <Label Text="Create Your Account" FontSize="32" FontFamily="NunitoRegular" FontAttributes="Bold" HorizontalOptions="Center" TextColor="#333"/>
 
-                    <Entry Placeholder="Name" 
-                           x:Name="NameEntry" 
-                           TextColor="#333"
-                           PlaceholderColor="#999"
-                           FontSize="18"/>
+                    <Entry Placeholder="Name" x:Name="NameEntry" TextColor="#333" PlaceholderColor="#999" FontSize="18"/>
+                    <Label x:Name="NameErrorLabel" TextColor="Red" FontSize="14" IsVisible="False"/>
 
-                    <Entry Placeholder="Email" 
-                           x:Name="EmailEntry" 
-                           Keyboard="Email"
-                           TextColor="#333"
-                           PlaceholderColor="#999"
-                           FontSize="18"/>
+                    <Entry Placeholder="Email" x:Name="EmailEntry" Keyboard="Email" TextColor="#333" PlaceholderColor="#999" FontSize="18"/>
+                    <Label x:Name="EmailErrorLabel" TextColor="Red" FontSize="14" IsVisible="False"/>
 
-                    <Entry Placeholder="Phone Number" 
-                           x:Name="PhoneNumberEntry" 
-                           Keyboard="Telephone"
-                           TextColor="#333"
-                           PlaceholderColor="#999"
-                           FontSize="18"/>
+                    <Entry Placeholder="Phone Number" x:Name="PhoneNumberEntry" Keyboard="Telephone" TextColor="#333" PlaceholderColor="#999" FontSize="18"/>
+                    <Label x:Name="PhoneNumberErrorLabel" TextColor="Red" FontSize="14" IsVisible="False"/>
 
-                    <Entry Placeholder="Password" 
-                           x:Name="PasswordEntry" 
-                           IsPassword="True"
-                           TextColor="#333"
-                           PlaceholderColor="#999"
-                           FontSize="18"/>
+                    <Entry Placeholder="Password" x:Name="PasswordEntry" IsPassword="True" TextColor="#333" PlaceholderColor="#999" FontSize="18"/>
+                    <Label x:Name="PasswordErrorLabel" TextColor="Red" FontSize="14" IsVisible="False"/>
 
-                    <Entry Placeholder="Confirm Password" 
-                           x:Name="ConfirmPasswordEntry" 
-                           IsPassword="True"
-                           TextColor="#333"
-                           PlaceholderColor="#999"
-                           FontSize="18"/>
+                    <Entry Placeholder="Confirm Password" x:Name="ConfirmPasswordEntry" IsPassword="True" TextColor="#333" PlaceholderColor="#999" FontSize="18"/>
+                    <Label x:Name="ConfirmPasswordErrorLabel" TextColor="Red" FontSize="14" IsVisible="False"/>
 
-                    <!-- Show Password Toggle -->
                     <StackLayout Orientation="Horizontal" HorizontalOptions="End">
                         <CheckBox x:Name="ShowPasswordCheckBox" CheckedChanged="OnShowPasswordCheckedChanged"/>
                         <Label Text="Show Password" VerticalOptions="Center"/>
                     </StackLayout>
 
-                    <!-- Upload Document Front -->
-                    <Button Text="Upload Document Front Image" Clicked="OnDocumentFrontClicked" CornerRadius="20" FontAttributes="Bold"/>
-                    <Image x:Name="DocumentImageFrontPreview" HeightRequest="100" IsVisible="False"/>
+                    <StackLayout Orientation="Horizontal" HorizontalOptions="CenterAndExpand" Spacing="20">
+                        <StackLayout Orientation="Vertical" HorizontalOptions="Start" Padding="5">
+                            <Button Text="Upload ID" Clicked="OnDocumentFrontClicked" FontSize="18" CornerRadius="20" FontAttributes="Bold" HeightRequest="50"/>
+                            <Image x:Name="DocumentImageFrontPreview" HeightRequest="100" IsVisible="False" Margin="0,10,0,0"/>
+                        </StackLayout>
 
-                    <!-- Upload Selfie -->
-                    <Button Text="Upload Selfie" Clicked="OnSelfieImageClicked" CornerRadius="20" FontAttributes="Bold"/>
-                    <Image x:Name="SelfieImagePreview" HeightRequest="100" IsVisible="False"/>
+                        <StackLayout Orientation="Vertical" HorizontalOptions="End" Padding="5">
+                            <Button Text="Upload Selfie" Clicked="OnSelfieImageClicked" FontSize="18" CornerRadius="20" FontAttributes="Bold" HeightRequest="50"/>
+                            <Image x:Name="SelfieImagePreview" HeightRequest="100" IsVisible="False" Margin="0,10,0,0"/>
+                        </StackLayout>
+                    </StackLayout>
 
-                    <!-- Error Label -->
-                    <Label x:Name="ErrorLabel"
-                           TextColor="Red"
-                           FontSize="14"
-                           HorizontalOptions="Center"
-                           IsVisible="False"/>
-
-                    <!-- Register Button -->
                     <Button Text="Register"
                             Clicked="OnRegisterClicked"
                             BackgroundColor="#efbb6b"
@@ -104,7 +74,22 @@
                             FontAttributes="Bold"
                             HorizontalOptions="FillAndExpand"/>
 
-                    <!-- Footer for Login Link -->
+                    <Label x:Name="ErrorLabel"
+                           TextColor="Red"
+                           FontSize="14"
+                           HorizontalOptions="Center"
+                           IsVisible="False"/>
+
+                    <StackLayout Orientation="Horizontal" HorizontalOptions="Start" Margin="0,5,0,0">
+                        <CheckBox x:Name="AgreeTermsCheckBox"/>
+                        <Label Text="I agree to the" FontSize="14" TextColor="#999" VerticalOptions="Center"/>
+                        <Button Text="Terms and Conditions" 
+                                Clicked="OnTermsClicked" 
+                                FontSize="14" 
+                                BackgroundColor="Transparent" 
+                                TextColor="#efbb6b"/>
+                    </StackLayout>
+
                     <StackLayout Orientation="Vertical" HorizontalOptions="Center" Margin="0,5,0,0">
                         <Label Text="Already have an account?" FontSize="14" TextColor="#999"/>
                         <Button Text="Login"

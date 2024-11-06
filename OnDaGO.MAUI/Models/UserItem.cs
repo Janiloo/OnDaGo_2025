@@ -9,7 +9,7 @@
         public string PhoneNumber { get; set; }
 
         public string DocumentImageBase64 { get; set; } // Base64 string for front image
-        public string SelfieImage { get; set; }        // Base64 string for selfie image
+        public string FaceImageBase64 { get; set; }        // Base64 string for selfie image
 
         public string Role { get; set; } = "User";  // New Role property with default value "User"
         public string ResetToken { get; set; }
