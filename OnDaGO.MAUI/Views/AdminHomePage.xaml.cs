@@ -139,7 +139,7 @@ namespace OnDaGO.MAUI.Views
             var tapGestureRecognizer = new TapGestureRecognizer();
             tapGestureRecognizer.Tapped += OnOverlayTapped;
             Overlay.GestureRecognizers.Add(tapGestureRecognizer);
-
+            LoadFareMatrixInBottomSheet();
             StartLocationPicker.SelectedIndexChanged += (s, e) => UpdateFare();
             EndLocationPicker.SelectedIndexChanged += (s, e) => UpdateFare();
 
@@ -261,20 +261,22 @@ namespace OnDaGO.MAUI.Views
 
         private async void UpdatePins(List<VehicleModel> vehicles)
         {
-            map.Pins.Clear(); // Clear existing pins to avoid duplication
+            // Clear existing pins to avoid duplication if needed
+            map.Pins.Clear();
 
+            // Get the user's location once to use in the loop
+            var userLocation = await Geolocation.GetLastKnownLocationAsync();
+            
             foreach (var vehicle in vehicles)
             {
                 var vehicleLocation = new Location(vehicle.CurrentLat, vehicle.CurrentLong);
 
-                // Get the user's location to calculate ETA
-                var userLocation = await Geolocation.GetLastKnownLocationAsync();
-                if (userLocation != null)
+                if (userLocation != null && vehicle.CurrentLat != 0 && vehicle.CurrentLong != 0)
                 {
                     var distance = userLocation.CalculateDistance(vehicleLocation, DistanceUnits.Kilometers);
                     const double averageSpeedKmH = 18.0;
                     double etaMinutes = (distance / averageSpeedKmH) * 60;
-
+                    SetButtonStrokeColor(vehicle.PassengerCount);
                     // Create a pin with ETA, PUV number, and passenger count
                     var pin = new Pin
                     {
@@ -300,7 +302,63 @@ namespace OnDaGO.MAUI.Views
                     map.Pins.Add(pin);
                 }
             }
+
+            // Update bottom sheet if it's visible
+            if (BottomSheet.IsVisible && SelectedVehicle != null)
+            {
+                // Find the closest vehicle to the user's location again, if needed
+                SelectedVehicle = vehicles
+                    .OrderBy(vehicle => userLocation?.CalculateDistance(new Location(vehicle.CurrentLat, vehicle.CurrentLong), DistanceUnits.Kilometers) ?? double.MaxValue)
+                    .FirstOrDefault();
+                
+
+                if (SelectedVehicle != null)
+                {
+                    var vehicleLocation = new Location(SelectedVehicle.CurrentLat, SelectedVehicle.CurrentLong);
+                    var distance = userLocation?.CalculateDistance(vehicleLocation, DistanceUnits.Kilometers) ?? 0;
+                    const double averageSpeedKmH = 18.0;
+                    double etaMinutes = (distance / averageSpeedKmH) * 60;
+
+                    // Update BottomSheet labels
+                    ETALabel.Text = $"ETA: {etaMinutes:F1} mins";
+                    PuvNoLabel.Text = $"PUV No: {SelectedVehicle.PuvNo}";
+                    PassengerCountLabel.Text = $"Passenger Count: {SelectedVehicle.PassengerCount}/{SelectedVehicle.MaxPassengerCount}";
+                    UpdateStandingPassengerCount(SelectedVehicle.PassengerCount, SelectedVehicle.MaxPassengerCount);
+                    // Calculate and update standing passengers
+                    int standingPassengers = Math.Max(0, SelectedVehicle.PassengerCount - SelectedVehicle.MaxPassengerCount);
+                    StandingPassengerCountLabel.Text = $"Standing Passengers: {standingPassengers}/10";
+                }
+            }
         }
+
+        private void SetButtonStrokeColor(int count)
+        {
+            Color strokeColor;
+
+            if (count >= 0 && count <= 15)
+            {
+                strokeColor = Colors.LimeGreen;
+            }
+            else if (count >= 16 && count <= 25)
+            {
+                strokeColor = Colors.Orange;
+            }
+            else if (count >= 26 && count <= 30)
+            {
+                strokeColor = Colors.Red;
+            }
+            else
+            {
+                strokeColor = Colors.DarkRed; // Default for zero passengers
+            }
+
+            // Set the border color of the outer frame
+            OuterFrame.BorderColor = strokeColor;
+            ToggleBottomSheetFrame.BorderColor = strokeColor;
+        }
+
+
+
 
 
 
@@ -847,6 +905,53 @@ namespace OnDaGO.MAUI.Views
             _isSearchVisible = !_isSearchVisible;
         }
 
+        private async void OnRefreshBottomSheetClicked(object sender, EventArgs e)
+        {
+            // Refresh fare matrix data
+            LoadFareMatrixInBottomSheet();
+
+            // Attempt to retrieve the user's last known location
+            var userLocation = await Geolocation.GetLastKnownLocationAsync();
+            if (userLocation == null)
+            {
+                await DisplayAlert("Error", "User location could not be determined.", "OK");
+                return;
+            }
+
+            // Find the nearest vehicle to the user's location
+            List<VehicleModel> vehicles = await _vehicleService.GetVehiclesAsync();
+            if (vehicles == null || vehicles.Count == 0)
+            {
+                await DisplayAlert("Info", "No vehicles available.", "OK");
+                return;
+            }
+
+            // Identify the closest vehicle
+            SelectedVehicle = vehicles
+                .OrderBy(vehicle => userLocation.CalculateDistance(new Location(vehicle.CurrentLat, vehicle.CurrentLong), DistanceUnits.Kilometers))
+                .FirstOrDefault();
+
+            if (SelectedVehicle != null)
+            {
+                // Calculate ETA for the closest vehicle
+                var vehicleLocation = new Location(SelectedVehicle.CurrentLat, SelectedVehicle.CurrentLong);
+                var distance = userLocation.CalculateDistance(vehicleLocation, DistanceUnits.Kilometers);
+                const double averageSpeedKmH = 18.0;
+                double etaMinutes = (distance / averageSpeedKmH) * 60;
+
+                // Update the BottomSheet labels with vehicle information
+                ETALabel.Text = $"ETA: {etaMinutes:F1} mins";
+                PuvNoLabel.Text = $"PUV No: {SelectedVehicle.PuvNo}";
+                PassengerCountLabel.Text = $"Passenger Count: {SelectedVehicle.PassengerCount}/{SelectedVehicle.MaxPassengerCount}";
+
+                // Calculate and update standing passengers
+                int standingPassengers = Math.Max(0, SelectedVehicle.PassengerCount - SelectedVehicle.MaxPassengerCount);
+                StandingPassengerCountLabel.Text = $"Standing Passengers: {standingPassengers}/10";
+            }
+        }
+
+
+
         private async void OnZoomToUserLocationClicked(object sender, EventArgs e)
         {
             try
@@ -874,11 +979,11 @@ namespace OnDaGO.MAUI.Views
         {
             // Attempt to retrieve the user's last known location
             var userLocation = await Geolocation.GetLastKnownLocationAsync();
-            if (userLocation == null)
+            /*if (userLocation == null)
             {
                 await DisplayAlert("Error", "User location could not be determined.", "OK");
                 return;
-            }
+            }*/
 
             // Find the nearest vehicle to the user's location
             List<VehicleModel> vehicles = await _vehicleService.GetVehiclesAsync();
@@ -996,14 +1101,16 @@ namespace OnDaGO.MAUI.Views
             // Use the MainThread to update UI elements as timers run on a background thread
             Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
             {
+                // Update the button stroke color whenever passenger count changes
                 SetButtonStrokeColor(passengerCount);
             });
         }
 
-        private void SetButtonStrokeColor(int count)
+
+        /*private void SetButtonStrokeColor(int count)
         {
             Color strokeColor;
-
+            
             if (count >= 0 && count <= 15)
             {
                 strokeColor = Colors.LimeGreen;
@@ -1026,7 +1133,7 @@ namespace OnDaGO.MAUI.Views
             OuterFrame.BorderColor = strokeColor;
 
             ToggleBottomSheetFrame.BorderColor = strokeColor;
-        }
+        }*/
 
         protected override void OnDisappearing()
         {
@@ -1133,7 +1240,7 @@ namespace OnDaGO.MAUI.Views
                         var yellowCircle = new Circle
                         {
                             Center = new Location(userLocation.Latitude, userLocation.Longitude),
-                            Radius = new Microsoft.Maui.Maps.Distance(10), // 10 meters
+                            Radius = new Microsoft.Maui.Maps.Distance(15), // 10 meters
                             StrokeColor = Colors.Yellow, // Yellow color
                             StrokeWidth = 5,
                             FillColor = Colors.Yellow.WithAlpha(0.5f) // 50% opacity

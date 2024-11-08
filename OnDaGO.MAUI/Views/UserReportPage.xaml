@@ -5,14 +5,12 @@
              Title="Submit a Report">
     <ScrollView>
         <StackLayout Padding="20" Spacing="15">
-
             <Image
                 Source="feedbacklogo.png"
                 HorizontalOptions="Center"
                 HeightRequest="210"
                 WidthRequest="260" />
 
-            <!-- Header for the Page -->
             <Label 
                 Text="What can we do for you?"
                 FontFamily="NunitoRegular"
@@ -23,41 +21,37 @@
                 VerticalOptions="Center" />
 
             <Label 
-Text="Email: "
-FontFamily="NunitoRegular"
-FontAttributes="Bold"
-TextColor="#421502"
-FontSize="16"
-HorizontalOptions="Start"
-VerticalOptions="Center" />
+                Text="Email:"
+                FontFamily="NunitoRegular"
+                FontAttributes="Bold"
+                TextColor="#421502"
+                FontSize="16"
+                HorizontalOptions="Start"
+                VerticalOptions="Center" />
 
-            <!-- Frame wrapping the Entry for UserId -->
             <Frame BackgroundColor="White" CornerRadius="20" Padding="0" HasShadow="False">
                 <Entry x:Name="UserIdEntry"
                        Placeholder="Your Email"
                        FontSize="16"
                        Margin="5"
                        IsReadOnly="True" />
-                <!-- Make it read-only -->
             </Frame>
 
             <Label 
-        Text="Select a Subject:"
-        FontFamily="NunitoRegular"
-        FontAttributes="Bold"
-        TextColor="#421502"
-        FontSize="16"
-        HorizontalOptions="Start"
-        VerticalOptions="Center" />
-            <!-- Frame wrapping the Picker for Report Subject -->
+                Text="Select a Subject:"
+                FontFamily="NunitoRegular"
+                FontAttributes="Bold"
+                TextColor="#421502"
+                FontSize="16"
+                HorizontalOptions="Start"
+                VerticalOptions="Center" />
+
             <Frame BackgroundColor="White" CornerRadius="20" Padding="0" HasShadow="False">
                 <Picker x:Name="SubjectPicker"
                         SelectedIndexChanged="OnSubjectChanged"
                         FontSize="16"
                         Margin="5">
-                    <!-- Placeholder item that is not selectable -->
                     <Picker.Items>
-                        <!-- Placeholder item -->
                         <x:String>Select an Item</x:String>
                         <x:String>Lost Item</x:String>
                         <x:String>Harassment</x:String>
@@ -72,26 +66,22 @@ VerticalOptions="Center" />
                 </Picker>
             </Frame>
 
-            
-            <!-- Frame wrapping the Entry for Custom Subject if 'Other' is selected -->
             <Frame BackgroundColor="White" CornerRadius="20" Padding="0" HasShadow="False" IsVisible="False" x:Name="CustomSubjectFrame">
-                
-                <Entry x:Name="CustomSubjectEntry" Text="Select a Subject"
+                <Entry x:Name="CustomSubjectEntry"
                        Placeholder="Enter custom subject"
                        FontSize="16"
                        Margin="5" />
             </Frame>
 
             <Label 
-Text="Description: "
-FontFamily="NunitoRegular"
-FontAttributes="Bold"
-TextColor="#421502"
-FontSize="16"
-HorizontalOptions="Start"
-VerticalOptions="Center" />
+                Text="Description:"
+                FontFamily="NunitoRegular"
+                FontAttributes="Bold"
+                TextColor="#421502"
+                FontSize="16"
+                HorizontalOptions="Start"
+                VerticalOptions="Center" />
 
-            <!-- Frame wrapping the Editor for Report Description -->
             <Frame BackgroundColor="White" CornerRadius="20" Padding="0" HasShadow="False">
                 <Editor x:Name="DescriptionEditor"
                         Placeholder="Enter report description"
@@ -101,8 +91,15 @@ VerticalOptions="Center" />
                         Margin="5" />
             </Frame>
 
-            <!-- Button to Submit Report -->
-            <Button x:Name="SubmitButton" 
+            <Label x:Name="AttemptsLabel"
+                   Text="You have 3 attempts left today."
+                   FontFamily="NunitoRegular"
+                   TextColor="Red"
+                   FontSize="14"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center" />
+
+            <Button x:Name="SubmitButton"
                     Text="Submit Report"
                     Clicked="OnSubmitReportClicked"
                     BackgroundColor="#efbb6b"

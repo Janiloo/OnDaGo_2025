@@ -21,6 +21,18 @@ namespace OnDaGO.MAUI.Views
             InitializeComponent();
         }
 
+        private bool isLoading;
+        public bool IsLoading
+        {
+            get => isLoading;
+            set
+            {
+                isLoading = value;
+                LoadingIndicator.IsRunning = isLoading;
+                LoadingIndicator.IsVisible = isLoading;
+            }
+        }
+
         private async void OnDocumentFrontClicked(object sender, EventArgs e)
         {
             if (await RequestCameraPermissionAsync())
@@ -84,11 +96,12 @@ namespace OnDaGO.MAUI.Views
 
         private async void OnRegisterClicked(object sender, EventArgs e)
         {
-            // Reset all error labels
             ClearErrorMessages();
+            IsLoading = true; // Start loading animation
 
             bool hasError = false;
 
+            // Validation checks
             if (string.IsNullOrWhiteSpace(NameEntry.Text))
             {
                 ShowErrorMessage(NameErrorLabel, "Name is required.");
@@ -107,11 +120,16 @@ namespace OnDaGO.MAUI.Views
                 hasError = true;
             }
 
-            if (string.IsNullOrWhiteSpace(PasswordEntry.Text) || PasswordEntry.Text.Length < 6)
+            if (string.IsNullOrWhiteSpace(PasswordEntry.Text) ||
+                PasswordEntry.Text.Length < 6 ||
+                !Regex.IsMatch(PasswordEntry.Text, @"[A-Z]") ||         // Contains uppercase letter
+                !Regex.IsMatch(PasswordEntry.Text, @"[\W_]") ||         // Contains special character
+                !Regex.IsMatch(PasswordEntry.Text, @"\d"))              // Contains number
             {
-                ShowErrorMessage(PasswordErrorLabel, "Password must be at least 6 characters.");
+                ShowErrorMessage(PasswordErrorLabel, "Password does not meet the required standards.");
                 hasError = true;
             }
+
 
             if (PasswordEntry.Text != ConfirmPasswordEntry.Text)
             {
@@ -121,7 +139,6 @@ namespace OnDaGO.MAUI.Views
 
             if (string.IsNullOrWhiteSpace(DocumentImageBase64) || string.IsNullOrWhiteSpace(FaceImageBase64))
             {
-                // Display error messages for images if required (add respective labels in the XAML if needed)
                 hasError = true;
             }
 
@@ -131,7 +148,11 @@ namespace OnDaGO.MAUI.Views
                 hasError = true;
             }
 
-            if (hasError) return;
+            if (hasError)
+            {
+                IsLoading = false; // Stop loading animation if there are validation errors
+                return;
+            }
 
             // Proceed with registration if no errors
             try
@@ -152,13 +173,36 @@ namespace OnDaGO.MAUI.Views
             }
             catch (ApiException ex)
             {
-                await DisplayAlert("Registration Failed", $"Error: {ex.Content}", "OK");
+                await DisplayAlert("Registration Failed", $"Error: Invalid ID or Portrait Picture", "OK");
             }
             catch (Exception ex)
             {
                 await DisplayAlert("Error", $"An unexpected error occurred: {ex.Message}", "OK");
             }
+            finally
+            {
+                IsLoading = false; // Stop loading animation after registration process
+            }
         }
+
+        private void OnPasswordTextChanged(object sender, TextChangedEventArgs e)
+{
+    string password = e.NewTextValue;
+
+    // Check for uppercase letter
+    ContainsUppercaseLabel.TextColor = Regex.IsMatch(password, @"[A-Z]") ? Colors.Green : Colors.Gray;
+
+    // Check for special character
+    ContainsSpecialCharLabel.TextColor = Regex.IsMatch(password, @"[\W_]") ? Colors.Green : Colors.Gray;
+
+    // Check for number
+    ContainsNumberLabel.TextColor = Regex.IsMatch(password, @"\d") ? Colors.Green : Colors.Gray;
+
+    // Check for minimum length of 6 characters
+    MinLengthLabel.TextColor = password.Length >= 6 ? Colors.Green : Colors.Gray;
+}
+
+
 
         private void ClearErrorMessages()
         {

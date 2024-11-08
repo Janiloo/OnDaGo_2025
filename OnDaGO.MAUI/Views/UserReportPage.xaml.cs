@@ -12,13 +12,17 @@ namespace OnDaGO.MAUI.Views
         private readonly ReportService _reportService;
         private string _userId;
         private string _userEmail;
+        private int _reportAttempts;
+        private const int MaxAttempts = 3;
+        private DateTime _lastReportDate;
 
         public UserReportPage(ReportService reportService)
         {
             InitializeComponent();
             _reportService = reportService;
-            SubmitButton.IsEnabled = false; // Disable the submit button initially
-            GetUserProfile();  // Fetch the user profile on page load
+            SubmitButton.IsEnabled = false;
+            GetUserProfile();
+            CheckReportAttempts();
         }
 
         private async Task GetUserProfile()
@@ -26,7 +30,6 @@ namespace OnDaGO.MAUI.Views
             try
             {
                 var token = await SecureStorage.GetAsync("jwt_token");
-
                 if (!string.IsNullOrEmpty(token))
                 {
                     var client = HttpClientFactory.CreateClient();
@@ -35,13 +38,10 @@ namespace OnDaGO.MAUI.Views
 
                     if (response != null)
                     {
-                        _userId = response.Id;  // Store the UserId for report submission
-                        _userEmail = response.Email;  // Store the user's email
-
-                        // Automatically populate the UserIdEntry with the user's email
+                        _userId = response.Id;
+                        _userEmail = response.Email;
                         UserIdEntry.Text = _userEmail;
-
-                        SubmitButton.IsEnabled = true; // Enable the submit button once the user profile is loaded
+                        SubmitButton.IsEnabled = true;
                     }
                 }
             }
@@ -52,37 +52,58 @@ namespace OnDaGO.MAUI.Views
             }
         }
 
-        // Event handler for when the subject is changed (for "Other" option)
-        // Event handler for when the subject is changed (for "Other" option)
+        private void CheckReportAttempts()
+        {
+            // Load the last report date and attempts count
+            if (Preferences.ContainsKey("LastReportDate"))
+            {
+                _lastReportDate = Preferences.Get("LastReportDate", DateTime.MinValue);
+                _reportAttempts = Preferences.Get("ReportAttempts", 0);
+
+                // Reset attempts if more than 24 hours have passed
+                if ((DateTime.UtcNow - _lastReportDate).TotalHours >= 24)
+                {
+                    _reportAttempts = 0;
+                    Preferences.Set("ReportAttempts", 0);
+                }
+            }
+
+            UpdateAttemptsLabel();
+        }
+
+        private void UpdateAttemptsLabel()
+        {
+            int remainingAttempts = MaxAttempts - _reportAttempts;
+            AttemptsLabel.Text = $"You have {remainingAttempts} attempts left today.";
+            SubmitButton.IsEnabled = remainingAttempts > 0;
+        }
+
         private void OnSubjectChanged(object sender, EventArgs e)
         {
-            // Show the custom subject entry field only if "Other" is selected
-            if (SubjectPicker.SelectedIndex == 0) // "Select a subject" is the 1st item (index 0)
+            if (SubjectPicker.SelectedIndex == 0)
             {
-                CustomSubjectFrame.IsVisible = false;  // Hide the custom subject field
-                SubmitButton.IsEnabled = false; // Disable submit until valid option is selected
+                CustomSubjectFrame.IsVisible = false;
+                SubmitButton.IsEnabled = false;
             }
-            else if (SubjectPicker.SelectedIndex == 8) // "Other" is the 9th item (index 8)
+            else if (SubjectPicker.SelectedIndex == 8)
             {
-                CustomSubjectFrame.IsVisible = false; // Hide the custom subject entry field
-                SubmitButton.IsEnabled = true; // Enable submit button if "Other" is selected
+                CustomSubjectFrame.IsVisible = true;
             }
             else
             {
-                CustomSubjectFrame.IsVisible = false; // Hide the custom subject entry field for any other selection
-                SubmitButton.IsEnabled = true; // Enable submit button if valid subject is selected
+                CustomSubjectFrame.IsVisible = false;
+                SubmitButton.IsEnabled = true;
             }
         }
 
-
-        // Event handler for the Submit Report button
-        // Event handler for the Submit Report button
         private async void OnSubmitReportClicked(object sender, EventArgs e)
         {
-            // Use the user's email (retrieved from the profile) for the report
-            _userId = _userEmail;
+            if (_reportAttempts >= MaxAttempts)
+            {
+                await DisplayAlert("Limit Reached", "You have reached the maximum number of reports for today.", "OK");
+                return;
+            }
 
-            // Validate input fields
             if (string.IsNullOrWhiteSpace(UserIdEntry.Text) ||
                 string.IsNullOrWhiteSpace(SubjectPicker.SelectedItem?.ToString()) ||
                 string.IsNullOrWhiteSpace(DescriptionEditor.Text) ||
@@ -92,14 +113,12 @@ namespace OnDaGO.MAUI.Views
                 return;
             }
 
-            // Get the selected subject or custom subject
             string subject = SubjectPicker.SelectedItem.ToString();
-            if (subject == "Other")
+            if (subject == "Other" && !string.IsNullOrWhiteSpace(CustomSubjectEntry.Text))
             {
-                subject = "Other"; // Treat "Other" as the subject without needing the custom input field
+                subject = CustomSubjectEntry.Text;
             }
 
-            // Create a new report with the provided UserId and "Pending" status
             var newReport = new ReportItem
             {
                 UserId = _userId,
@@ -111,11 +130,18 @@ namespace OnDaGO.MAUI.Views
 
             try
             {
-                // Call the API service to create the report
                 await _reportService.CreateReportAsync(newReport);
                 await DisplayAlert("Success", "Your report has been submitted successfully.", "OK");
 
-                // Optionally, clear the fields or navigate away
+                _reportAttempts++;
+                _lastReportDate = DateTime.UtcNow;
+
+                // Save report attempt data
+                Preferences.Set("ReportAttempts", _reportAttempts);
+                Preferences.Set("LastReportDate", _lastReportDate);
+
+                UpdateAttemptsLabel();
+
                 SubjectPicker.SelectedIndex = -1;
                 CustomSubjectEntry.Text = string.Empty;
                 DescriptionEditor.Text = string.Empty;
@@ -129,6 +155,5 @@ namespace OnDaGO.MAUI.Views
                 await DisplayAlert("Error", $"An error occurred while submitting the report: {ex.Message}", "OK");
             }
         }
-
     }
 }

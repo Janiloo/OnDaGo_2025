@@ -41,7 +41,7 @@ public class IdAnalyzerService
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync();
-            return new IdAnalyzerResponse { Success = false, Message = $"Failed to analyze document: {errorContent}" };
+            return new IdAnalyzerResponse { Success = false, Message = $"Failed to analyze ID or Selfie" };
         }
 
         // Read and log the full JSON response

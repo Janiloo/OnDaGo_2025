@@ -13,51 +13,51 @@ namespace OnDaGO.MAUI.Views
 
         private async void OnLoginClicked(object sender, EventArgs e)
         {
-            // Clear the error message before login attempt
-            ErrorLabel.IsVisible = false;
-            ErrorLabel.Text = string.Empty;
-
-            var user = new UserItem
-            {
-                Email = EmailEntry.Text,
-                PasswordHash = PasswordEntry.Text // Hash password in a real app
-            };
-
-            // Check if fields are empty
-            if (string.IsNullOrWhiteSpace(user.Email) || string.IsNullOrWhiteSpace(user.PasswordHash))
-            {
-                ErrorLabel.Text = "Email and Password are required.";
-                ErrorLabel.IsVisible = true;
-                return;
-            }
+            // Show the loading animation and disable the login button
+            LoginActivityIndicator.IsVisible = true;
+            LoginActivityIndicator.IsRunning = true;
+            LoginButton.IsEnabled = false;
 
             try
             {
+                // Clear the error message before login attempt
+                ErrorLabel.IsVisible = false;
+                ErrorLabel.Text = string.Empty;
+
+                var user = new UserItem
+                {
+                    Email = EmailEntry.Text,
+                    PasswordHash = PasswordEntry.Text // Hash password in a real app
+                };
+
+                // Check if fields are empty
+                if (string.IsNullOrWhiteSpace(user.Email) || string.IsNullOrWhiteSpace(user.PasswordHash))
+                {
+                    ErrorLabel.Text = "Email and Password are required.";
+                    ErrorLabel.IsVisible = true;
+                    return;
+                }
+
+                // Perform login API call
                 var result = await App.AuthApi.Login(user);
 
-                // Store the token and user ID securely
                 if (result != null)
                 {
-                    await SecureStorage.SetAsync("jwt_token", result.Token); // Store token securely
-                    await SecureStorage.SetAsync("user_id", result.User.Id); // Store user ID securely
+                    await SecureStorage.SetAsync("jwt_token", result.Token);
+                    await SecureStorage.SetAsync("user_id", result.User.Id);
 
-                    // Request location permission
                     var locationPermissionStatus = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
                     if (locationPermissionStatus != PermissionStatus.Granted)
                     {
-                        // If permission has not been granted, request it
                         locationPermissionStatus = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
                     }
 
-                    // Check if location permission is granted
                     if (locationPermissionStatus != PermissionStatus.Granted)
                     {
-                        // Optionally, show a message or handle accordingly
                         await DisplayAlert("Location Permission", "Location permission is required to access location features.", "OK");
-                        return; // Exit or handle the denied permission scenario
+                        return;
                     }
 
-                    // Proceed to the appropriate home page after permission is granted
                     if (result.User.Role == "Admin")
                     {
                         await Navigation.PushAsync(new AdminHomePage());
@@ -75,12 +75,10 @@ namespace OnDaGO.MAUI.Views
             }
             catch (ApiException ex)
             {
-                // Log the API error details
                 Console.WriteLine($"API Error: {ex.StatusCode} - {ex.Message} - Content: {ex.Content}");
                 ErrorLabel.Text = $"Login failed: {ex.Message}";
                 ErrorLabel.IsVisible = true;
 
-                // Optionally, display a user-friendly message based on the status code
                 if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 {
                     ErrorLabel.Text = "Invalid login credentials. Please try again.";
@@ -96,12 +94,19 @@ namespace OnDaGO.MAUI.Views
             }
             catch (Exception ex)
             {
-                // Log unexpected errors
                 Console.WriteLine($"Unexpected Error: {ex.Message}");
                 ErrorLabel.Text = $"An unexpected error occurred: {ex.Message}";
                 ErrorLabel.IsVisible = true;
             }
+            finally
+            {
+                // Hide the loading animation and re-enable the login button
+                LoginActivityIndicator.IsVisible = false;
+                LoginActivityIndicator.IsRunning = false;
+                LoginButton.IsEnabled = true;
+            }
         }
+
 
 
 

@@ -126,6 +126,19 @@
             </StackLayout>
         </Frame>
 
+        <ImageButton Source="Images/mylocation1.png"
+             Clicked="OnZoomToUserLocationClicked"
+             WidthRequest="50"
+             HeightRequest="50"
+             BackgroundColor="Transparent"
+             HorizontalOptions="Start"
+             VerticalOptions="End"
+             Margin="15,5,5,15">
+            <ImageButton.Shadow>
+                <Shadow Brush="Gray" Offset="0, 0" Radius="10"/>
+            </ImageButton.Shadow>
+        </ImageButton>
+
         <!-- Bottom Sheet with Fare Matrix -->
         <Grid x:Name="BottomSheet" BackgroundColor="White" HeightRequest="500" VerticalOptions="End" IsVisible="False" Opacity="0">
             <Grid.RowDefinitions>
@@ -194,25 +207,16 @@
                 </StackLayout>
             </ScrollView>
 
+            <!-- Horizontal StackLayout for Close and Refresh Buttons in BottomSheet -->
             <Button Text="Close" Clicked="OnCloseBottomSheetClicked" BackgroundColor="#efbb6b" TextColor="White" Grid.Row="2" Margin="10" />
+
 
             <Grid.GestureRecognizers>
                 <PanGestureRecognizer PanUpdated="OnBottomSheetPanUpdated"/>
             </Grid.GestureRecognizers>
         </Grid>
 
-        <ImageButton Source="Images/mylocation1.png"
-                     Clicked="OnZoomToUserLocationClicked"
-                     WidthRequest="50"
-                     HeightRequest="50"
-                     BackgroundColor="Transparent"
-                     HorizontalOptions="End"
-                     VerticalOptions="End"
-                     Margin="0,0,15,15">
-            <ImageButton.Shadow>
-                <Shadow Brush="Gray" Offset="0, 0" Radius="10"/>
-            </ImageButton.Shadow>
-        </ImageButton>
+        
 
 
 

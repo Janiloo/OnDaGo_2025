@@ -136,6 +136,7 @@ namespace OnDaGO.MAUI.Views
             StartPassengerCountMonitor();
             FrameLayout.TranslationY = FrameLayout.Height;
             LoadVehicles();
+            LoadFareMatrixInBottomSheet();
             var tapGestureRecognizer = new TapGestureRecognizer();
             tapGestureRecognizer.Tapped += OnOverlayTapped;
             Overlay.GestureRecognizers.Add(tapGestureRecognizer);
@@ -261,13 +262,13 @@ namespace OnDaGO.MAUI.Views
 
         private async void UpdatePins(List<VehicleModel> vehicles)
         {
-            //var userLocation = new Location(14.621360, 121.055222);
+            //var userLocation = new Location(14.6967, 121.1205);
             var userLocation = await Geolocation.GetLastKnownLocationAsync();
-            if (userLocation == null)
+            /*if (userLocation == null)
             {
                 await DisplayAlert("Error", "User location could not be determined.", "OK");
                 return;
-            }
+            }*/
 
             bool isUserWithinYellowCircle = false;
 
@@ -303,6 +304,7 @@ namespace OnDaGO.MAUI.Views
 
                 foreach (var vehicle in vehicles)
                 {
+                    SetButtonStrokeColor(vehicle.PassengerCount);
                     var vehicleLocation = new Location(vehicle.CurrentLat, vehicle.CurrentLong);
                     var distance = userLocation.CalculateDistance(vehicleLocation, DistanceUnits.Kilometers);
 
@@ -320,6 +322,31 @@ namespace OnDaGO.MAUI.Views
                             BindingContext = vehicle
                         };
                         map.Pins.Add(pin);
+                    }
+                }
+                if (BottomSheet.IsVisible && SelectedVehicle != null)
+                {
+                    // Find the closest vehicle to the user's location again, if needed
+                    SelectedVehicle = vehicles
+                        .OrderBy(vehicle => userLocation?.CalculateDistance(new Location(vehicle.CurrentLat, vehicle.CurrentLong), DistanceUnits.Kilometers) ?? double.MaxValue)
+                        .FirstOrDefault();
+
+
+                    if (SelectedVehicle != null)
+                    {
+                        var vehicleLocation = new Location(SelectedVehicle.CurrentLat, SelectedVehicle.CurrentLong);
+                        var distance = userLocation?.CalculateDistance(vehicleLocation, DistanceUnits.Kilometers) ?? 0;
+                        const double averageSpeedKmH = 18.0;
+                        double etaMinutes = (distance / averageSpeedKmH) * 60;
+
+                        // Update BottomSheet labels
+                        ETALabel.Text = $"ETA: {etaMinutes:F1} mins";
+                        PuvNoLabel.Text = $"PUV No: {SelectedVehicle.PuvNo}";
+                        PassengerCountLabel.Text = $"Passenger Count: {SelectedVehicle.PassengerCount}/{SelectedVehicle.MaxPassengerCount}";
+                        UpdateStandingPassengerCount(SelectedVehicle.PassengerCount, SelectedVehicle.MaxPassengerCount);
+                        // Calculate and update standing passengers
+                        int standingPassengers = Math.Max(0, SelectedVehicle.PassengerCount - SelectedVehicle.MaxPassengerCount);
+                        StandingPassengerCountLabel.Text = $"Standing Passengers: {standingPassengers}/10";
                     }
                 }
             }
@@ -871,7 +898,7 @@ namespace OnDaGO.MAUI.Views
         //var userLocation = new Location(14.621360, 121.055222);//var userLocation = await Geolocation.GetLastKnownLocationAsync();
         private async void OnToggleBottomSheetClicked(object sender, EventArgs e)
         {
-            //var userLocation = new Location(14.621360, 121.055222);
+            //var userLocation = new Location(14.6967, 121.1205);
             var userLocation = await Geolocation.GetLastKnownLocationAsync();
             if (userLocation == null)
             {

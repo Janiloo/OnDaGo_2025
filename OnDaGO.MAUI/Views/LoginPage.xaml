@@ -65,8 +65,19 @@
                            HorizontalOptions="Center"
                            IsVisible="False"/>
 
+                    <ActivityIndicator 
+                            x:Name="LoginActivityIndicator"
+                            IsVisible="False"
+                            IsRunning="False"
+                            Color="#efbb6b"
+                            VerticalOptions="Center"
+                            HorizontalOptions="Center"
+                            HeightRequest="50"
+                            WidthRequest="50" />
+
                     <!-- Login Button -->
                     <Button Text="Login"
+                            x:Name="LoginButton"
                             Clicked="OnLoginClicked"
                             BackgroundColor="#efbb6b"
                             TextColor="White"
