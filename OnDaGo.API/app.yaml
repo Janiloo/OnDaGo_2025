@@ -9,10 +9,10 @@ env_variables:
   ASPNETCORE_ENVIRONMENT: Development
   ConnectionStrings__MongoDb: "mongodb+srv://USER:PASSWORD@ondago.jiv6m.mongodb.net/?retryWrites=true&w=majority&appName=OnDaGo"
   Smtp__Host: "smtp.gmail.com"
-  Smtp__Port: "587"
+  Smtp__Port: "8274661"
   Smtp__EnableSsl: "true"
-  Smtp__Username: "avancena.johnilo@gmail.com"
-  Smtp__Password: "YOUR_SMTP_APP_PASSWORD"
+  Smtp__Username: "email"
+  Smtp__Password: "key"
 
 resources:
   cpu: 1
