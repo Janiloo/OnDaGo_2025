@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="OnDaGO.MAUI.Views.CreateAdminPage"
-             Title="Create Admin"
+             x:Class="OnDaGO.MAUI.Views.CreatePUVPage"
+             Title="Create PUV Account"
              NavigationPage.HasNavigationBar="False">
 
     <Grid RowDefinitions="*, Auto">
@@ -30,19 +30,30 @@
 
             <ScrollView>
                 <StackLayout Padding="30" Spacing="20">
-                    <Label Text="Create Admin Account" 
+                    <Label Text="Create PUV Account" 
                            FontSize="32" 
                            FontAttributes="Bold" 
                            HorizontalOptions="Center"
                            TextColor="#333"/>
 
-                    <!-- Name -->
-                    <Entry Placeholder="Name" 
-                           x:Name="NameEntry" 
+                    <!-- Username -->
+                    <Entry Placeholder="Username"
+                           x:Name="UsernameEntry"
                            TextColor="#333"
                            PlaceholderColor="#999"
                            FontSize="18"/>
-                    <Label x:Name="NameErrorLabel"
+                    <Label x:Name="UsernameErrorLabel"
+                           TextColor="Red"
+                           FontSize="14"
+                           IsVisible="False"/>
+
+                    <!-- Plate Number -->
+                    <Entry Placeholder="Plate Number"
+                           x:Name="PlateNumberEntry"
+                           TextColor="#333"
+                           PlaceholderColor="#999"
+                           FontSize="18"/>
+                    <Label x:Name="PlateNumberErrorLabel"
                            TextColor="Red"
                            FontSize="14"
                            IsVisible="False"/>
@@ -55,18 +66,6 @@
                            PlaceholderColor="#999"
                            FontSize="18"/>
                     <Label x:Name="EmailErrorLabel"
-                           TextColor="Red"
-                           FontSize="14"
-                           IsVisible="False"/>
-
-                    <!-- Phone -->
-                    <Entry Placeholder="Phone Number" 
-                           x:Name="PhoneNumberEntry" 
-                           Keyboard="Telephone"
-                           TextColor="#333"
-                           PlaceholderColor="#999"
-                           FontSize="18"/>
-                    <Label x:Name="PhoneErrorLabel"
                            TextColor="Red"
                            FontSize="14"
                            IsVisible="False"/>
@@ -89,16 +88,16 @@
                         <Label Text="Show Password" VerticalOptions="Center"/>
                     </StackLayout>
 
-                    <!-- Loading Indicator -->
+                    <!-- Activity Indicator -->
                     <ActivityIndicator x:Name="LoadingIndicator"
                                        IsVisible="False"
                                        IsRunning="False"
                                        Color="#efbb6b"
                                        HorizontalOptions="Center"/>
 
-                    <!-- Create Admin Button -->
-                    <Button Text="Create Admin"
-                            Clicked="OnCreateAdminClicked"
+                    <!-- Create Account Button -->
+                    <Button Text="Create Account"
+                            Clicked="OnCreatePUVClicked"
                             BackgroundColor="#efbb6b"
                             TextColor="White"
                             CornerRadius="20"
@@ -107,7 +106,7 @@
                             FontAttributes="Bold"
                             HorizontalOptions="FillAndExpand"/>
 
-                    <!-- Footer for Back to Settings Link -->
+                    <!-- Footer -->
                     <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Margin="0,20,0,0">
                         <Button Text="Back to Settings"
                                 Clicked="OnBackClicked"

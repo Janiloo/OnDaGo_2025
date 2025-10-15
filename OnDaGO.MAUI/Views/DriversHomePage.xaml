@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="OnDaGO.MAUI.Views.DriversHomePage"
+             xmlns:maps="http://schemas.microsoft.com/dotnet/2021/maui/maps"
+             xmlns:sensors="clr-namespace:Microsoft.Maui.Devices.Sensors;assembly=Microsoft.Maui.Essentials"
+             NavigationPage.HasNavigationBar="False"
+             BackgroundColor="White">
+
+    <Grid>
+
+        <!-- Google Map in background -->
+        <maps:Map x:Name="map"
+                  MapType="Street"
+                  IsShowingUser="True"
+                  IsScrollEnabled="True"
+                  IsZoomEnabled="True"
+                  IsTrafficEnabled="True">
+            <x:Arguments>
+                <maps:MapSpan>
+                    <x:Arguments>
+                        <sensors:Location>
+                            <x:Arguments>
+                                <x:Double>14.654322</x:Double>
+                                <x:Double>121.102763</x:Double>
+                            </x:Arguments>
+                        </sensors:Location>
+                        <x:Double>0.8</x:Double>
+                        <x:Double>0.8</x:Double>
+                    </x:Arguments>
+                </maps:MapSpan>
+            </x:Arguments>
+        </maps:Map>
+
+        <!-- Profile button on top left -->
+        <VerticalStackLayout Padding="10">
+            <ImageButton Source="Images/profile.svg"
+                         Clicked="OnProfileClicked"
+                         WidthRequest="50"
+                         HeightRequest="50"
+                         BackgroundColor="Transparent"
+                         HorizontalOptions="Start"
+                         VerticalOptions="Start"
+                         Margin="5,0,0,10"/>
+        </VerticalStackLayout>
+
+        <!-- Settings button on top right -->
+        <VerticalStackLayout HorizontalOptions="End" VerticalOptions="Start" Padding="10">
+            <ImageButton Source="Images/settings.svg"
+                         Clicked="OnSettingsClicked"
+                         WidthRequest="50"
+                         HeightRequest="50"
+                         BackgroundColor="Transparent"
+                         HorizontalOptions="End"
+                         VerticalOptions="Start"
+                         Margin="0,0,5,0"/>
+        </VerticalStackLayout>
+
+        <!-- Overlay behind Bottom Sheet -->
+        <BoxView x:Name="BottomSheetOverlay"
+                 BackgroundColor="Transparent"
+                 IsVisible="False"
+                 Grid.RowSpan="2">
+            <BoxView.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnOverlayTapped"/>
+            </BoxView.GestureRecognizers>
+        </BoxView>
+
+        <!-- Bottom Sheet -->
+        <Grid x:Name="BottomSheet"
+              BackgroundColor="White"
+              HeightRequest="250"
+              VerticalOptions="End"
+              IsVisible="False"
+              Opacity="0"
+              Padding="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Handle -->
+            <BoxView HeightRequest="5"
+                     BackgroundColor="Gray"
+                     HorizontalOptions="Center"
+                     VerticalOptions="Start"
+                     Margin="0,10"
+                     WidthRequest="40"/>
+
+            <!-- Passenger Counter -->
+            <!-- Passenger Counter -->
+            <StackLayout Grid.Row="1"
+             VerticalOptions="Center"
+             HorizontalOptions="Center"
+             Spacing="10">
+
+                <!-- Passenger count value on top -->
+                <Label x:Name="PassengerCountLabel"
+           Text="0"
+           FontSize="48"
+           FontAttributes="Bold"
+           HorizontalOptions="Center"/>
+
+                <!-- Text below -->
+                <Label Text="Passenger Count"
+           FontSize="20"
+           HorizontalOptions="Center"/>
+
+                <!-- Passenger Controls (remain horizontal) -->
+                <StackLayout Orientation="Horizontal"
+                 HorizontalOptions="Center"
+                 Spacing="20">
+
+                    <!-- Increment -->
+                    <Button Text="➕"
+                Clicked="OnIncrementPassenger"
+                BackgroundColor="#77DD77"
+                TextColor="White"
+                WidthRequest="70"
+                HeightRequest="70"
+                FontSize="24"
+                CornerRadius="35"/>
+
+                    <!-- Decrement -->
+                    <Button Text="➖"
+                Clicked="OnDecrementPassenger"
+                BackgroundColor="#AEC6CF"
+                TextColor="White"
+                WidthRequest="70"
+                HeightRequest="70"
+                FontSize="24"
+                CornerRadius="35"/>
+
+                    <!-- Clear All -->
+                    <Button Text="✖️"
+                Clicked="OnClearPassengers"
+                BackgroundColor="#FF6961"
+                TextColor="White"
+                WidthRequest="70"
+                HeightRequest="70"
+                FontSize="24"
+                CornerRadius="35"/>
+                </StackLayout>
+            </StackLayout>
+
+
+
+            <Grid.GestureRecognizers>
+                <PanGestureRecognizer PanUpdated="OnBottomSheetPanUpdated"/>
+            </Grid.GestureRecognizers>
+        </Grid>
+
+        <!-- Bottom Sheet Toggle Button in the middle bottom -->
+        <ImageButton x:Name="BottomSheetButton"
+                     Source="bottomsheetbutton.png"
+                     Clicked="OnToggleBottomSheetClicked"
+                     BackgroundColor="#fff"
+                     WidthRequest="80"
+                     HeightRequest="80"
+                     CornerRadius="40"
+                     HorizontalOptions="Center"
+                     VerticalOptions="End"
+                     Margin="0,0,0,20"
+                     Padding="15"
+                     Aspect="AspectFit">
+            <ImageButton.Shadow>
+                <Shadow Brush="Black"
+                        Opacity="0.2"
+                        Radius="8"
+                        Offset="0,4"/>
+            </ImageButton.Shadow>
+        </ImageButton>
+
+    </Grid>
+</ContentPage>

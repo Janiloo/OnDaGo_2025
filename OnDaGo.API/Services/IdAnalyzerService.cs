@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿/*using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using OnDaGo.API.Models;
 using System.Net.Http;
@@ -72,3 +72,4 @@ public class IdAnalyzerService
         return idAnalyzerResponse;
     }
 }
+*/

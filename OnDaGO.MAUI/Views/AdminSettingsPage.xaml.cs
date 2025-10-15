@@ -24,6 +24,20 @@ public partial class AdminSettingsPage : ContentPage
         }
     }
 
+    private async void OnCreatePUVClicked(object sender, EventArgs e)
+    {
+        try
+        {
+
+            // Navigate to ProfilePage
+            await Navigation.PushAsync(new CreatePUVPage());
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", $"Failed to navigate to Create Admin Page: {ex.Message}", "OK");
+        }
+    }
+
     private async void OnReportClicked(object sender, EventArgs e)
     {
         try

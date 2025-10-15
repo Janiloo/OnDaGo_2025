@@ -1,15 +1,19 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
 using OnDaGo.API.Models;
+using System;
+using System.Threading.Tasks;
 
 namespace OnDaGo.API.Services
 {
     public class UserService
     {
         private readonly IMongoCollection<UserItem> _users;
+        public readonly IMongoDatabase _database; // Expose the database
 
         public UserService(IMongoDatabase database)
         {
+            _database = database; // Save reference to database
             _users = database.GetCollection<UserItem>("users");
         }
 
@@ -22,8 +26,6 @@ namespace OnDaGo.API.Services
         {
             await _users.InsertOneAsync(user);
         }
-
-
 
         public async Task UpdateUserAsync(UserItem user)
         {
@@ -46,7 +48,6 @@ namespace OnDaGo.API.Services
 
         public async Task<UserItem> FindByIdAsync(string id)
         {
-            // Implement logic to find user by ID
             return await _users.Find(u => u.Id == new ObjectId(id)).FirstOrDefaultAsync();
         }
 
@@ -55,7 +56,9 @@ namespace OnDaGo.API.Services
             await _users.DeleteOneAsync(user => user.Id == new ObjectId(id));
         }
 
-
-
+        public async Task<UserItem> FindByUsernameAsync(string username)
+        {
+            return await _users.Find(u => u.Name == username).FirstOrDefaultAsync();
+        }
     }
 }

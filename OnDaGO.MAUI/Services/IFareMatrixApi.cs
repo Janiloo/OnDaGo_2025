@@ -41,7 +41,16 @@ namespace OnDaGO.MAUI.Services
         public FareMatrixService()
         {
             // Set the base URL to your Azure backend URL
-            string baseUrl = "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net";
+            #if DEBUG
+                        string baseUrl = DeviceInfo.Platform == DevicePlatform.Android
+                            ? "http://10.0.2.2:5147"  // Android emulator to your local machine
+                            : "http://localhost:5147"; // Running on Windows/Mac
+#else
+                   
+                    string baseUrl = "https://ondago-api-akfye0eahsamhrgt.southeastasia-01.azurewebsites.net";
+#endif
+            //string baseUrl = "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net";
+            //string baseUrl = "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net";
 
             _api = RestService.For<IFareMatrixApi>(baseUrl);
         }

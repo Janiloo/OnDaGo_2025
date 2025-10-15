@@ -24,6 +24,8 @@ namespace OnDaGO.MAUI.Views
         private List<Pin> _currentPins = new List<Pin>();
         private int passengerCount = 0;
         private System.Timers.Timer passengerCountCheckTimer;
+        public List<VehicleModel> Vehicles { get; set; } = new List<VehicleModel>();
+
 
         public VehicleModel SelectedVehicle { get; set; }
 
@@ -323,10 +325,10 @@ namespace OnDaGO.MAUI.Views
                     ETALabel.Text = $"ETA: {etaMinutes:F1} mins";
                     PuvNoLabel.Text = $"PUV No: {SelectedVehicle.PuvNo}";
                     PassengerCountLabel.Text = $"Passenger Count: {SelectedVehicle.PassengerCount}/{SelectedVehicle.MaxPassengerCount}";
-                    UpdateStandingPassengerCount(SelectedVehicle.PassengerCount, SelectedVehicle.MaxPassengerCount);
+                    //UpdateStandingPassengerCount(SelectedVehicle.PassengerCount, SelectedVehicle.MaxPassengerCount);
                     // Calculate and update standing passengers
-                    int standingPassengers = Math.Max(0, SelectedVehicle.PassengerCount - SelectedVehicle.MaxPassengerCount);
-                    StandingPassengerCountLabel.Text = $"Standing Passengers: {standingPassengers}/10";
+                    //int standingPassengers = Math.Max(0, SelectedVehicle.PassengerCount - SelectedVehicle.MaxPassengerCount);
+                    //StandingPassengerCountLabel.Text = $"Standing Passengers: {standingPassengers}/10";
                 }
             }
         }
@@ -335,15 +337,15 @@ namespace OnDaGO.MAUI.Views
         {
             Color strokeColor;
 
-            if (count >= 0 && count <= 15)
+            if (count >= 0 && count <= 5)
             {
                 strokeColor = Colors.LimeGreen;
             }
-            else if (count >= 16 && count <= 25)
+            else if (count >= 6 && count <= 13)
             {
                 strokeColor = Colors.Orange;
             }
-            else if (count >= 26 && count <= 30)
+            else if (count >= 14 && count <= 18)
             {
                 strokeColor = Colors.Red;
             }
@@ -363,7 +365,7 @@ namespace OnDaGO.MAUI.Views
 
 
 
-        private void UpdateStandingPassengerCount(int currentPassengerCount, int maxPassengerCount)
+        /*private void UpdateStandingPassengerCount(int currentPassengerCount, int maxPassengerCount)
         {
             int standingPassengers = 0;
 
@@ -374,7 +376,7 @@ namespace OnDaGO.MAUI.Views
 
             // Update the standing passenger label
             StandingPassengerCountLabel.Text = $"Standing Passengers: {standingPassengers}/10";
-        }
+        }*/
 
         private async void LoadFareMatrixInBottomSheet()
         {
@@ -945,8 +947,8 @@ namespace OnDaGO.MAUI.Views
                 PassengerCountLabel.Text = $"Passenger Count: {SelectedVehicle.PassengerCount}/{SelectedVehicle.MaxPassengerCount}";
 
                 // Calculate and update standing passengers
-                int standingPassengers = Math.Max(0, SelectedVehicle.PassengerCount - SelectedVehicle.MaxPassengerCount);
-                StandingPassengerCountLabel.Text = $"Standing Passengers: {standingPassengers}/10";
+                //int standingPassengers = Math.Max(0, SelectedVehicle.PassengerCount - SelectedVehicle.MaxPassengerCount);
+                //StandingPassengerCountLabel.Text = $"Standing Passengers: {standingPassengers}/10";
             }
         }
 
@@ -1091,17 +1093,17 @@ namespace OnDaGO.MAUI.Views
             passengerCountCheckTimer.Enabled = true;
         }
 
-        private void OnPassengerCountCheck(object sender, System.Timers.ElapsedEventArgs e)
+        private void OnPassengerCountCheck(object sender, ElapsedEventArgs e)
         {
-            // Assuming SelectedVehicle is an existing property with a PassengerCount
-            passengerCount = SelectedVehicle?.PassengerCount ?? 0;
+            if (SelectedVehicle == null)
+                return; // don’t reset to 0 if no vehicle selected
 
-            UpdateStandingPassengerCount(passengerCount, SelectedVehicle?.MaxPassengerCount ?? 0);
+            passengerCount = SelectedVehicle.PassengerCount;
 
-            // Use the MainThread to update UI elements as timers run on a background thread
-            Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+            //UpdateStandingPassengerCount(passengerCount, SelectedVehicle.MaxPassengerCount);
+
+            MainThread.BeginInvokeOnMainThread(() =>
             {
-                // Update the button stroke color whenever passenger count changes
                 SetButtonStrokeColor(passengerCount);
             });
         }

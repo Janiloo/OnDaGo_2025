@@ -14,7 +14,7 @@ public class VehicleModel
     public double CurrentLat { get; set; }
 
     [BsonElement("puv_no")]
-    public int PuvNo { get; set; } // PUV number
+    public required string PuvNo { get; set; } // PUV number
 
     [BsonElement("maxPassengerCount")]
     public int MaxPassengerCount { get; set; } // New field for maximum passenger count

@@ -1,4 +1,4 @@
-using OnDaGO.MAUI.Models;
+﻿using OnDaGO.MAUI.Models;
 using Refit;
 using System;
 using System.Net.Http;
@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace OnDaGO.MAUI.Views
 {
-    public partial class CreateAdminPage : ContentPage
+    public partial class CreatePUVPage : ContentPage
     {
         private bool isLoading;
         public bool IsLoading
@@ -21,40 +21,37 @@ namespace OnDaGO.MAUI.Views
             }
         }
 
-        public CreateAdminPage()
+        public CreatePUVPage()
         {
             InitializeComponent();
         }
 
-        private async void OnCreateAdminClicked(object sender, EventArgs e)
+        private async void OnCreatePUVClicked(object sender, EventArgs e)
         {
             ClearErrorMessages();
             IsLoading = true;
 
             bool hasError = false;
 
-            // ? Name validation
-            if (string.IsNullOrWhiteSpace(NameEntry.Text))
+            // ✅ Validation
+            if (string.IsNullOrWhiteSpace(UsernameEntry.Text))
             {
-                ShowErrorMessage(NameErrorLabel, "Name is required.");
+                ShowErrorMessage(UsernameErrorLabel, "Username is required.");
                 hasError = true;
             }
 
-            // ? Email validation
             if (string.IsNullOrWhiteSpace(EmailEntry.Text) || !IsValidEmail(EmailEntry.Text))
             {
                 ShowErrorMessage(EmailErrorLabel, "Please enter a valid email address.");
                 hasError = true;
             }
 
-            // ? Phone validation
-            if (string.IsNullOrWhiteSpace(PhoneNumberEntry.Text) || PhoneNumberEntry.Text.Length < 10)
+            if (string.IsNullOrWhiteSpace(PlateNumberEntry.Text))
             {
-                ShowErrorMessage(PhoneErrorLabel, "Please enter a valid phone number.");
+                ShowErrorMessage(PlateNumberErrorLabel, "Plate number is required.");
                 hasError = true;
             }
 
-            // ? Password validation
             if (string.IsNullOrWhiteSpace(PasswordEntry.Text) || PasswordEntry.Text.Length < 6)
             {
                 ShowErrorMessage(PasswordErrorLabel, "Password must be at least 6 characters.");
@@ -67,19 +64,19 @@ namespace OnDaGO.MAUI.Views
                 return;
             }
 
-            var adminUser = new UserItem
+            var driverRequest = new DriverRegistrationRequest
             {
-                Name = NameEntry.Text.Trim(),
+                Username = UsernameEntry.Text.Trim(),
                 Email = EmailEntry.Text.Trim(),
-                PasswordHash = HashPassword(PasswordEntry.Text),
-                PhoneNumber = PhoneNumberEntry.Text.Trim(),
-                Role = "Admin"
+                Password = PasswordEntry.Text,
+                PlateNumber = PlateNumberEntry.Text.Trim(),
+                Role = "Driver"
             };
 
             try
             {
-                var result = await App.AuthApi.RegisterAdmin(adminUser);
-                await DisplayAlert("Success", "Admin account created successfully!", "OK");
+                var result = await App.AuthApi.RegisterDriver(driverRequest);
+                await DisplayAlert("Success", "Driver account created successfully!", "OK");
                 await Navigation.PushAsync(new AdminSettingsPage());
             }
             catch (ApiException ex)
@@ -87,7 +84,7 @@ namespace OnDaGO.MAUI.Views
                 string errorMessage = ex.StatusCode switch
                 {
                     System.Net.HttpStatusCode.BadRequest => "Invalid input. Please check your entries.",
-                    System.Net.HttpStatusCode.Conflict => "This email or phone number is already in use.",
+                    System.Net.HttpStatusCode.Conflict => "This username, email, or plate number is already in use.",
                     _ => $"Server error ({ex.StatusCode}). Please try again later."
                 };
 
@@ -120,9 +117,9 @@ namespace OnDaGO.MAUI.Views
 
         private void ClearErrorMessages()
         {
-            NameErrorLabel.IsVisible = false;
+            UsernameErrorLabel.IsVisible = false;
             EmailErrorLabel.IsVisible = false;
-            PhoneErrorLabel.IsVisible = false;
+            PlateNumberErrorLabel.IsVisible = false;
             PasswordErrorLabel.IsVisible = false;
         }
 
@@ -139,12 +136,6 @@ namespace OnDaGO.MAUI.Views
         private async void OnBackClicked(object sender, EventArgs e)
         {
             await Navigation.PopAsync();
-        }
-
-        private string HashPassword(string password)
-        {
-            // Replace this with actual hashing in production
-            return password;
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿/*
+using Microsoft.AspNetCore.Mvc;
 using OnDaGo.API.Models;
 using System.Threading.Tasks;
 
@@ -34,3 +35,4 @@ public class RegistrationController : ControllerBase
         return Ok(new { Message = "Registration successful!" });
     }
 }
+*/
