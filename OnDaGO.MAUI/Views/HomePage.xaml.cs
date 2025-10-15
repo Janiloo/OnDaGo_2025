@@ -42,7 +42,10 @@ namespace OnDaGO.MAUI.Views
             new LocationItem { Name = "Concepcion", Coordinates = new Location(14.6505, 121.1035) },
             new LocationItem { Name = "Savemore Bayan", Coordinates = new Location(14.6372, 121.0973) },
             new LocationItem { Name = "Marikina Riverbanks", Coordinates = new Location(14.6329, 121.0828) },
-            new LocationItem { Name = "Cubao", Coordinates = new Location(14.621360, 121.055222) }
+            new LocationItem { Name = "Cubao", Coordinates = new Location(14.621360, 121.055222) },
+            new LocationItem { Name = "STI Main Building", Coordinates = new Location(14.616446, 121.054145) },
+            new LocationItem { Name = "STI Guard House", Coordinates = new Location(14.616470, 121.054000) },
+            new LocationItem { Name = "STI Canteen", Coordinates = new Location(14.616262, 121.054312) }
         };
 
         private readonly Dictionary<(string, string), (int Regular, int Discounted)> fareMatrix = new()
@@ -262,14 +265,14 @@ namespace OnDaGO.MAUI.Views
 
         private async void UpdatePins(List<VehicleModel> vehicles)
         {
-            //var userLocation = new Location(14.6967, 121.1205);
+            //var userLocation = new Location(14.7288, 121.1441);
             var userLocation = await Geolocation.GetLastKnownLocationAsync();
             /*if (userLocation == null)
             {
                 await DisplayAlert("Error", "User location could not be determined.", "OK");
                 return;
             }*/
-
+            
             bool isUserWithinYellowCircle = false;
 
             // Check if the user is within any yellow-circled locations
@@ -343,10 +346,10 @@ namespace OnDaGO.MAUI.Views
                         ETALabel.Text = $"ETA: {etaMinutes:F1} mins";
                         PuvNoLabel.Text = $"PUV No: {SelectedVehicle.PuvNo}";
                         PassengerCountLabel.Text = $"Passenger Count: {SelectedVehicle.PassengerCount}/{SelectedVehicle.MaxPassengerCount}";
-                        UpdateStandingPassengerCount(SelectedVehicle.PassengerCount, SelectedVehicle.MaxPassengerCount);
+                        //UpdateStandingPassengerCount(SelectedVehicle.PassengerCount, SelectedVehicle.MaxPassengerCount);
                         // Calculate and update standing passengers
-                        int standingPassengers = Math.Max(0, SelectedVehicle.PassengerCount - SelectedVehicle.MaxPassengerCount);
-                        StandingPassengerCountLabel.Text = $"Standing Passengers: {standingPassengers}/10";
+                        //int standingPassengers = Math.Max(0, SelectedVehicle.PassengerCount - SelectedVehicle.MaxPassengerCount);
+                        //StandingPassengerCountLabel.Text = $"Standing Passengers: {standingPassengers}/10";
                     }
                 }
             }
@@ -354,7 +357,7 @@ namespace OnDaGO.MAUI.Views
 
 
 
-        private void UpdateStandingPassengerCount(int currentPassengerCount, int maxPassengerCount)
+        /*private void UpdateStandingPassengerCount(int currentPassengerCount, int maxPassengerCount)
         {
             int standingPassengers = 0;
 
@@ -365,7 +368,7 @@ namespace OnDaGO.MAUI.Views
 
             // Update the standing passenger label
             StandingPassengerCountLabel.Text = $"Standing Passengers: {standingPassengers}/10";
-        }
+        }*/
 
         private async void LoadFareMatrixInBottomSheet()
         {
@@ -898,7 +901,7 @@ namespace OnDaGO.MAUI.Views
         //var userLocation = new Location(14.621360, 121.055222);//var userLocation = await Geolocation.GetLastKnownLocationAsync();
         private async void OnToggleBottomSheetClicked(object sender, EventArgs e)
         {
-            //var userLocation = new Location(14.6967, 121.1205);
+            //var userLocation = new Location(14.7288, 121.1441);
             var userLocation = await Geolocation.GetLastKnownLocationAsync();
             if (userLocation == null)
             {
@@ -1071,7 +1074,7 @@ namespace OnDaGO.MAUI.Views
             // Assuming SelectedVehicle is an existing property with a PassengerCount
             passengerCount = SelectedVehicle?.PassengerCount ?? 0;
 
-            UpdateStandingPassengerCount(passengerCount, SelectedVehicle?.MaxPassengerCount ?? 0);
+            //UpdateStandingPassengerCount(passengerCount, SelectedVehicle?.MaxPassengerCount ?? 0);
 
             // Use the MainThread to update UI elements as timers run on a background thread
             Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
@@ -1084,15 +1087,15 @@ namespace OnDaGO.MAUI.Views
         {
             Color strokeColor;
 
-            if (count >= 0 && count <= 15)
+            if (count >= 0 && count <= 5)
             {
                 strokeColor = Colors.LimeGreen;
             }
-            else if (count >= 16 && count <= 25)
+            else if (count >= 6 && count <= 13)
             {
                 strokeColor = Colors.Orange;
             }
-            else if (count >= 26 && count <=30)
+            else if (count >= 14 && count <=18)
             {
                 strokeColor = Colors.Red;
             }

@@ -37,6 +37,10 @@ namespace OnDaGO.MAUI.Services
         [Post("/api/users/admin/register")]
         Task<UserItem> RegisterAdmin([Body] UserItem adminUser);
 
+        [Post("/api/users/driver/register")]
+        Task<UserItem> RegisterDriver([Body] DriverRegistrationRequest driver);
+
+
 
         [Put("/api/users/edit-profile")]
         Task<HttpResponseMessage> EditProfile([Body] UpdateProfileRequest request);

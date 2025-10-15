@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using OnDaGo.API.Services; // Assuming the service is in the OnDaGo.API.Services namespace
+using OnDaGo.API.Services;
 using System.Threading.Tasks;
 
 namespace OnDaGo.API.Controllers
@@ -15,7 +15,6 @@ namespace OnDaGo.API.Controllers
             _vehicleService = vehicleService;
         }
 
-        // GET: api/vehicles
         [HttpGet]
         public async Task<IActionResult> GetVehicles()
         {
@@ -23,56 +22,22 @@ namespace OnDaGo.API.Controllers
             return Ok(vehicles);
         }
 
-        // GET: api/vehicles/{id}
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetVehicleById(string id)
+        [HttpPatch("{puvNo}/status")]
+        public async Task<IActionResult> UpdateVehicleStatus(string puvNo, [FromBody] VehicleStatusUpdateRequest request)
         {
-            var vehicle = await _vehicleService.GetVehicleByIdAsync(id);
+            var vehicle = await _vehicleService.GetVehicleByPuvAsync(puvNo);
+            if (vehicle == null) return NotFound("Vehicle not found");
 
-            if (vehicle == null)
-            {
-                return NotFound();
-            }
+            await _vehicleService.UpdateVehicleStatusAsync(puvNo, request);
 
-            return Ok(vehicle);
-        }
-
-        // POST: api/vehicles
-        [HttpPost]
-        public async Task<IActionResult> CreateVehicle([FromBody] VehicleModel newVehicle)
-        {
-            await _vehicleService.CreateVehicleAsync(newVehicle);
-            return CreatedAtAction(nameof(GetVehicleById), new { id = newVehicle.Id }, newVehicle);
-        }
-
-        // PUT: api/vehicles/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateVehicle(string id, [FromBody] VehicleModel updatedVehicle)
-        {
-            var existingVehicle = await _vehicleService.GetVehicleByIdAsync(id);
-
-            if (existingVehicle == null)
-            {
-                return NotFound();
-            }
-
-            await _vehicleService.UpdateVehicleAsync(id, updatedVehicle);
             return NoContent();
         }
+    }
 
-        // DELETE: api/vehicles/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteVehicle(string id)
-        {
-            var existingVehicle = await _vehicleService.GetVehicleByIdAsync(id);
-
-            if (existingVehicle == null)
-            {
-                return NotFound();
-            }
-
-            await _vehicleService.DeleteVehicleAsync(id);
-            return NoContent();
-        }
+    public class VehicleStatusUpdateRequest
+    {
+        public int PassengerCount { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
     }
 }

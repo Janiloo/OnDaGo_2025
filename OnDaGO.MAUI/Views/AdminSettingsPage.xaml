@@ -83,6 +83,20 @@
                 </Grid>
             </Frame>
 
+            <!-- Create Admin Account Button -->
+            <Frame Padding="10" BackgroundColor="White" HasShadow="True" CornerRadius="0">
+                <Grid ColumnDefinitions="Auto,*" VerticalOptions="Center">
+                    <Image Source="adminreg.svg" HeightRequest="24" WidthRequest="24" VerticalOptions="Center" Margin="10,0,0,0"/>
+                    <Button Text="Create PUV Account" 
+                 Clicked="OnCreatePUVClicked" 
+                 BackgroundColor="Transparent" 
+                 TextColor="Black" 
+                 FontAttributes="Bold"
+                 HorizontalOptions="Start" 
+                 Grid.Column="1"/>
+                </Grid>
+            </Frame>
+
             <!-- Logout Button -->
             <Frame Padding="10" BackgroundColor="White" HasShadow="True" CornerRadius="0">
                 <Grid ColumnDefinitions="Auto,*" VerticalOptions="Center">

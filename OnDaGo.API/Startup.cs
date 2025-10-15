@@ -33,9 +33,9 @@ public class Startup
         services.AddScoped<ReportService>();
         services.AddControllers();
         services.AddScoped<IdAnalyzerClient>();
-        services.AddScoped<IdAnalyzerService>();
+        //services.AddScoped<IdAnalyzerService>();
         services.AddHttpClient<IdAnalyzerClient>();
-        services.AddHttpClient<IdAnalyzerService>();
+        //services.AddHttpClient<IdAnalyzerService>();
         services.AddScoped<VehicleService>();     // Register Vehicle service
         services.AddLogging();
 
@@ -47,11 +47,16 @@ public class Startup
         {
             options.AddPolicy("AllowSpecificOrigins", builder =>
             {
-                builder.WithOrigins("https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net/")
-                       .AllowAnyMethod()
-                       .AllowAnyHeader();
+                builder.WithOrigins(
+                    "https://ondago-api-akfye0eahsamhrgt.southeastasia-01.azurewebsites.net",
+                    "http://localhost:5147",
+                    "http://10.0.2.2:5147"
+                )
+                .AllowAnyMethod()
+                .AllowAnyHeader();
             });
         });
+
 
 
         // JWT Authentication
@@ -120,7 +125,8 @@ public class Startup
         app.UseRouting();
 
         // Use CORS policy
-        app.UseCors("AllowAllOrigins");
+        app.UseCors("AllowSpecificOrigins");
+
 
         app.UseAuthentication(); // Ensure this is added before authorization
         app.UseAuthorization();

@@ -1,36 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="OnDaGO.MAUI.Views.EditFarePage"
              Title="Edit Fare Page"
              BackgroundColor="#33efbb6b">
-    <!-- Lighter background for contrast -->
 
     <ScrollView>
         <StackLayout Padding="20">
+
             <!-- Header for Fare Matrix -->
             <Label Text="Fare Matrix"
                    FontSize="28"
-                   FontFamily="NunitoRegular"
                    FontAttributes="Bold"
                    HorizontalOptions="Center"
                    TextColor="#333333"
                    Margin="0,0,0,20"/>
 
-            <!-- CollectionView to display fare matrix in a card-style format -->
+            <!-- Header Row (Fixed with Frame for rounded corners) -->
+            <Frame CornerRadius="10"
+                   Padding="0"
+                   HasShadow="False"
+                   BackgroundColor="#efbb6b">
+                <Grid ColumnSpacing="5" RowSpacing="5" Padding="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Label Text="Origin" FontAttributes="Bold" Grid.Column="0" HorizontalOptions="Center" TextColor="White"/>
+                    <Label Text="Destination" FontAttributes="Bold" Grid.Column="1" HorizontalOptions="Center" TextColor="White"/>
+                    <Label Text="Fare" FontAttributes="Bold" Grid.Column="2" HorizontalOptions="Center" TextColor="White"/>
+                    <Label Text="Discounted Fare" FontAttributes="Bold" Grid.Column="3" HorizontalOptions="Center" TextColor="White"/>
+                </Grid>
+            </Frame>
+
+            <!-- CollectionView to display and edit fare matrix -->
             <CollectionView x:Name="FareMatrixCollection" Margin="0,10,0,0">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Frame Padding="15" 
-                               Margin="0,5" 
-                               BackgroundColor="#efbb6b" 
-                               CornerRadius="15" 
-                               HasShadow="True" 
-                               BorderColor="#E0E0E0" >
-                            <!-- Add border for emphasis -->
-                            <Grid ColumnSpacing="10" RowSpacing="5">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+                        <Frame Padding="10"
+                               Margin="0,5"
+                               BackgroundColor="White"
+                               CornerRadius="10"
+                               HasShadow="True"
+                               BorderColor="#E0E0E0">
+                            <Grid ColumnSpacing="5" RowSpacing="5">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="*"/>
@@ -38,29 +54,43 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
 
-                                <!-- Display Fare Matrix Data -->
-                                <Label Text="{Binding Origin}" Grid.Row="0" Grid.Column="0" HorizontalOptions="Center" FontSize="Medium" TextColor="#fff" FontAttributes="Bold"/>
-                                <Label Text="{Binding Destination}" Grid.Row="0" Grid.Column="1" HorizontalOptions="Center" FontSize="Medium" TextColor="#fff" FontAttributes="Bold"/>
+                                <!-- Origin -->
+                                <Label Text="{Binding Origin}"
+                                       Grid.Column="0"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       TextColor="#333"
+                                       FontAttributes="Bold"/>
 
-                                <Entry Text="{Binding Fare, Mode=TwoWay}" 
-                                       Grid.Row="0" Grid.Column="2" 
-                                       Keyboard="Numeric" 
-                                       Placeholder="Fare" 
-                                       PlaceholderColor="#efbb6b" 
-                                       Margin="5" 
-                                       BackgroundColor="#efbb6b" 
+                                <!-- Destination -->
+                                <Label Text="{Binding Destination}"
+                                       Grid.Column="1"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       TextColor="#333"
+                                       FontAttributes="Bold"/>
 
-                                       TextColor="#fff" />
+                                <!-- Fare (Editable) -->
+                                <Entry Text="{Binding Fare, Mode=TwoWay}"
+                                       Grid.Column="2"
+                                       Keyboard="Numeric"
+                                       Placeholder="Fare"
+                                       PlaceholderColor="#aaa"
+                                       Margin="5"
+                                       BackgroundColor="#f9f9f9"
+                                       TextColor="#333"
+                                       HorizontalOptions="FillAndExpand"/>
 
-                                <Entry Text="{Binding DiscountedFare, Mode=TwoWay}" 
-                                       Grid.Row="0" Grid.Column="3" 
-                                       Keyboard="Numeric" 
-                                       Placeholder="Discounted Fare" 
-                                       PlaceholderColor="#efbb6b" 
-                                       Margin="5" 
-                                       BackgroundColor="#efbb6b" 
-
-                                       TextColor="#fff" />
+                                <!-- Discounted Fare (Editable) -->
+                                <Entry Text="{Binding DiscountedFare, Mode=TwoWay}"
+                                       Grid.Column="3"
+                                       Keyboard="Numeric"
+                                       Placeholder="Discounted"
+                                       PlaceholderColor="#aaa"
+                                       Margin="5"
+                                       BackgroundColor="#f9f9f9"
+                                       TextColor="#333"
+                                       HorizontalOptions="FillAndExpand"/>
                             </Grid>
                         </Frame>
                     </DataTemplate>
@@ -68,7 +98,7 @@
             </CollectionView>
 
             <!-- Save Button -->
-            <Button Text="Save Changes" 
+            <Button Text="Save Changes"
                     Clicked="OnSaveChangesClicked"
                     HorizontalOptions="Center"
                     VerticalOptions="End"
@@ -77,7 +107,7 @@
                     TextColor="White"
                     CornerRadius="25"
                     Padding="10"
-                    FontSize="Medium" />
+                    FontSize="Medium"/>
         </StackLayout>
     </ScrollView>
 </ContentPage>

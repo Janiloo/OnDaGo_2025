@@ -18,7 +18,9 @@ namespace OnDaGO.MAUI.Services
             _secureStorage = secureStorage;
 
             // Always use the production URL (Azure)
-            _baseUrl = "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net:443";
+            //_baseUrl = "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net:443";
+            _baseUrl = "https://ondago-api-akfye0eahsamhrgt.southeastasia-01.azurewebsites.net";
+
         }
 
         // Example: GetProtectedDataAsync

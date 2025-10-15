@@ -13,8 +13,8 @@ namespace OnDaGO.MAUI.Views
 {
     public partial class RegistrationPage : ContentPage
     {
-        private string DocumentImageBase64 { get; set; }
-        private string FaceImageBase64 { get; set; }
+        //private string DocumentImageBase64 { get; set; }
+        //private string FaceImageBase64 { get; set; }
 
         public RegistrationPage()
         {
@@ -33,7 +33,7 @@ namespace OnDaGO.MAUI.Views
             }
         }
 
-        private async void OnDocumentFrontClicked(object sender, EventArgs e)
+        /*private async void OnDocumentFrontClicked(object sender, EventArgs e)
         {
             if (await RequestCameraPermissionAsync())
             {
@@ -90,14 +90,14 @@ namespace OnDaGO.MAUI.Views
         {
             var imageBytes = await File.ReadAllBytesAsync(filePath);
             return Convert.ToBase64String(imageBytes);
-        }
+        }*/
 
 
 
         private async void OnRegisterClicked(object sender, EventArgs e)
         {
             ClearErrorMessages();
-            IsLoading = true; // Start loading animation
+            IsLoading = true;
 
             bool hasError = false;
 
@@ -122,23 +122,17 @@ namespace OnDaGO.MAUI.Views
 
             if (string.IsNullOrWhiteSpace(PasswordEntry.Text) ||
                 PasswordEntry.Text.Length < 6 ||
-                !Regex.IsMatch(PasswordEntry.Text, @"[A-Z]") ||         // Contains uppercase letter
-                !Regex.IsMatch(PasswordEntry.Text, @"[\W_]") ||         // Contains special character
-                !Regex.IsMatch(PasswordEntry.Text, @"\d"))              // Contains number
+                !Regex.IsMatch(PasswordEntry.Text, @"[A-Z]") ||
+                !Regex.IsMatch(PasswordEntry.Text, @"[\W_]") ||
+                !Regex.IsMatch(PasswordEntry.Text, @"\d"))
             {
                 ShowErrorMessage(PasswordErrorLabel, "Password does not meet the required standards.");
                 hasError = true;
             }
 
-
             if (PasswordEntry.Text != ConfirmPasswordEntry.Text)
             {
                 ShowErrorMessage(ConfirmPasswordErrorLabel, "Passwords do not match.");
-                hasError = true;
-            }
-
-            if (string.IsNullOrWhiteSpace(DocumentImageBase64) || string.IsNullOrWhiteSpace(FaceImageBase64))
-            {
                 hasError = true;
             }
 
@@ -150,30 +144,44 @@ namespace OnDaGO.MAUI.Views
 
             if (hasError)
             {
-                IsLoading = false; // Stop loading animation if there are validation errors
+                IsLoading = false;
                 return;
             }
 
-            // Proceed with registration if no errors
             try
             {
                 var user = new UserItem
                 {
                     Name = NameEntry.Text,
                     Email = EmailEntry.Text,
-                    PasswordHash = HashPassword(PasswordEntry.Text),
-                    PhoneNumber = PhoneNumberEntry.Text,
-                    DocumentImageBase64 = DocumentImageBase64,
-                    FaceImageBase64 = FaceImageBase64
+                    PasswordHash = PasswordEntry.Text,
+                    PhoneNumber = PhoneNumberEntry.Text
                 };
 
                 var result = await App.AuthApi.Register(user);
                 await DisplayAlert("Success", "Registration successful!", "OK");
                 await Navigation.PushAsync(new LoginPage());
             }
-            catch (ApiException ex)
+            catch (ApiException apiEx)
             {
-                await DisplayAlert("Registration Failed", $"Error: Invalid ID or Portrait Picture", "OK");
+                string errorMessage;
+
+                if (apiEx.StatusCode == System.Net.HttpStatusCode.Conflict ||
+                    apiEx.Content.Contains("already exists", StringComparison.OrdinalIgnoreCase) ||
+                    apiEx.Content.Contains("email", StringComparison.OrdinalIgnoreCase))
+                {
+                    errorMessage = "This email is already registered. Please use another one.";
+                }
+                else if (apiEx.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                {
+                    errorMessage = "Invalid registration details. Please check your inputs.";
+                }
+                else
+                {
+                    errorMessage = $"Registration failed: {apiEx.Message}";
+                }
+
+                await DisplayAlert("Registration Failed", errorMessage, "OK");
             }
             catch (Exception ex)
             {
@@ -181,26 +189,27 @@ namespace OnDaGO.MAUI.Views
             }
             finally
             {
-                IsLoading = false; // Stop loading animation after registration process
+                IsLoading = false;
             }
         }
 
+
         private void OnPasswordTextChanged(object sender, TextChangedEventArgs e)
-{
-    string password = e.NewTextValue;
+        {
+            string password = e.NewTextValue;
 
-    // Check for uppercase letter
-    ContainsUppercaseLabel.TextColor = Regex.IsMatch(password, @"[A-Z]") ? Colors.Green : Colors.Gray;
+            // Check for uppercase letter
+            ContainsUppercaseLabel.TextColor = Regex.IsMatch(password, @"[A-Z]") ? Colors.Green : Colors.Gray;
 
-    // Check for special character
-    ContainsSpecialCharLabel.TextColor = Regex.IsMatch(password, @"[\W_]") ? Colors.Green : Colors.Gray;
+            // Check for special character
+            ContainsSpecialCharLabel.TextColor = Regex.IsMatch(password, @"[\W_]") ? Colors.Green : Colors.Gray;
 
-    // Check for number
-    ContainsNumberLabel.TextColor = Regex.IsMatch(password, @"\d") ? Colors.Green : Colors.Gray;
+            // Check for number
+            ContainsNumberLabel.TextColor = Regex.IsMatch(password, @"\d") ? Colors.Green : Colors.Gray;
 
-    // Check for minimum length of 6 characters
-    MinLengthLabel.TextColor = password.Length >= 6 ? Colors.Green : Colors.Gray;
-}
+            // Check for minimum length of 6 characters
+            MinLengthLabel.TextColor = password.Length >= 6 ? Colors.Green : Colors.Gray;
+        }
 
 
 
@@ -221,7 +230,7 @@ namespace OnDaGO.MAUI.Views
 
 
 
-        private string HashPassword(string password)
+        /*private string HashPassword(string password)
         {
             // Hashing the password securely
             using (var sha256 = SHA256.Create())
@@ -230,13 +239,7 @@ namespace OnDaGO.MAUI.Views
                 var hash = sha256.ComputeHash(bytes);
                 return Convert.ToBase64String(hash);
             }
-        }
-
-        private void ShowErrorMessage(string message)
-        {
-            ErrorLabel.Text = message;
-            ErrorLabel.IsVisible = true;
-        }
+        }*/
 
         private bool IsValidEmail(string email) =>
             !string.IsNullOrWhiteSpace(email) &&

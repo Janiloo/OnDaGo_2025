@@ -1,4 +1,4 @@
-﻿using System.Net.Http;
+﻿/*using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -103,3 +103,4 @@ namespace OnDaGO.MAUI.Services
         // Additional fields can be added based on ID Analyzer's API documentation.
     }
 }
+*/

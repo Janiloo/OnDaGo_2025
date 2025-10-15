@@ -58,14 +58,19 @@ namespace OnDaGO.MAUI.Views
                         return;
                     }
 
-                    if (result.User.Role == "Admin")
+                    switch (result.User.Role)
                     {
-                        await Navigation.PushAsync(new AdminHomePage());
+                        case "Admin":
+                            await Navigation.PushAsync(new AdminHomePage());
+                            break;
+                        case "Driver":
+                            await Navigation.PushAsync(new DriversHomePage());
+                            break;
+                        default:
+                            await Navigation.PushAsync(new HomePage());
+                            break;
                     }
-                    else
-                    {
-                        await Navigation.PushAsync(new HomePage());
-                    }
+
                 }
                 else
                 {

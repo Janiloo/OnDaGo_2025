@@ -62,7 +62,6 @@
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#fad06f" />
 
 		<!-- Splash Screen -->
-		<MauiSplashScreen Include="Resources\Splash\ondagologo.svg" Color="#fad06f" BaseSize="128,128" />
 
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />
@@ -88,7 +87,14 @@
 	  <None Remove="Resources\Images\reportlist.svg" />
 	  <None Remove="Resources\Images\support.svg" />
 	  <None Remove="Resources\Raw\ondagologo.svg" />
+	  <None Remove="Resources\Splash\ondagologoonly.png" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <MauiSplashScreen Include="Resources\Splash\ondagologoonly.png" Color="#fad06f" />
+	</ItemGroup>
+
+
 
 	<ItemGroup>
 		<PackageReference Include="CommonDialogs.Maui" Version="1.0.10" />	
@@ -101,7 +107,7 @@
 		<PackageReference Include="Microsoft.Maui.Maps" Version="8.0.91" />
 		<PackageReference Include="MongoDB.Bson" Version="2.28.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<PackageReference Include="Refit" Version="7.1.2" />
+		<PackageReference Include="Refit" Version="8.0.0" />
 		<PackageReference Include="CommunityToolkit.Maui" Version="9.0.2" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
 		<PackageReference Include="CommunityToolkit.Maui.Maps" Version="2.0.2" />
@@ -111,6 +117,33 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Update="Views\DriversProfilePage.xaml.cs">
+	    <DependentUpon>DriversProfilePage.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\CreatePUVPage.xaml.cs">
+	    <DependentUpon>CreatePUVPage.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\DriversHomePage.xaml.cs">
+	    <DependentUpon>DriversHomePage.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\DriversSettings.xaml.cs">
+	    <DependentUpon>DriversSettings.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\DriverReportPage.xaml.cs">
+	    <DependentUpon>DriverReportPage.xaml</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <MauiXaml Update="Views\DriversProfilePage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\CreatePUVPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\DriversHomePage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Views\AdminHomePage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
@@ -153,10 +186,16 @@
 	  <MauiXaml Update="Views\ResetTokenPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	  <MauiXaml Update="Views\DriversSettings.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Views\SettingsPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\TermsPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\DriverReportPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\UserReportPage.xaml">
@@ -165,6 +204,12 @@
 	  <MauiXaml Update="Views\VehicleInfoBottomSheet.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="Resources\Splash\ondagologo.svg" Color="#fad06f" BaseSize="128,128" />
+	  <None Update="Resources\Splash\ondagologosplash.svg" Color="#fbe4ac" BaseSize="1500,1500" />
+	  <None Update="Resources\Splash\ondagoscreen.png" Color="#fad06f" BaseSize="1080,1920" />
 	</ItemGroup>
 
 </Project>

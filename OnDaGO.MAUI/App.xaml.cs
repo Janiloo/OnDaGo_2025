@@ -1,6 +1,7 @@
 ﻿using Refit;
 using OnDaGO.MAUI.Services;
 using OnDaGO.MAUI.Views;
+using OnDaGO.MAUI.Models; // Added for UserItem
 using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
 
@@ -10,21 +11,29 @@ public partial class App : Application
 {
     public static IAuthApi AuthApi { get; private set; }
 
+    // 🔹 Store the currently logged-in user
+    public static UserItem CurrentUser { get; set; }
+
     public App()
     {
         InitializeComponent();
 
         Application.Current.UserAppTheme = AppTheme.Light;
 
-        // Set the new Azure domain URL
+#if DEBUG
         string baseUrl = DeviceInfo.Platform == DevicePlatform.Android
-            ? "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net"
-            : "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net";
+            ? "http://10.0.2.2:5147"  // Android emulator to your local machine
+            : "http://localhost:5147"; // Running on Windows/Mac
+#else
+        string baseUrl = "https://ondago-api-akfye0eahsamhrgt.southeastasia-01.azurewebsites.net";
+#endif
+        //string baseUrl = "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net";
 
         AuthApi = RestService.For<IAuthApi>(baseUrl);
 
-        // Check for developer options if in release mode
-#if RELEASE && ANDROID
+        // 🔸 Developer Options check (DISABLED)
+        /*
+        #if RELEASE && ANDROID
         if (AreDeveloperOptionsEnabled())
         {
             MainPage = new ContentPage
@@ -36,23 +45,36 @@ public partial class App : Application
                     VerticalOptions = LayoutOptions.Center
                 }
             };
-            return; // Exit early if developer options are enabled
+            return;
         }
-#endif
+        #endif
+        */
 
         // Check if the user is already logged in
         var token = SecureStorage.GetAsync("jwt_token").Result;
-        if (!string.IsNullOrEmpty(token))
+        var userId = SecureStorage.GetAsync("user_id").Result;
+
+        if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(userId))
         {
-            // Extract role information from the JWT token
             var userRole = GetUserRoleFromToken(token);
+
+            // Set minimal CurrentUser (you can fetch full details later)
+            CurrentUser = new UserItem
+            {
+                Id = userId,
+                Role = userRole
+            };
 
             // Redirect based on the user's role
             if (userRole == "Admin")
             {
                 MainPage = new NavigationPage(new AdminHomePage());
             }
-            else if (userRole == "User")
+            else if (userRole == "Driver")
+            {
+                MainPage = new NavigationPage(new DriversHomePage());
+            }
+            else
             {
                 MainPage = new NavigationPage(new HomePage());
             }
@@ -65,22 +87,21 @@ public partial class App : Application
 
     private string GetUserRoleFromToken(string token)
     {
-        // Decode the JWT token to extract the role information
         var jwtHandler = new JwtSecurityTokenHandler();
         var jwtToken = jwtHandler.ReadJwtToken(token);
 
-        // Assuming the role is stored in the "role" claim in the JWT
         var roleClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "role");
         return roleClaim?.Value;
     }
 
-#if ANDROID // Define the method only for Android
+#if ANDROID
     private bool AreDeveloperOptionsEnabled()
     {
-        // Import the Android namespace at the top of your file
-        //using Android.Provider;
+        var adbEnabled = Android.Provider.Settings.Global.GetInt(
+            Android.App.Application.Context.ContentResolver,
+            Android.Provider.Settings.Global.DevelopmentSettingsEnabled,
+            0);
 
-        var adbEnabled = Android.Provider.Settings.Global.GetInt(Android.App.Application.Context.ContentResolver, Android.Provider.Settings.Global.DevelopmentSettingsEnabled, 0);
         return adbEnabled == 1;
     }
 #endif

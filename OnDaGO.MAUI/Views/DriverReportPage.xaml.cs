@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace OnDaGO.MAUI.Views
 {
-    public partial class UserReportPage : ContentPage
+    public partial class DriverReportPage : ContentPage
     {
         private readonly ReportService _reportService;
         private string _userId;
@@ -16,7 +16,7 @@ namespace OnDaGO.MAUI.Views
         private const int MaxAttempts = 3;
         private DateTime _lastReportDate;
 
-        public UserReportPage(ReportService reportService)
+        public DriverReportPage(ReportService reportService)
         {
             InitializeComponent();
             _reportService = reportService;

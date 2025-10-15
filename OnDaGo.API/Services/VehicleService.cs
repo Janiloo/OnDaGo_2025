@@ -1,5 +1,5 @@
 ﻿using MongoDB.Driver;
-using OnDaGo.API.Models;
+using OnDaGo.API.Controllers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -24,6 +24,11 @@ namespace OnDaGo.API.Services
             return await _vehicles.Find(vehicle => vehicle.Id == id).FirstOrDefaultAsync();
         }
 
+        public async Task<VehicleModel> GetVehicleByPuvAsync(string puvNo)
+        {
+            return await _vehicles.Find(vehicle => vehicle.PuvNo == puvNo).FirstOrDefaultAsync();
+        }
+
         public async Task CreateVehicleAsync(VehicleModel newVehicle)
         {
             await _vehicles.InsertOneAsync(newVehicle);
@@ -38,5 +43,17 @@ namespace OnDaGo.API.Services
         {
             await _vehicles.DeleteOneAsync(vehicle => vehicle.Id == id);
         }
+
+        public async Task UpdateVehicleStatusAsync(string puvNo, VehicleStatusUpdateRequest request)
+        {
+            var update = Builders<VehicleModel>.Update
+                .Set(v => v.PassengerCount, request.PassengerCount)
+                .Set(v => v.CurrentLat, request.Latitude)
+                .Set(v => v.CurrentLong, request.Longitude);
+
+            await _vehicles.UpdateOneAsync(v => v.PuvNo == puvNo, update);
+        }
+
+
     }
 }

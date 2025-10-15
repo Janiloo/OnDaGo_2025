@@ -19,16 +19,16 @@ namespace OnDaGo.API.Controllers
     {
         private readonly UserService _userService;
         private readonly EmailService _emailService;
-        private readonly IdAnalyzerClient _idAnalyzerClient;
+        //private readonly IdAnalyzerClient _idAnalyzerClient;
         private readonly ILogger<UsersController> _logger;
-        private readonly IdAnalyzerService _idAnalyzerService;
+        //private readonly IdAnalyzerService _idAnalyzerService;
 
-        public UsersController(UserService userService, EmailService emailService, IdAnalyzerClient idAnalyzerClient, IdAnalyzerService idAnalyzerService)
+        public UsersController(UserService userService, EmailService emailService)//, IdAnalyzerClient idAnalyzerClient, IdAnalyzerService idAnalyzerService)
         {
             _userService = userService;
             _emailService = emailService;
-            _idAnalyzerClient = idAnalyzerClient;
-            _idAnalyzerService = idAnalyzerService;
+            //_idAnalyzerClient = idAnalyzerClient;
+            //_idAnalyzerService = idAnalyzerService;
         }
 
 
@@ -50,7 +50,7 @@ namespace OnDaGo.API.Controllers
                 return Conflict(new { Success = false, Message = "User with this email already exists." });
             }
 
-            // Analyze document and face images if provided
+            /* Analyze document and face images if provided
             if (!string.IsNullOrWhiteSpace(userRequest.DocumentImageBase64) && !string.IsNullOrWhiteSpace(userRequest.FaceImageBase64))
             {
                 var analysisResult = await _idAnalyzerService.AnalyzeDocumentAsync(
@@ -63,7 +63,7 @@ namespace OnDaGo.API.Controllers
                 {
                     return BadRequest(new { Success = false, Message = "Document analysis failed: " + analysisResult.Message });
                 }
-            }
+            }*/
 
             // Create and save user in database if document analysis is successful
             var user = new UserItem
@@ -73,8 +73,8 @@ namespace OnDaGo.API.Controllers
                 PasswordHash = HashPassword(userRequest.PasswordHash),
                 PhoneNumber = userRequest.PhoneNumber,
                 Role = userRequest.Role ?? "User",
-                DocumentImageBase64 = userRequest.DocumentImageBase64,
-                FaceImageBase64 = userRequest.FaceImageBase64,
+                //DocumentImageBase64 = userRequest.DocumentImageBase64,
+                //FaceImageBase64 = userRequest.FaceImageBase64,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -85,7 +85,61 @@ namespace OnDaGo.API.Controllers
         }
 
 
+        [HttpPost("driver/register")]
+        //[Authorize(Roles = "Admin")] // uncomment if only admin can create drivers
+        public async Task<IActionResult> RegisterDriver([FromBody] DriverRegistrationRequest driverRequest)
+        {
+            if (string.IsNullOrWhiteSpace(driverRequest.Email) ||
+                string.IsNullOrWhiteSpace(driverRequest.Username) ||
+                string.IsNullOrWhiteSpace(driverRequest.Password) ||
+                string.IsNullOrWhiteSpace(driverRequest.PlateNumber))
+            {
+                return BadRequest("Email, username, password, and plate number are required.");
+            }
+            // Check if email already exists
+            var existingEmail = await _userService.FindByEmailAsync(driverRequest.Email);
+            if (existingEmail != null)
+            {
+                return Conflict("Driver with this email already exists.");
+            }
+            // Check if username already exists
+            var existingUser = await _userService.FindByUsernameAsync(driverRequest.Username);
+            if (existingUser != null)
+            {
+                return Conflict("Driver with this username already exists.");
+            }
 
+            var driver = new UserItem
+            {
+                Name = driverRequest.Username,
+                Email = driverRequest.Email, // ← Add this
+                PasswordHash = HashPassword(driverRequest.Password),
+                Role = "Driver",
+                PlateNumber = driverRequest.PlateNumber,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            await _userService.CreateUserAsync(driver);
+
+            // ✅ Automatically create a vehicle for this driver
+            var vehicleService = new VehicleService(_userService._database); // Pass same database instance
+            var existingVehicle = await vehicleService.GetVehicleByPuvAsync(driver.PlateNumber);
+            if (existingVehicle == null)
+            {
+                var newVehicle = new VehicleModel
+                {
+                    PuvNo = driver.PlateNumber,
+                    CurrentLat = 0,
+                    CurrentLong = 0,
+                    PassengerCount = 0,
+                    MaxPassengerCount = 18
+                };
+                await vehicleService.CreateVehicleAsync(newVehicle);
+            }
+
+            return CreatedAtAction(nameof(RegisterDriver), new { id = driver.Id }, driver);
+        }
 
 
 
@@ -219,7 +273,9 @@ namespace OnDaGo.API.Controllers
             {
                 user.Name,
                 user.Email,
-                user.PhoneNumber
+                user.PhoneNumber,
+                user.PlateNumber
+
             };
 
             return Ok(userProfile);
@@ -314,11 +370,11 @@ namespace OnDaGo.API.Controllers
 
     }
 
-    public class VerifyIdRequest
+    /*public class VerifyIdRequest
     {
         public string DocumentImageBase64 { get; set; }
         public string SelfieImage { get; set; }
-    }
+    }*/
 
 
     public class LoginResponse

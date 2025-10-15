@@ -67,7 +67,7 @@
                         <Label Text="Show Password" VerticalOptions="Center"/>
                     </StackLayout>
 
-                    <StackLayout Orientation="Horizontal" HorizontalOptions="CenterAndExpand" Spacing="20">
+                    <!--<StackLayout Orientation="Horizontal" HorizontalOptions="CenterAndExpand" Spacing="20">
                         <StackLayout Orientation="Vertical" HorizontalOptions="Start" Padding="5">
                             <Button Text="Upload ID" Clicked="OnDocumentFrontClicked" FontSize="18" CornerRadius="20" FontAttributes="Bold" HeightRequest="50"/>
                             <Image x:Name="DocumentImageFrontPreview" HeightRequest="100" IsVisible="False" Margin="0,10,0,0"/>
@@ -77,7 +77,7 @@
                             <Button Text="Upload Selfie" Clicked="OnSelfieImageClicked" FontSize="18" CornerRadius="20" FontAttributes="Bold" HeightRequest="50"/>
                             <Image x:Name="SelfieImagePreview" HeightRequest="100" IsVisible="False" Margin="0,10,0,0"/>
                         </StackLayout>
-                    </StackLayout>
+                    </StackLayout>-->
 
                     <!-- Loading Indicator -->
                     <ActivityIndicator x:Name="LoadingIndicator" 

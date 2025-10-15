@@ -19,7 +19,7 @@ namespace OnDaGO.MAUI.Views
             SubjectList = new[]
             {
                 "All", "Lost Item", "Harassment", "Crime", "Accident", "Traffic Issue",
-                "Road Damage", "Petty Theft", "Emergency Assistance", "Other"
+                "Road Damage", "Petty Theft", "Other"
             };
             SubjectPicker.ItemsSource = SubjectList;
             SubjectPicker.SelectedIndex = 0;  // Default to "All"
@@ -39,15 +39,42 @@ namespace OnDaGO.MAUI.Views
             {
                 var reports = await _reportService.GetReportsAsync();
 
-                // Filter by subject if selected
-                if (!string.IsNullOrEmpty(subjectFilter) && subjectFilter != "All")
+                if (reports == null || reports.Count == 0)
                 {
-                    reports = reports.Where(r => r.Subject == subjectFilter).ToList();
+                    ReportCollection.ItemsSource = null;
+                    return;
                 }
 
-                // Sort reports by "Newest First" (most recent first)
+                // ? Convert all CreatedAt values from UTC ? local device time
+                foreach (var r in reports)
+                {
+                    r.CreatedAt = r.CreatedAt.ToLocalTime();
+                }
+
+                // ? Filter by subject if selected
+                if (!string.IsNullOrEmpty(subjectFilter) && subjectFilter != "All")
+                {
+                    if (subjectFilter == "Other")
+                    {
+                        // ? Show reports that do NOT match any predefined subjects
+                        reports = reports.Where(r =>
+                            r.Subject == null ||
+                            !SubjectList.Contains(r.Subject, StringComparer.OrdinalIgnoreCase)
+                        ).ToList();
+                    }
+                    else
+                    {
+                        // ? Show only reports that match the selected subject
+                        reports = reports.Where(r =>
+                            string.Equals(r.Subject, subjectFilter, StringComparison.OrdinalIgnoreCase)
+                        ).ToList();
+                    }
+                }
+
+                // ? Sort reports by "Newest First"
                 reports = reports.OrderByDescending(r => r.CreatedAt).ToList();
 
+                // ? Bind to UI
                 ReportCollection.ItemsSource = reports;
             }
             catch (Exception ex)
@@ -55,6 +82,8 @@ namespace OnDaGO.MAUI.Views
                 await DisplayAlert("Error", $"Failed to load reports: {ex.Message}", "OK");
             }
         }
+
+
 
         private async void OnReportTapped(object sender, EventArgs e)
         {

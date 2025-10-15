@@ -17,7 +17,7 @@ namespace OnDaGO.MAUI.Models
         public double CurrentLat { get; set; }
 
         [BsonElement("puv_no")]
-        public int PuvNo { get; set; }
+        public string PuvNo { get; set; } // PUV number
 
         // New fields
         [BsonElement("maxPassengerCount")]
