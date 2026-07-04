@@ -55,6 +55,16 @@ public class Startup
                 .AllowAnyMethod()
                 .AllowAnyHeader();
             });
+
+            // Development-only: Expo dev server / web preview run on random localhost
+            // ports (19000, 19006, 8081, ...), so allow any origin while developing.
+            // Native mobile apps are not subject to CORS; this is for browser tooling.
+            options.AddPolicy("AllowLocalDev", builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+            });
         });
 
 
@@ -125,7 +135,8 @@ public class Startup
         app.UseRouting();
 
         // Use CORS policy
-        app.UseCors("AllowSpecificOrigins");
+        // Permissive CORS in local development, strict origin list elsewhere.
+        app.UseCors(env.IsDevelopment() ? "AllowLocalDev" : "AllowSpecificOrigins");
 
 
         app.UseAuthentication(); // Ensure this is added before authorization
