@@ -118,10 +118,11 @@ src/
 
 ## Assumptions / known backend gaps (worth fixing server-side later)
 
-- Vehicle, fare, and report endpoints have **no `[Authorize]` attributes** — anyone with the
-  URL can PATCH a vehicle or fare. The app sends the JWT anyway; add role checks server-side.
-- The JWT signing key is hardcoded in `UsersController.GenerateJwtToken` — move it to
-  configuration/secret storage.
+- ~~Vehicle, fare, and report endpoints have no `[Authorize]` attributes~~ **Fixed (2026-07-05):**
+  those controllers now require a JWT; fare/report admin actions need the `Admin` role and the
+  vehicle status PATCH needs the `Driver` role. The app already sends the JWT on every request.
+- ~~The JWT signing key is hardcoded in `UsersController.GenerateJwtToken`~~ **Fixed (2026-07-05):**
+  the key now comes from `Jwt:Key` configuration (appsettings.json / `Jwt__Key` env var).
 - Report/fare IDs are normalized client-side (`normalizeId`) in case the serializer returns
   ObjectIds as objects rather than hex strings.
 - Driver passenger capacity defaults to 18 (set when the backend auto-creates a vehicle).
