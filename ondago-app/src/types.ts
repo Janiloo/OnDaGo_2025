@@ -28,6 +28,8 @@ export interface Vehicle {
   currentLong: number;
   passengerCount: number;
   maxPassengerCount: number;
+  /** ISO timestamp of the last status broadcast; null on legacy records. */
+  lastUpdated?: string | null;
 }
 
 export interface FareMatrixItem {
@@ -46,5 +48,6 @@ export interface ReportItem {
   status: string;
   isImportant: boolean;
   createdAt: string;
+  completedAt?: string | null;
   deletedAt?: string | null;
 }

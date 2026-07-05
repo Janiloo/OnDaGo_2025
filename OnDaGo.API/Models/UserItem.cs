@@ -17,8 +17,11 @@ namespace OnDaGo.API.Models
         //public string DocumentImageBase64 { get; set; } // Base64 string for ID document
         //public string FaceImageBase64 { get; set; } // Base64 string for selfie image
 
+        /// <summary>SHA-256 hash (hex) of the reset code — the raw code is never stored.</summary>
         public string? ResetToken { get; set; }
         public DateTime? ResetTokenExpiry { get; set; }
+        /// <summary>Failed change-password attempts against the current token; token is invalidated after 5.</summary>
+        public int ResetTokenAttempts { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

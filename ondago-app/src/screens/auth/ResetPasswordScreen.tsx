@@ -20,6 +20,10 @@ export default function ResetPasswordScreen({ navigation, route }: Props) {
       Alert.alert("Missing fields", "Email, token, and new password are required.");
       return;
     }
+    if (newPassword.length < 8) {
+      Alert.alert("Weak password", "Password must be at least 8 characters.");
+      return;
+    }
     if (newPassword !== confirm) {
       Alert.alert("Password mismatch", "Passwords do not match.");
       return;
@@ -40,7 +44,10 @@ export default function ResetPasswordScreen({ navigation, route }: Props) {
   return (
     <Screen>
       <Title>Reset password</Title>
-      <Subtitle>Enter the token from your email and choose a new password.</Subtitle>
+      <Subtitle>
+        Enter the 6-digit code from your email and choose a new password (min. 8 characters). The
+        code expires after 15 minutes or 5 wrong attempts.
+      </Subtitle>
       <Field
         label="Email"
         icon="mail-outline"

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -6,9 +6,10 @@ import {
   deleteReport,
   getReports,
   markReportCompleted,
-  markReportImportant,
+  setReportImportant,
   updateReportStatus,
 } from "../../services/reportApi";
+import { connectReportHub } from "../../services/reportHub";
 import { ReportItem } from "../../types";
 import { Badge, EmptyState, StatCard } from "../../components/UI";
 import { errorMessage } from "../../services/client";
@@ -48,6 +49,16 @@ export default function AdminReportsScreen() {
       load();
     }, [load])
   );
+
+  // Real-time: refetch whenever any report changes on the server.
+  const loadRef = useRef(load);
+  loadRef.current = load;
+  useEffect(() => {
+    const hub = connectReportHub({ onChange: () => loadRef.current() });
+    return () => {
+      hub.stop();
+    };
+  }, []);
 
   const stats = useMemo(
     () => ({
@@ -92,8 +103,8 @@ export default function AdminReportsScreen() {
           ),
       },
       {
-        text: report.isImportant ? "Important ✓" : "Mark Important",
-        onPress: () => act(() => markReportImportant(report.id)),
+        text: report.isImportant ? "Unmark Important" : "Mark Important",
+        onPress: () => act(() => setReportImportant(report.id, !report.isImportant)),
       },
       {
         text: "Delete",
@@ -166,7 +177,13 @@ export default function AdminReportsScreen() {
         </>
       }
       ListEmptyComponent={
-        loaded ? <EmptyState icon="checkmark-circle-outline" message="Nothing here. Pull to refresh." /> : null
+        loaded ? (
+          <EmptyState
+            icon="checkmark-circle-outline"
+            title="All clear"
+            message={filter === "all" ? "No reports yet. Pull to refresh." : `No ${filter} reports.`}
+          />
+        ) : null
       }
       renderItem={({ item }) => (
         <Pressable

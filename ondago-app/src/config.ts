@@ -24,11 +24,27 @@ const useProd = process.env.EXPO_PUBLIC_USE_PROD === "true";
 
 export const API_BASE_URL = envUrl || (useProd ? PRODUCTION_API : LOCAL_API!);
 
-/** How often (ms) the commuter map refreshes vehicle positions. */
+/**
+ * Fallback polling interval (ms) while the SignalR socket is down, and the
+ * tick rate of the staleness clock. Live updates normally arrive as pushes
+ * over /hubs/vehicles, not polls.
+ */
 export const VEHICLE_REFRESH_MS = 3000;
+
+/** How often (ms) to reconcile with a full GET while the socket is healthy. */
+export const VEHICLE_RECONCILE_MS = 30000;
 
 /** How often (ms) a driver broadcasts location to the backend. */
 export const DRIVER_LOCATION_UPDATE_MS = 3000;
+
+/**
+ * A vehicle whose last broadcast is older than this is treated as
+ * stale/offline (greyed on the map, excluded from the "live" count).
+ * Prevents phantom PUVs from misleading riders. Drivers broadcast every ~3s
+ * while on duty, so 25s of silence reliably means offline. (Ending a shift
+ * also pushes an immediate "offline" event, so this is just the safety net.)
+ */
+export const VEHICLE_STALE_MS = 25000;
 
 /** Route stops shown as fixed pins on the commuter map (Montalban–Cubao route). */
 export const ROUTE_STOPS = [

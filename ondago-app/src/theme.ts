@@ -41,11 +41,11 @@ export const palettes: { light: Palette; dark: Palette } = {
     text: "#0E1524",
     textMuted: "#5C6B82",
     border: "#E1E7F0",
-    primary: "#2563EB",
+    primary: "#F97316", // OnDaGO orange
     onPrimary: "#FFFFFF",
-    primarySoft: "#E4EDFF",
-    accent: "#F59E0B",
-    accentSoft: "#FEF1D6",
+    primarySoft: "#FDE8D4",
+    accent: "#EA580C", // deeper orange for secondary emphasis
+    accentSoft: "#FBE2CE",
     success: "#16A34A",
     successSoft: "#DCF5E5",
     danger: "#DC2626",
@@ -63,11 +63,11 @@ export const palettes: { light: Palette; dark: Palette } = {
     text: "#E8EDF7",
     textMuted: "#93A1B8",
     border: "#26324B",
-    primary: "#5B8DFF",
-    onPrimary: "#0B1220",
-    primarySoft: "#1D2C4F",
-    accent: "#FBBF24",
-    accentSoft: "#3A2E12",
+    primary: "#F97316", // OnDaGO orange (same hue in dark for brand consistency)
+    onPrimary: "#FFFFFF",
+    primarySoft: "#3A2717",
+    accent: "#FB923C", // lighter orange reads better on dark surfaces
+    accentSoft: "#3A2717",
     success: "#34D399",
     successSoft: "#123527",
     danger: "#F87171",
@@ -104,6 +104,34 @@ export const type = {
   label: { fontSize: 13, fontWeight: "600" as const },
   caption: { fontSize: 12, fontWeight: "500" as const },
 } as const;
+
+/**
+ * Shared animation timing. Keep transitions in the 150–320ms band — long
+ * enough to read as motion, short enough to never feel sluggish. Spring
+ * presets are spread straight into Animated.spring configs.
+ */
+export const motion = {
+  duration: { fast: 150, base: 220, slow: 320 },
+  spring: {
+    snappy: { speed: 18, bounciness: 6 },
+    gentle: { speed: 12, bounciness: 4 },
+  },
+} as const;
+
+/** Consistent, theme-aware elevation. Level scales shadow blur/offset together. */
+export function elevation(level: 1 | 2 | 3, shadowColor: string) {
+  const m = { 1: { r: 8, y: 2, e: 2 }, 2: { r: 14, y: 6, e: 5 }, 3: { r: 24, y: 12, e: 12 } }[level];
+  return {
+    shadowColor,
+    shadowOpacity: 1,
+    shadowRadius: m.r,
+    shadowOffset: { width: 0, height: m.y },
+    elevation: m.e,
+  };
+}
+
+/** Brand background used by the native + animated splash (theme-independent). */
+export const BRAND_BG = "#0B1220";
 
 /** Subtle Google Maps dark styling used when the app is in dark mode. */
 export const darkMapStyle = [

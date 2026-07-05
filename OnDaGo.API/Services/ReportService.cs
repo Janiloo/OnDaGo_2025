@@ -1,4 +1,3 @@
-﻿using MongoDB.Bson;
 using MongoDB.Driver;
 using OnDaGo.API.Models;
 using System;
@@ -18,45 +17,64 @@ namespace OnDaGo.API.Services
 
         public async Task<List<ReportItem>> GetReportsAsync()
         {
-            var reports = await _reports.Find(report => report.DeletedAt == null).ToListAsync();
-            Console.WriteLine($"Retrieved {reports.Count} reports from the database.");
-            return reports;
+            return await _reports.Find(report => report.DeletedAt == null).ToListAsync();
         }
 
-        public async Task<ReportItem> GetReportByIdAsync(string id)
+        public async Task<ReportItem?> GetReportByIdAsync(string id)
         {
-            return await _reports.Find(report => report.Id == new ObjectId(id) && report.DeletedAt == null).FirstOrDefaultAsync();
+            return await _reports.Find(r => r.Id == id && r.DeletedAt == null).FirstOrDefaultAsync();
         }
 
         public async Task CreateReportAsync(ReportItem report)
         {
             report.CreatedAt = DateTime.UtcNow;
-            report.DeletedAt = null; // Set DeletedAt to null on creation
+            report.DeletedAt = null;
             await _reports.InsertOneAsync(report);
         }
 
-        public async Task UpdateReportStatusAsync(string id, string status)
+        // Applies an update to a non-deleted report and returns the updated
+        // document (or null if it wasn't found), so callers can broadcast it.
+        private Task<ReportItem?> ApplyUpdateAsync(string id, UpdateDefinition<ReportItem> update)
+        {
+            var filter = Builders<ReportItem>.Filter.Where(r => r.Id == id && r.DeletedAt == null);
+            return _reports.FindOneAndUpdateAsync(
+                filter,
+                update,
+                new FindOneAndUpdateOptions<ReportItem> { ReturnDocument = ReturnDocument.After });
+        }
+
+        public Task<ReportItem?> UpdateReportStatusAsync(string id, string status)
         {
             var update = Builders<ReportItem>.Update.Set(r => r.Status, status);
-            await _reports.UpdateOneAsync(r => r.Id == new ObjectId(id), update);
+            // Keep CompletedAt consistent with the status.
+            update = status == "Completed"
+                ? update.Set(r => r.CompletedAt, DateTime.UtcNow)
+                : update.Set(r => r.CompletedAt, (DateTime?)null);
+            return ApplyUpdateAsync(id, update);
         }
 
-        public async Task SoftDeleteReportAsync(string id)
+        public Task<ReportItem?> SetImportantAsync(string id, bool important)
+        {
+            return ApplyUpdateAsync(id, Builders<ReportItem>.Update.Set(r => r.IsImportant, important));
+        }
+
+        public Task<ReportItem?> MarkAsCompletedAsync(string id)
+        {
+            var update = Builders<ReportItem>.Update
+                .Set(r => r.Status, "Completed")
+                .Set(r => r.CompletedAt, DateTime.UtcNow);
+            return ApplyUpdateAsync(id, update);
+        }
+
+        // Soft delete: preserves the record for audit/history but hides it from
+        // every query (all reads filter DeletedAt == null). Returns false if the
+        // report didn't exist / was already deleted.
+        public async Task<bool> SoftDeleteReportAsync(string id)
         {
             var update = Builders<ReportItem>.Update.Set(r => r.DeletedAt, DateTime.UtcNow);
-            await _reports.UpdateOneAsync(r => r.Id == new ObjectId(id), update);
-        }
-
-        public async Task MarkAsImportantAsync(string id)
-        {
-            var update = Builders<ReportItem>.Update.Set(r => r.IsImportant, true);
-            await _reports.UpdateOneAsync(r => r.Id == new ObjectId(id), update);
-        }
-
-        public async Task MarkAsCompletedAsync(string id)
-        {
-            var update = Builders<ReportItem>.Update.Set(r => r.Status, "Completed");
-            await _reports.UpdateOneAsync(r => r.Id == new ObjectId(id), update);
+            var result = await _reports.UpdateOneAsync(
+                r => r.Id == id && r.DeletedAt == null, update);
+            return result.ModifiedCount > 0;
         }
     }
 }
