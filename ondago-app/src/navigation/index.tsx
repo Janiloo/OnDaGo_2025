@@ -6,7 +6,13 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../store/AuthContext";
 import { useTheme } from "../store/ThemeContext";
+import { useOnboarding } from "../store/OnboardingContext";
 import { IconName } from "../components/UI";
+import { haptics } from "../services/haptics";
+import OnboardingScreen from "../screens/onboarding/OnboardingScreen";
+
+/** Subtle tactile tick on every tab switch. */
+const tabListeners = { tabPress: () => haptics.selection() };
 
 import LoginScreen from "../screens/auth/LoginScreen";
 import RegisterScreen from "../screens/auth/RegisterScreen";
@@ -21,6 +27,7 @@ import EditProfileScreen from "../screens/shared/EditProfileScreen";
 
 import DriverHomeScreen from "../screens/driver/DriverHomeScreen";
 
+import AdminMapScreen from "../screens/admin/AdminMapScreen";
 import AdminReportsScreen from "../screens/admin/AdminReportsScreen";
 import EditFaresScreen from "../screens/admin/EditFaresScreen";
 import ManageUsersScreen from "../screens/admin/ManageUsersScreen";
@@ -99,7 +106,7 @@ function ProfileStack() {
 function CommuterTabs() {
   const tabOptions = useTabOptions();
   return (
-    <Tab.Navigator screenOptions={tabOptions}>
+    <Tab.Navigator screenOptions={tabOptions} screenListeners={tabListeners}>
       <Tab.Screen
         name="Home"
         component={CommuterHomeScreen}
@@ -127,11 +134,11 @@ function CommuterTabs() {
 function DriverTabs() {
   const tabOptions = useTabOptions();
   return (
-    <Tab.Navigator screenOptions={tabOptions}>
+    <Tab.Navigator screenOptions={tabOptions} screenListeners={tabListeners}>
       <Tab.Screen
         name="DriverHome"
         component={DriverHomeScreen}
-        options={{ title: "On Duty", tabBarLabel: "Dashboard", tabBarIcon: tabIcon("speedometer", "speedometer-outline") }}
+        options={{ headerShown: false, tabBarLabel: "Map", tabBarIcon: tabIcon("map", "map-outline") }}
       />
       <Tab.Screen
         name="Report"
@@ -150,7 +157,12 @@ function DriverTabs() {
 function AdminTabs() {
   const tabOptions = useTabOptions();
   return (
-    <Tab.Navigator screenOptions={tabOptions}>
+    <Tab.Navigator screenOptions={tabOptions} screenListeners={tabListeners}>
+      <Tab.Screen
+        name="LiveMap"
+        component={AdminMapScreen}
+        options={{ headerShown: false, tabBarLabel: "Live Map", tabBarIcon: tabIcon("map", "map-outline") }}
+      />
       <Tab.Screen
         name="Reports"
         component={AdminReportsScreen}
@@ -177,16 +189,23 @@ function AdminTabs() {
 
 export default function RootNavigator() {
   const { user, initializing } = useAuth();
+  const { initializing: onboardingInit, seen: onboardingSeen, complete } = useOnboarding();
   const { palette } = useTheme();
   const navTheme = useNavTheme();
   const screenOptions = useScreenOptions();
 
-  if (initializing) {
+  if (initializing || onboardingInit) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: palette.bg }}>
         <ActivityIndicator size="large" color={palette.primary} />
       </View>
     );
+  }
+
+  // First launch (and not already signed in): show onboarding once. Completing
+  // or skipping it drops through to the existing auth flow (Login).
+  if (!user && !onboardingSeen) {
+    return <OnboardingScreen onDone={complete} />;
   }
 
   return (

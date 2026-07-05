@@ -14,6 +14,8 @@
       "bundleIdentifier": "com.ondago.app",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "OnDaGO uses your location to show nearby PUVs and, for drivers, to broadcast the vehicle position to commuters.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "OnDaGO broadcasts your PUV location to commuters while you are on duty, including when the app is in the background.",
+        "UIBackgroundModes": ["location"],
         "NSAppTransportSecurity": {
           "NSAllowsLocalNetworking": true
         }
@@ -23,7 +25,10 @@
       "package": "com.ondago.app",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
       ],
       "config": {
         "googleMaps": {
@@ -35,7 +40,10 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "OnDaGO uses your location to show nearby PUVs and track vehicle positions."
+          "locationWhenInUsePermission": "OnDaGO uses your location to show nearby PUVs and track vehicle positions.",
+          "locationAlwaysAndWhenInUsePermission": "OnDaGO broadcasts your PUV location to commuters while you are on duty, including when the app is in the background.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
         }
       ],
       "expo-secure-store",

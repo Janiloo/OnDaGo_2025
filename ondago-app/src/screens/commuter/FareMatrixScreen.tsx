@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { getFareMatrix } from "../../services/fareApi";
 import { FareMatrixItem } from "../../types";
 import { EmptyState } from "../../components/UI";
+import { SkeletonList } from "../../components/Skeleton";
 import { useTheme } from "../../store/ThemeContext";
 import { radius, spacing, type } from "../../theme";
 
@@ -30,6 +31,15 @@ export default function FareMatrixScreen() {
     load();
   }, [load]);
 
+  // Shimmer skeletons on the very first load instead of a blank screen.
+  if (!loaded) {
+    return (
+      <View style={{ flex: 1, backgroundColor: palette.bg }}>
+        <SkeletonList count={7} />
+      </View>
+    );
+  }
+
   return (
     <FlatList
       style={{ flex: 1, backgroundColor: palette.bg }}
@@ -39,7 +49,13 @@ export default function FareMatrixScreen() {
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={load} tintColor={palette.primary} />
       }
-      ListEmptyComponent={loaded ? <EmptyState icon="cash-outline" message="No fares published yet." /> : null}
+      ListEmptyComponent={
+        <EmptyState
+          icon="cash-outline"
+          title="No fares yet"
+          message="Fares set by the operator will appear here. Pull down to refresh."
+        />
+      }
       renderItem={({ item }) => (
         <View
           style={{

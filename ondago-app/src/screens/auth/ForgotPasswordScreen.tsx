@@ -20,9 +20,11 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
     setLoading(true);
     try {
       await forgotPassword(email.trim());
-      Alert.alert("Token sent", "Check your email for the reset token.", [
-        { text: "OK", onPress: () => navigation.navigate("ResetPassword", { email: email.trim() }) },
-      ]);
+      Alert.alert(
+        "Check your email",
+        "If an account exists for that email, a 6-digit reset code was sent. It expires in 15 minutes.",
+        [{ text: "OK", onPress: () => navigation.navigate("ResetPassword", { email: email.trim() }) }]
+      );
     } catch (error) {
       Alert.alert("Request failed", errorMessage(error));
     } finally {
@@ -33,7 +35,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   return (
     <Screen>
       <Title>Forgot password</Title>
-      <Subtitle>We'll email you a 6-digit reset token.</Subtitle>
+      <Subtitle>We'll email you a 6-digit reset code, valid for 15 minutes.</Subtitle>
       <Field
         label="Email"
         icon="mail-outline"

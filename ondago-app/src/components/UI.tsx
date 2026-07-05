@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,8 +14,9 @@ import {
   ViewStyle,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Palette, radius, spacing, type } from "../theme";
+import { motion, Palette, radius, spacing, type } from "../theme";
 import { useTheme } from "../store/ThemeContext";
+import { haptics } from "../services/haptics";
 
 export type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -97,15 +99,23 @@ export function SectionHeader({ title, icon }: { title: string; icon?: IconName 
 interface FieldProps extends TextInputProps {
   label: string;
   icon?: IconName;
+  /** Inline validation message; turns the field red and shows below it. */
+  error?: string;
 }
 
-export function Field({ label, icon, style, secureTextEntry, ...props }: FieldProps) {
+export function Field({ label, icon, error, style, secureTextEntry, ...props }: FieldProps) {
   const { palette } = useTheme();
   const [focused, setFocused] = useState(false);
   const [hidden, setHidden] = useState(!!secureTextEntry);
+
+  const borderColor = error ? palette.danger : focused ? palette.primary : "transparent";
+  const accent = error ? palette.danger : focused ? palette.primary : palette.textMuted;
+
   return (
     <View style={{ marginBottom: spacing.md }}>
-      <Text style={[type.label, { color: palette.textMuted, marginBottom: 6 }]}>{label}</Text>
+      <Text style={[type.label, { color: error ? palette.danger : palette.textMuted, marginBottom: 6 }]}>
+        {label}
+      </Text>
       <View
         style={{
           flexDirection: "row",
@@ -113,13 +123,11 @@ export function Field({ label, icon, style, secureTextEntry, ...props }: FieldPr
           backgroundColor: palette.surfaceAlt,
           borderRadius: radius.md,
           borderWidth: 1.5,
-          borderColor: focused ? palette.primary : "transparent",
+          borderColor,
           paddingHorizontal: spacing.md,
         }}
       >
-        {icon && (
-          <Ionicons name={icon} size={18} color={focused ? palette.primary : palette.textMuted} style={{ marginRight: spacing.sm }} />
-        )}
+        {icon && <Ionicons name={icon} size={18} color={accent} style={{ marginRight: spacing.sm }} />}
         <TextInput
           style={[{ flex: 1, paddingVertical: 13, fontSize: 15, color: palette.text }, style]}
           placeholderTextColor={palette.textMuted}
@@ -129,11 +137,17 @@ export function Field({ label, icon, style, secureTextEntry, ...props }: FieldPr
           {...props}
         />
         {secureTextEntry && (
-          <Pressable onPress={() => setHidden((h) => !h)} hitSlop={8}>
+          <Pressable onPress={() => { haptics.selection(); setHidden((h) => !h); }} hitSlop={8}>
             <Ionicons name={hidden ? "eye-off-outline" : "eye-outline"} size={18} color={palette.textMuted} />
           </Pressable>
         )}
       </View>
+      {!!error && (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 5 }}>
+          <Ionicons name="alert-circle" size={13} color={palette.danger} />
+          <Text style={[type.caption, { color: palette.danger }]}>{error}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -148,11 +162,26 @@ interface ButtonProps {
   loading?: boolean;
   disabled?: boolean;
   compact?: boolean;
+  /** Fire a light haptic on press. Default true. */
+  haptic?: boolean;
 }
 
-export function Button({ title, onPress, variant = "primary", icon, loading, disabled, compact }: ButtonProps) {
+export function Button({
+  title,
+  onPress,
+  variant = "primary",
+  icon,
+  loading,
+  disabled,
+  compact,
+  haptic = true,
+}: ButtonProps) {
   const { palette } = useTheme();
   const styles = useMemo(() => buttonStyles(palette), [palette]);
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const spring = (to: number) =>
+    Animated.spring(scale, { toValue: to, useNativeDriver: true, ...motion.spring.snappy }).start();
 
   const container =
     variant === "primary"
@@ -172,25 +201,32 @@ export function Button({ title, onPress, variant = "primary", icon, loading, dis
       : palette.textMuted;
 
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled || loading}
-      style={({ pressed }) => [
-        styles.base,
-        compact && styles.compact,
-        container,
-        { opacity: pressed ? 0.85 : disabled || loading ? 0.55 : 1, transform: [{ scale: pressed ? 0.985 : 1 }] },
-      ]}
-    >
-      {loading ? (
-        <ActivityIndicator color={textColor} />
-      ) : (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          {icon && <Ionicons name={icon} size={17} color={textColor} />}
-          <Text style={{ color: textColor, fontWeight: "700", fontSize: compact ? 14 : 15.5 }}>{title}</Text>
-        </View>
-      )}
-    </Pressable>
+    <Animated.View style={{ transform: [{ scale }], marginTop: compact ? 0 : spacing.sm }}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={() => {
+          if (haptic && !disabled && !loading) haptics.light();
+          spring(0.97);
+        }}
+        onPressOut={() => spring(1)}
+        disabled={disabled || loading}
+        style={[
+          styles.base,
+          compact && styles.compact,
+          container,
+          { opacity: disabled || loading ? 0.55 : 1 },
+        ]}
+      >
+        {loading ? (
+          <ActivityIndicator color={textColor} />
+        ) : (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            {icon && <Ionicons name={icon} size={17} color={textColor} />}
+            <Text style={{ color: textColor, fontWeight: "700", fontSize: compact ? 14 : 15.5 }}>{title}</Text>
+          </View>
+        )}
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -202,9 +238,8 @@ const buttonStyles = (p: Palette) =>
       paddingHorizontal: spacing.md,
       alignItems: "center",
       justifyContent: "center",
-      marginTop: spacing.sm,
     },
-    compact: { paddingVertical: 10, marginTop: 0 },
+    compact: { paddingVertical: 10 },
     primary: { backgroundColor: p.primary },
     danger: { backgroundColor: p.danger },
     outline: { borderWidth: 1.5, borderColor: p.primary, backgroundColor: "transparent" },
@@ -362,12 +397,42 @@ export function ListRow({
 
 /* -------------------------------- empty state ------------------------------ */
 
-export function EmptyState({ message, icon = "file-tray-outline" }: { message: string; icon?: IconName }) {
+export function EmptyState({
+  message,
+  icon = "file-tray-outline",
+  title,
+  actionLabel,
+  onAction,
+}: {
+  message: string;
+  icon?: IconName;
+  title?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   const { palette } = useTheme();
   return (
-    <View style={{ padding: spacing.xl, alignItems: "center", gap: spacing.sm }}>
-      <Ionicons name={icon} size={36} color={palette.textMuted} />
+    <View style={{ paddingVertical: spacing.xl, paddingHorizontal: spacing.lg, alignItems: "center", gap: spacing.sm }}>
+      <View
+        style={{
+          width: 64,
+          height: 64,
+          borderRadius: 32,
+          backgroundColor: palette.surfaceAlt,
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: spacing.xs,
+        }}
+      >
+        <Ionicons name={icon} size={30} color={palette.textMuted} />
+      </View>
+      {!!title && <Text style={[type.heading, { color: palette.text, textAlign: "center" }]}>{title}</Text>}
       <Text style={[type.body, { color: palette.textMuted, textAlign: "center" }]}>{message}</Text>
+      {!!actionLabel && !!onAction && (
+        <View style={{ marginTop: spacing.sm, minWidth: 180 }}>
+          <Button title={actionLabel} onPress={onAction} compact />
+        </View>
+      )}
     </View>
   );
 }

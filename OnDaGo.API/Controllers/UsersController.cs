@@ -9,7 +9,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Newtonsoft.Json.Linq;
+using System.Security.Cryptography;
 
 namespace OnDaGo.API.Controllers
 {
@@ -187,6 +189,7 @@ namespace OnDaGo.API.Controllers
 
 
         [HttpPost("login")]
+        [EnableRateLimiting("login")]
         public async Task<IActionResult> Login([FromBody] UserLoginRequest loginRequest)
         {
             if (loginRequest == null || string.IsNullOrWhiteSpace(loginRequest.Email) || string.IsNullOrWhiteSpace(loginRequest.PasswordHash))
@@ -230,6 +233,7 @@ namespace OnDaGo.API.Controllers
         }
 
         [HttpPost("forgot-password")]
+        [EnableRateLimiting("password-reset")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.Email))
@@ -238,18 +242,20 @@ namespace OnDaGo.API.Controllers
             }
 
             var token = GenerateResetToken();
-            var expiry = DateTime.UtcNow.AddHours(1);
-            var success = await _userService.UpdateResetTokenAsync(request.Email, token, expiry);
+            var expiry = DateTime.UtcNow.AddMinutes(15);
+            // Only the hash is persisted — a database leak does not expose usable codes.
+            var success = await _userService.UpdateResetTokenAsync(request.Email, HashToken(token), expiry);
 
             if (success)
             {
                 var subject = "Password Reset Request";
-                var body = $"<p>To reset your password, please use the following token: <strong>{token}</strong></p>";
+                var body = $"<p>Your OnDaGO password reset code is <strong>{token}</strong>. " +
+                           "It expires in 15 minutes. If you did not request this, you can ignore this email.</p>";
                 await _emailService.SendEmailAsync(request.Email, subject, body);
-
-                return Ok("Reset token sent to email.");
             }
-            return NotFound("User not found.");
+
+            // Same response whether or not the account exists — prevents email enumeration.
+            return Ok("If an account exists for that email, a reset code has been sent.");
         }
 
         [Authorize]
@@ -331,7 +337,10 @@ namespace OnDaGo.API.Controllers
 
 
 
+        private const int MaxResetAttempts = 5;
+
         [HttpPost("change-password")]
+        [EnableRateLimiting("password-reset")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.Email) ||
@@ -341,16 +350,44 @@ namespace OnDaGo.API.Controllers
                 return BadRequest("Email, token, and new password are required.");
             }
 
-            var user = await _userService.FindByEmailAsync(request.Email);
-            if (user == null || user.ResetToken != request.Token ||
-                user.ResetTokenExpiry < DateTime.UtcNow)
+            if (request.NewPassword.Length < 8)
             {
-                return Unauthorized("Invalid token or token has expired.");
+                return BadRequest("Password must be at least 8 characters.");
+            }
+
+            var user = await _userService.FindByEmailAsync(request.Email);
+
+            // Generic failure message throughout — never reveal which check failed.
+            const string invalidMessage = "Invalid or expired reset code.";
+
+            if (user == null || string.IsNullOrEmpty(user.ResetToken) ||
+                user.ResetTokenExpiry == null || user.ResetTokenExpiry < DateTime.UtcNow)
+            {
+                return Unauthorized(invalidMessage);
+            }
+
+            if (user.ResetTokenAttempts >= MaxResetAttempts)
+            {
+                await _userService.ClearResetTokenAsync(request.Email);
+                return Unauthorized("Too many attempts. Request a new reset code.");
+            }
+
+            if (!TokenMatches(request.Token, user.ResetToken))
+            {
+                var attempts = await _userService.IncrementResetTokenAttemptsAsync(request.Email);
+                if (attempts >= MaxResetAttempts)
+                {
+                    // Burn the token — brute force gets 5 tries per code, not 900k.
+                    await _userService.ClearResetTokenAsync(request.Email);
+                    return Unauthorized("Too many attempts. Request a new reset code.");
+                }
+                return Unauthorized(invalidMessage);
             }
 
             user.PasswordHash = HashPassword(request.NewPassword);
             user.ResetToken = null;
             user.ResetTokenExpiry = null;
+            user.ResetTokenAttempts = 0;
 
             await _userService.UpdateUserAsync(user);
 
@@ -362,10 +399,24 @@ namespace OnDaGo.API.Controllers
             return BCrypt.Net.BCrypt.HashPassword(password);
         }
 
-        private string GenerateResetToken()
+        /// <summary>Cryptographically secure 6-digit code (System.Random is predictable).</summary>
+        private static string GenerateResetToken()
         {
-            var random = new Random();
-            return random.Next(100000, 999999).ToString();
+            return RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
+        }
+
+        private static string HashToken(string token)
+        {
+            return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
+        }
+
+        /// <summary>Constant-time comparison of the submitted code against the stored hash.</summary>
+        private static bool TokenMatches(string submittedToken, string storedHash)
+        {
+            var submittedHash = Encoding.UTF8.GetBytes(HashToken(submittedToken));
+            var stored = Encoding.UTF8.GetBytes(storedHash);
+            return submittedHash.Length == stored.Length &&
+                   CryptographicOperations.FixedTimeEquals(submittedHash, stored);
         }
 
     }

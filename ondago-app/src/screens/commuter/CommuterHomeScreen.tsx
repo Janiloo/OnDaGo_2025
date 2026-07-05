@@ -1,54 +1,41 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
-import { getVehicles } from "../../services/vehicleApi";
-import { Vehicle } from "../../types";
-import { DEFAULT_MAP_REGION, ROUTE_STOPS, VEHICLE_REFRESH_MS } from "../../config";
+import { useVehicles } from "../../hooks/useVehicles";
+import { VehicleMarker } from "../../components/VehicleMarker";
+import { VehicleDetailSheet } from "../../components/VehicleDetailSheet";
+import { OccupancyLegend } from "../../components/OccupancyLegend";
+import { hasRealPosition, isVehicleStale } from "../../utils/vehicles";
+import { DEFAULT_MAP_REGION, ROUTE_STOPS } from "../../config";
 import { darkMapStyle, radius, spacing, type } from "../../theme";
 import { useTheme } from "../../store/ThemeContext";
 
 /**
  * Commuter home: map-first, low-cognitive-load view of live PUVs on the
- * Montalban–Cubao route. Fixed stop pins + vehicle markers refreshed on a
- * timer from GET /api/Vehicle.
+ * Montalban–Cubao route. Vehicle positions arrive as SignalR pushes
+ * (useVehicles), with polling only as a fallback.
  */
 export default function CommuterHomeScreen() {
   const { palette, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const mapRef = useRef<MapView>(null);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [offline, setOffline] = useState(false);
+  const { vehicles: allVehicles, offline, now } = useVehicles();
   const [showStops, setShowStops] = useState(true);
-  const mounted = useRef(true);
-
-  const refreshVehicles = useCallback(async () => {
-    try {
-      const list = await getVehicles();
-      if (mounted.current) {
-        // Ignore vehicles that haven't broadcast a real position yet (0,0).
-        setVehicles(list.filter((v) => v.currentLat !== 0 || v.currentLong !== 0));
-        setOffline(false);
-      }
-    } catch {
-      if (mounted.current) setOffline(true);
-    }
-  }, []);
+  const [selectedPuv, setSelectedPuv] = useState<string | null>(null);
 
   useEffect(() => {
-    mounted.current = true;
     Location.requestForegroundPermissionsAsync().catch(() => {});
-    refreshVehicles();
-    const timer = setInterval(refreshVehicles, VEHICLE_REFRESH_MS);
-    return () => {
-      mounted.current = false;
-      clearInterval(timer);
-    };
-  }, [refreshVehicles]);
+  }, []);
 
-  const availableSeats = vehicles.reduce(
+  // Ignore vehicles that haven't broadcast a real position yet (0,0).
+  const vehicles = allVehicles.filter(hasRealPosition);
+  const liveVehicles = vehicles.filter((v) => !isVehicleStale(v, now));
+  // Looked up from the live list so pushes keep the open sheet current.
+  const selectedVehicle = selectedPuv ? vehicles.find((v) => v.puvNo === selectedPuv) ?? null : null;
+  const availableSeats = liveVehicles.reduce(
     (sum, v) => sum + Math.max(0, v.maxPassengerCount - v.passengerCount),
     0
   );
@@ -73,6 +60,7 @@ export default function CommuterHomeScreen() {
         showsUserLocation
         showsMyLocationButton={false}
         toolbarEnabled={false}
+        onPress={() => setSelectedPuv(null)}
       >
         {showStops &&
           ROUTE_STOPS.map((stop) => (
@@ -88,19 +76,16 @@ export default function CommuterHomeScreen() {
             </Marker>
           ))}
         {vehicles.map((vehicle) => {
-          const full = vehicle.passengerCount >= vehicle.maxPassengerCount;
+          const vStale = isVehicleStale(vehicle, now);
           return (
-            <Marker
-              key={vehicle.puvNo}
-              coordinate={{ latitude: vehicle.currentLat, longitude: vehicle.currentLong }}
-              title={`PUV ${vehicle.puvNo}`}
-              description={full ? "FULL" : `${vehicle.passengerCount}/${vehicle.maxPassengerCount} passengers`}
-              anchor={{ x: 0.5, y: 0.5 }}
-            >
-              <View style={[styles.busMarker, { backgroundColor: full ? palette.danger : palette.primary }]}>
-                <Ionicons name="bus" size={16} color="#fff" />
-              </View>
-            </Marker>
+            <VehicleMarker
+              // Remount on label/state change so the marker bitmap is
+              // re-sized correctly (RN-maps Android clips resized markers).
+              key={`${vehicle.puvNo}-${vehicle.passengerCount}-${vStale ? 1 : 0}`}
+              vehicle={vehicle}
+              stale={vStale}
+              onPress={() => setSelectedPuv(vehicle.puvNo)}
+            />
           );
         })}
       </MapView>
@@ -114,7 +99,7 @@ export default function CommuterHomeScreen() {
           ]}
         />
         <Text style={styles.topPillText}>
-          {offline ? "Reconnecting…" : `${vehicles.length} PUV${vehicles.length === 1 ? "" : "s"} live`}
+          {offline ? "Reconnecting…" : `${liveVehicles.length} PUV${liveVehicles.length === 1 ? "" : "s"} live`}
         </Text>
       </View>
 
@@ -134,7 +119,11 @@ export default function CommuterHomeScreen() {
         </Pressable>
       </View>
 
-      {/* Bottom summary card */}
+      {/* Occupancy color legend (top-left, below the status pill) */}
+      <OccupancyLegend top={insets.top + 52} />
+
+      {/* Bottom summary card (hidden while a vehicle sheet is open) */}
+      {!selectedVehicle && (
       <View
         style={[
           styles.bottomCard,
@@ -153,14 +142,19 @@ export default function CommuterHomeScreen() {
           <View style={{ flex: 1 }}>
             <Text style={[type.heading, { color: palette.text }]}>Montalban → Cubao</Text>
             <Text style={[type.caption, { color: palette.textMuted }]}>
-              {vehicles.length === 0
+              {liveVehicles.length === 0
                 ? "No PUVs broadcasting right now"
-                : `${availableSeats} seat${availableSeats === 1 ? "" : "s"} available across the route`}
+                : `${availableSeats} seat${availableSeats === 1 ? "" : "s"} available across ${liveVehicles.length} live PUV${liveVehicles.length === 1 ? "" : "s"}`}
             </Text>
           </View>
           <Ionicons name="chevron-up" size={18} color={palette.textMuted} />
         </View>
       </View>
+      )}
+
+      {selectedVehicle && (
+        <VehicleDetailSheet vehicle={selectedVehicle} now={now} onClose={() => setSelectedPuv(null)} />
+      )}
     </View>
   );
 }

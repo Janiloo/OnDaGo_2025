@@ -33,17 +33,40 @@ namespace OnDaGo.API.Services
             await _users.ReplaceOneAsync(filter, user);
         }
 
-        public async Task<bool> UpdateResetTokenAsync(string email, string token, DateTime expiry)
+        public async Task<bool> UpdateResetTokenAsync(string email, string tokenHash, DateTime expiry)
         {
             var update = Builders<UserItem>.Update
-                .Set(u => u.ResetToken, token)
-                .Set(u => u.ResetTokenExpiry, expiry);
+                .Set(u => u.ResetToken, tokenHash)
+                .Set(u => u.ResetTokenExpiry, expiry)
+                .Set(u => u.ResetTokenAttempts, 0);
 
             var result = await _users.UpdateOneAsync(
                 user => user.Email == email,
                 update);
 
             return result.ModifiedCount > 0;
+        }
+
+        /// <summary>Atomically counts a failed reset attempt; returns the new attempt total.</summary>
+        public async Task<int> IncrementResetTokenAttemptsAsync(string email)
+        {
+            var updated = await _users.FindOneAndUpdateAsync(
+                Builders<UserItem>.Filter.Eq(u => u.Email, email),
+                Builders<UserItem>.Update.Inc(u => u.ResetTokenAttempts, 1),
+                new FindOneAndUpdateOptions<UserItem> { ReturnDocument = ReturnDocument.After });
+
+            return updated?.ResetTokenAttempts ?? int.MaxValue;
+        }
+
+        /// <summary>Invalidates any outstanding reset token (used on success and on lockout).</summary>
+        public async Task ClearResetTokenAsync(string email)
+        {
+            var update = Builders<UserItem>.Update
+                .Set(u => u.ResetToken, (string?)null)
+                .Set(u => u.ResetTokenExpiry, (DateTime?)null)
+                .Set(u => u.ResetTokenAttempts, 0);
+
+            await _users.UpdateOneAsync(user => user.Email == email, update);
         }
 
         public async Task<UserItem> FindByIdAsync(string id)

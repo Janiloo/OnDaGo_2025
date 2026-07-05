@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
@@ -42,6 +45,16 @@ public class Startup
         // JSON serialization
         services.AddControllers().AddNewtonsoftJson();
 
+        // Real-time vehicle fan-out (see Hubs/VehicleHub.cs).
+        // Ping clients every 10s (they tolerate 60s of silence); allow mobile
+        // clients 60s of silence before the server drops them — phones
+        // background apps and stall timers far more than browsers do.
+        services.AddSignalR(options =>
+        {
+            options.KeepAliveInterval = TimeSpan.FromSeconds(10);
+            options.ClientTimeoutInterval = TimeSpan.FromSeconds(60);
+        });
+
         // CORS configuration
         services.AddCors(options =>
         {
@@ -67,6 +80,43 @@ public class Startup
             });
         });
 
+        // Rate limiting for auth endpoints (per client IP). Blunts credential
+        // stuffing and makes the 6-digit reset code un-brute-forceable in
+        // combination with the 5-attempt token lockout.
+        // NOTE: behind a proxy/App Service the connection IP may be shared;
+        // limits are sized generously enough for legitimate shared-IP traffic.
+        services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.OnRejected = async (context, cancellationToken) =>
+            {
+                context.HttpContext.Response.ContentType = "text/plain";
+                await context.HttpContext.Response.WriteAsync(
+                    "Too many requests. Please wait a few minutes and try again.", cancellationToken);
+            };
+
+            static string ClientKey(HttpContext ctx) =>
+                ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+            // forgot-password + change-password: 10 requests / 15 min per IP.
+            options.AddPolicy("password-reset", ctx =>
+                RateLimitPartition.GetFixedWindowLimiter(ClientKey(ctx), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 10,
+                    Window = TimeSpan.FromMinutes(15),
+                    QueueLimit = 0,
+                }));
+
+            // login: 10 attempts / min per IP.
+            options.AddPolicy("login", ctx =>
+                RateLimitPartition.GetFixedWindowLimiter(ClientKey(ctx), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 10,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                }));
+        });
+
 
 
         // JWT Authentication
@@ -87,6 +137,22 @@ public class Startup
                 ValidateIssuer = false,
                 ValidateAudience = false,
                 ClockSkew = TimeSpan.Zero // Token expires exactly at token expiration time
+            };
+
+            // WebSockets cannot send an Authorization header, so SignalR clients
+            // pass the JWT as ?access_token=... — accept it for hub paths only.
+            x.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    if (!string.IsNullOrEmpty(accessToken) &&
+                        context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                    {
+                        context.Token = accessToken;
+                    }
+                    return Task.CompletedTask;
+                }
             };
         });
 
@@ -138,6 +204,8 @@ public class Startup
         // Permissive CORS in local development, strict origin list elsewhere.
         app.UseCors(env.IsDevelopment() ? "AllowLocalDev" : "AllowSpecificOrigins");
 
+        app.UseRateLimiter();
+
 
         app.UseAuthentication(); // Ensure this is added before authorization
         app.UseAuthorization();
@@ -145,6 +213,8 @@ public class Startup
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
+            endpoints.MapHub<OnDaGo.API.Hubs.VehicleHub>("/hubs/vehicles");
+            endpoints.MapHub<OnDaGo.API.Hubs.ReportHub>("/hubs/reports");
         });
     }
 }

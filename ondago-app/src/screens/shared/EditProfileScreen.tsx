@@ -1,31 +1,33 @@
 import React, { useState } from "react";
-import { Alert } from "react-native";
 import { Button, Field, Screen, Subtitle, Title } from "../../components/UI";
 import { editProfile } from "../../services/authApi";
 import { errorMessage } from "../../services/client";
 import { useAuth } from "../../store/AuthContext";
+import { useToast } from "../../components/Toast";
 
 /** Edit name/phone → PUT /api/Users/edit-profile. */
 export default function EditProfileScreen({ navigation, route }: any) {
   const { updateUser } = useAuth();
+  const toast = useToast();
   const [name, setName] = useState<string>(route.params?.name ?? "");
   const [phoneNumber, setPhoneNumber] = useState<string>(route.params?.phoneNumber ?? "");
+  const [nameError, setNameError] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
 
   const save = async () => {
     if (!name.trim()) {
-      Alert.alert("Missing name", "Name cannot be empty.");
+      setNameError("Name cannot be empty.");
       return;
     }
     setLoading(true);
     try {
       await editProfile(name.trim(), phoneNumber.trim());
       updateUser({ name: name.trim(), phoneNumber: phoneNumber.trim() });
-      Alert.alert("Saved", "Your profile was updated.", [
-        { text: "OK", onPress: () => navigation.goBack() },
-      ]);
+      // Toast lives above navigation, so it stays visible after we pop back.
+      toast.success("Profile updated");
+      navigation.goBack();
     } catch (error) {
-      Alert.alert("Update failed", errorMessage(error));
+      toast.error(errorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -35,7 +37,13 @@ export default function EditProfileScreen({ navigation, route }: any) {
     <Screen>
       <Title>Edit profile</Title>
       <Subtitle>Update your name and phone number.</Subtitle>
-      <Field label="Full Name" icon="person-outline" value={name} onChangeText={setName} />
+      <Field
+        label="Full Name"
+        icon="person-outline"
+        value={name}
+        onChangeText={(t) => { setName(t); if (nameError) setNameError(undefined); }}
+        error={nameError}
+      />
       <Field
         label="Phone Number"
         icon="call-outline"

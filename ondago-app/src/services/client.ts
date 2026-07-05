@@ -48,6 +48,7 @@ export function errorMessage(error: unknown, fallback = "Something went wrong. P
     }
     if (error.response?.status === 401) return "Invalid credentials or session expired.";
     if (error.response?.status === 403) return "You don't have permission to do that.";
+    if (error.response?.status === 429) return "Too many attempts. Please wait a few minutes and try again.";
     if (!error.response) return "Cannot reach the server. Check your connection.";
   }
   return fallback;
