@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using Newtonsoft.Json.Linq;
 using System.Security.Cryptography;
+using OnDaGo.API.Tenancy;
 
 namespace OnDaGo.API.Controllers
 {
@@ -21,17 +22,27 @@ namespace OnDaGo.API.Controllers
     {
         private readonly UserService _userService;
         private readonly EmailService _emailService;
+        private readonly TenantContext _tenant;
         //private readonly IdAnalyzerClient _idAnalyzerClient;
         private readonly ILogger<UsersController> _logger;
         //private readonly IdAnalyzerService _idAnalyzerService;
 
-        public UsersController(UserService userService, EmailService emailService)//, IdAnalyzerClient idAnalyzerClient, IdAnalyzerService idAnalyzerService)
+        public UsersController(UserService userService, EmailService emailService, TenantContext tenant)//, IdAnalyzerClient idAnalyzerClient, IdAnalyzerService idAnalyzerService)
         {
             _userService = userService;
             _emailService = emailService;
+            _tenant = tenant;
             //_idAnalyzerClient = idAnalyzerClient;
             //_idAnalyzerService = idAnalyzerService;
         }
+
+        /// <summary>
+        /// Company to assign a new company-owned account/entity to. During the
+        /// single-company transition this resolves to the sole company even for
+        /// anonymous registration; multi-company onboarding passes it explicitly
+        /// (a later phase). Commuters are platform-wide and are NOT stamped.
+        /// </summary>
+        private string? ResolveOwningCompany() => _tenant.EffectiveCompanyId;
 
 
         [HttpPost("register")]
@@ -68,13 +79,18 @@ namespace OnDaGo.API.Controllers
             }*/
 
             // Create and save user in database if document analysis is successful
+            var role = userRequest.Role ?? "User";
+            // Company-owned roles (Admin/Driver) are stamped with the owning company;
+            // commuters are platform-wide and stay company-less.
+            var isCompanyOwned = role == "Admin" || role == "Driver";
             var user = new UserItem
             {
                 Name = userRequest.Name,
                 Email = userRequest.Email,
                 PasswordHash = HashPassword(userRequest.PasswordHash),
                 PhoneNumber = userRequest.PhoneNumber,
-                Role = userRequest.Role ?? "User",
+                Role = role,
+                CompanyId = isCompanyOwned ? ResolveOwningCompany() : null,
                 //DocumentImageBase64 = userRequest.DocumentImageBase64,
                 //FaceImageBase64 = userRequest.FaceImageBase64,
                 CreatedAt = DateTime.UtcNow,
@@ -87,8 +103,11 @@ namespace OnDaGo.API.Controllers
         }
 
 
+        // Tier 1: drivers are created by their company admin (web console → POST
+        // /api/admin/drivers). Anonymous self-registration is closed — it cannot
+        // resolve an owning company once more than one company exists.
         [HttpPost("driver/register")]
-        //[Authorize(Roles = "Admin")] // uncomment if only admin can create drivers
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RegisterDriver([FromBody] DriverRegistrationRequest driverRequest)
         {
             if (string.IsNullOrWhiteSpace(driverRequest.Email) ||
@@ -111,12 +130,15 @@ namespace OnDaGo.API.Controllers
                 return Conflict("Driver with this username already exists.");
             }
 
+            // A driver belongs to the operator that onboards them.
+            var owningCompany = ResolveOwningCompany();
             var driver = new UserItem
             {
                 Name = driverRequest.Username,
                 Email = driverRequest.Email, // ← Add this
                 PasswordHash = HashPassword(driverRequest.Password),
                 Role = "Driver",
+                CompanyId = owningCompany,
                 PlateNumber = driverRequest.PlateNumber,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -124,7 +146,7 @@ namespace OnDaGo.API.Controllers
 
             await _userService.CreateUserAsync(driver);
 
-            // ✅ Automatically create a vehicle for this driver
+            // ✅ Automatically create a vehicle for this driver (same owning company)
             var vehicleService = new VehicleService(_userService._database); // Pass same database instance
             var existingVehicle = await vehicleService.GetVehicleByPuvAsync(driver.PlateNumber);
             if (existingVehicle == null)
@@ -132,6 +154,7 @@ namespace OnDaGo.API.Controllers
                 var newVehicle = new VehicleModel
                 {
                     PuvNo = driver.PlateNumber,
+                    CompanyId = owningCompany,
                     CurrentLat = 0,
                     CurrentLong = 0,
                     PassengerCount = 0,
@@ -178,6 +201,7 @@ namespace OnDaGo.API.Controllers
                 PasswordHash = HashPassword(adminRequest.PasswordHash),
                 PhoneNumber = adminRequest.PhoneNumber,
                 Role = "Admin",  // Explicitly assign the Admin role
+                CompanyId = ResolveOwningCompany(), // never leave a company admin company-less
                 ResetToken = null,
                 ResetTokenExpiry = null
             };
@@ -202,6 +226,10 @@ namespace OnDaGo.API.Controllers
             {
                 return Unauthorized("Invalid email or password.");
             }
+            if (user.Status == "Disabled")
+            {
+                return Unauthorized("This account has been disabled. Contact your company admin.");
+            }
 
             var token = GenerateJwtToken(user);
             return Ok(new LoginResponse { Token = token, User = user });
@@ -212,14 +240,25 @@ namespace OnDaGo.API.Controllers
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes("Yxg/R2jDGHJpLz0LeU8s9y8RcY3ThVwB9yZ9V6n1yQI=");
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role)
+            };
+            // Multi-tenancy claims (Phase 1): scope + platform capability.
+            if (!string.IsNullOrEmpty(user.CompanyId))
+                claims.Add(new Claim("companyId", user.CompanyId));
+            if (user.IsPlatformAdmin)
+                claims.Add(new Claim("platform_admin", "true"));
+            // Forces the client into the change-temp-password flow; dropped once
+            // a permanent password is set (a fresh token is issued on change).
+            if (user.MustChangePassword)
+                claims.Add(new Claim("must_change_password", "true"));
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim(ClaimTypes.Role, user.Role)
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
@@ -394,6 +433,43 @@ namespace OnDaGo.API.Controllers
             return Ok("Password changed successfully.");
         }
 
+        /// <summary>
+        /// Authenticated password change for an account on a temporary password
+        /// (freshly created / SuperAdmin-reset company admin). Verifies the current
+        /// temp password, sets a permanent one, clears the must-change gate, and
+        /// returns a FRESH token (without the must_change_password claim).
+        /// </summary>
+        [HttpPost("change-temp-password")]
+        [Authorize]
+        [EnableRateLimiting("password-reset")]
+        public async Task<IActionResult> ChangeTempPassword([FromBody] ChangeTempPasswordRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.CurrentPassword) ||
+                string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                return BadRequest("Current and new password are required.");
+            }
+            if (request.NewPassword.Length < 8)
+                return BadRequest("Password must be at least 8 characters.");
+
+            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            if (string.IsNullOrEmpty(email)) return Unauthorized();
+
+            var user = await _userService.FindByEmailAsync(email);
+            if (user == null || !VerifyPassword(user.PasswordHash, request.CurrentPassword))
+                return Unauthorized("Current password is incorrect.");
+            if (request.NewPassword == request.CurrentPassword)
+                return BadRequest("New password must be different from the temporary password.");
+
+            var newHash = HashPassword(request.NewPassword);
+            await _userService.SetPasswordAndClearMustChangeAsync(email, newHash);
+
+            user.PasswordHash = newHash;
+            user.MustChangePassword = false;
+            var token = GenerateJwtToken(user); // no must_change_password claim now
+            return Ok(new LoginResponse { Token = token, User = user });
+        }
+
         private string HashPassword(string password)
         {
             return BCrypt.Net.BCrypt.HashPassword(password);
@@ -450,6 +526,12 @@ namespace OnDaGo.API.Controllers
     {
         public string Email { get; set; }
         public string Token { get; set; }
+        public string NewPassword { get; set; }
+    }
+
+    public class ChangeTempPasswordRequest
+    {
+        public string CurrentPassword { get; set; }
         public string NewPassword { get; set; }
     }
 

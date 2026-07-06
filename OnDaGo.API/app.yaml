@@ -7,7 +7,7 @@ entrypoint: dotnet OnDaGo.API.dll
 
 env_variables:
   ASPNETCORE_ENVIRONMENT: Development
-  ConnectionStrings__MongoDb: "mongodb+srv://USER:PASSWORD@ondago.jiv6m.mongodb.net/?retryWrites=true&w=majority&appName=OnDaGo"
+  ConnectionStrings__MongoDb: "mongodb+srv://USER:PASSWORD@john.m5td10i.mongodb.net/?retryWrites=true&w=majority&appName=OnDaGo"
   Smtp__Host: "smtp.gmail.com"
   Smtp__Port: "8274661"
   Smtp__EnableSsl: "true"

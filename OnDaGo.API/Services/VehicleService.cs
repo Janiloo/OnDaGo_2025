@@ -47,6 +47,16 @@ namespace OnDaGo.API.Services
 
         public async Task UpdateVehicleStatusAsync(string puvNo, VehicleStatusUpdateRequest request)
         {
+            // Intent transition: any broadcast from an off-duty vehicle starts a
+            // shift ({$ne:"OnDuty"} also matches legacy docs without the field).
+            var beginShift = Builders<VehicleModel>.Update
+                .Set(v => v.DutyStatus, "OnDuty")
+                .Set(v => v.DutyStartedAt, DateTime.UtcNow)
+                .Unset(v => v.DutyEndedAt)
+                .Unset(v => v.DutyEndReason);
+            await _vehicles.UpdateOneAsync(
+                v => v.PuvNo == puvNo && v.DutyStatus != "OnDuty", beginShift);
+
             var update = Builders<VehicleModel>.Update
                 .Set(v => v.PassengerCount, request.PassengerCount)
                 .Set(v => v.CurrentLat, request.Latitude)
@@ -60,13 +70,46 @@ namespace OnDaGo.API.Services
         }
 
         /// <summary>
-        /// Marks a vehicle offline by clearing its last-broadcast timestamp, so it
-        /// reads as stale in GET responses (not just via the real-time event).
+        /// Driver ended their shift: records the duty transition (OffDuty, reason
+        /// "driver") and clears the last-broadcast timestamp — the existing client
+        /// contract for "read as stale immediately in GETs".
         /// </summary>
         public async Task SetVehicleOfflineAsync(string puvNo)
         {
-            var update = Builders<VehicleModel>.Update.Set(v => v.LastUpdated, (DateTime?)null);
+            var update = Builders<VehicleModel>.Update
+                .Set(v => v.LastUpdated, (DateTime?)null)
+                .Set(v => v.DutyStatus, "OffDuty")
+                .Set(v => v.DutyEndedAt, DateTime.UtcNow)
+                .Set(v => v.DutyEndReason, "driver");
             await _vehicles.UpdateOneAsync(v => v.PuvNo == puvNo, update);
+        }
+
+        /// <summary>
+        /// Closes abandoned shifts: OnDuty vehicles silent for longer than
+        /// <paramref name="timeout"/> go OffDuty with reason "timeout" (phone died,
+        /// app killed — the driver never tapped end shift). LastUpdated is kept:
+        /// it is the last evidence of contact, and it's already stale to clients.
+        /// Returns how many shifts were closed.
+        /// </summary>
+        public async Task<long> TimeoutStaleDutiesAsync(TimeSpan timeout)
+        {
+            var cutoff = DateTime.UtcNow - timeout;
+            var onDuty = Builders<VehicleModel>.Filter.Eq(v => v.DutyStatus, "OnDuty");
+            // Silent = last broadcast is old, or (degenerate: no broadcast recorded
+            // at all) the shift itself started before the cutoff.
+            var silent = Builders<VehicleModel>.Filter.Or(
+                Builders<VehicleModel>.Filter.Lt(v => v.LastUpdated, cutoff),
+                Builders<VehicleModel>.Filter.And(
+                    Builders<VehicleModel>.Filter.Eq(v => v.LastUpdated, (DateTime?)null),
+                    Builders<VehicleModel>.Filter.Lt(v => v.DutyStartedAt, cutoff)));
+            var update = Builders<VehicleModel>.Update
+                .Set(v => v.DutyStatus, "OffDuty")
+                .Set(v => v.DutyEndedAt, DateTime.UtcNow)
+                .Set(v => v.DutyEndReason, "timeout");
+
+            var result = await _vehicles.UpdateManyAsync(
+                Builders<VehicleModel>.Filter.And(onDuty, silent), update);
+            return result.ModifiedCount;
         }
 
         /// <summary>

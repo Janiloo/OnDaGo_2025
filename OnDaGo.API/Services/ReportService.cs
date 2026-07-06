@@ -1,79 +1,83 @@
 using MongoDB.Driver;
 using OnDaGo.API.Models;
+using OnDaGo.API.Tenancy;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace OnDaGo.API.Services
 {
+    /// <summary>
+    /// Reports are company-owned, so writes and company-admin reads go through
+    /// <see cref="TenantCollection{T}"/> — the company filter is applied
+    /// automatically and cannot be forgotten. The platform SuperAdmin reads
+    /// across every company (including commuter-filed reports that carry no
+    /// company) via the raw collection, so nothing is ever orphaned.
+    /// </summary>
     public class ReportService
     {
-        private readonly IMongoCollection<ReportItem> _reports;
+        private readonly TenantCollection<ReportItem> _reports;
+        private readonly IMongoCollection<ReportItem> _raw;
+        private readonly TenantContext _tenant;
 
-        public ReportService(IMongoDatabase database)
+        public ReportService(TenantCollection<ReportItem> reports, IMongoDatabase db, TenantContext tenant)
         {
-            _reports = database.GetCollection<ReportItem>("reports");
+            _reports = reports;
+            _raw = db.GetCollection<ReportItem>("reports");
+            _tenant = tenant;
         }
 
-        public async Task<List<ReportItem>> GetReportsAsync()
+        private static FilterDefinition<ReportItem> Active(string? id = null)
         {
-            return await _reports.Find(report => report.DeletedAt == null).ToListAsync();
+            var notDeleted = Builders<ReportItem>.Filter.Eq(r => r.DeletedAt, null);
+            return id == null
+                ? notDeleted
+                : Builders<ReportItem>.Filter.And(Builders<ReportItem>.Filter.Eq(r => r.Id, id), notDeleted);
         }
 
-        public async Task<ReportItem?> GetReportByIdAsync(string id)
-        {
-            return await _reports.Find(r => r.Id == id && r.DeletedAt == null).FirstOrDefaultAsync();
-        }
+        // Platform SuperAdmin: read every company's reports plus unattributed
+        // (commuter) ones. Company admin: only their own company's, via scoping.
+        public Task<List<ReportItem>> GetReportsAsync() =>
+            _tenant.IsPlatformAdmin
+                ? _raw.Find(Active()).ToListAsync()
+                : _reports.FindAsync(Active());
 
-        public async Task CreateReportAsync(ReportItem report)
+        public Task<ReportItem> GetReportByIdAsync(string id) =>
+            _tenant.IsPlatformAdmin
+                ? _raw.Find(Active(id)).FirstOrDefaultAsync()
+                : _reports.FindOneAsync(Active(id));
+
+        public Task CreateReportAsync(ReportItem report)
         {
             report.CreatedAt = DateTime.UtcNow;
             report.DeletedAt = null;
-            await _reports.InsertOneAsync(report);
-        }
-
-        // Applies an update to a non-deleted report and returns the updated
-        // document (or null if it wasn't found), so callers can broadcast it.
-        private Task<ReportItem?> ApplyUpdateAsync(string id, UpdateDefinition<ReportItem> update)
-        {
-            var filter = Builders<ReportItem>.Filter.Where(r => r.Id == id && r.DeletedAt == null);
-            return _reports.FindOneAndUpdateAsync(
-                filter,
-                update,
-                new FindOneAndUpdateOptions<ReportItem> { ReturnDocument = ReturnDocument.After });
+            return _reports.InsertAsync(report); // stamps CompanyId
         }
 
         public Task<ReportItem?> UpdateReportStatusAsync(string id, string status)
         {
             var update = Builders<ReportItem>.Update.Set(r => r.Status, status);
-            // Keep CompletedAt consistent with the status.
             update = status == "Completed"
                 ? update.Set(r => r.CompletedAt, DateTime.UtcNow)
                 : update.Set(r => r.CompletedAt, (DateTime?)null);
-            return ApplyUpdateAsync(id, update);
+            return _reports.FindOneAndUpdateAsync(Active(id), update);
         }
 
-        public Task<ReportItem?> SetImportantAsync(string id, bool important)
-        {
-            return ApplyUpdateAsync(id, Builders<ReportItem>.Update.Set(r => r.IsImportant, important));
-        }
+        public Task<ReportItem?> SetImportantAsync(string id, bool important) =>
+            _reports.FindOneAndUpdateAsync(Active(id), Builders<ReportItem>.Update.Set(r => r.IsImportant, important));
 
         public Task<ReportItem?> MarkAsCompletedAsync(string id)
         {
             var update = Builders<ReportItem>.Update
                 .Set(r => r.Status, "Completed")
                 .Set(r => r.CompletedAt, DateTime.UtcNow);
-            return ApplyUpdateAsync(id, update);
+            return _reports.FindOneAndUpdateAsync(Active(id), update);
         }
 
-        // Soft delete: preserves the record for audit/history but hides it from
-        // every query (all reads filter DeletedAt == null). Returns false if the
-        // report didn't exist / was already deleted.
         public async Task<bool> SoftDeleteReportAsync(string id)
         {
-            var update = Builders<ReportItem>.Update.Set(r => r.DeletedAt, DateTime.UtcNow);
             var result = await _reports.UpdateOneAsync(
-                r => r.Id == id && r.DeletedAt == null, update);
+                Active(id), Builders<ReportItem>.Update.Set(r => r.DeletedAt, DateTime.UtcNow));
             return result.ModifiedCount > 0;
         }
     }

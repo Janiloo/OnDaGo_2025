@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using OnDaGo.API.Hubs;
 using OnDaGo.API.Services;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace OnDaGo.API.Controllers
@@ -11,19 +12,30 @@ namespace OnDaGo.API.Controllers
     public class VehicleController : ControllerBase
     {
         private readonly VehicleService _vehicleService;
+        private readonly UserService _userService;
+        private readonly StopArrivalService _stopArrivals;
         private readonly IHubContext<VehicleHub> _vehicleHub;
 
-        public VehicleController(VehicleService vehicleService, IHubContext<VehicleHub> vehicleHub)
+        public VehicleController(
+            VehicleService vehicleService,
+            UserService userService,
+            StopArrivalService stopArrivals,
+            IHubContext<VehicleHub> vehicleHub)
         {
             _vehicleService = vehicleService;
+            _userService = userService;
+            _stopArrivals = stopArrivals;
             _vehicleHub = vehicleHub;
         }
+
+        /// <summary>Deactivated vehicles are an admin concept — commuter maps never see them.</summary>
+        private static bool IsActive(VehicleModel v) => v.Status != "Inactive";
 
         [HttpGet]
         public async Task<IActionResult> GetVehicles()
         {
             var vehicles = await _vehicleService.GetVehiclesAsync();
-            return Ok(vehicles);
+            return Ok(vehicles.Where(IsActive));
         }
 
         /// <summary>
@@ -43,7 +55,7 @@ namespace OnDaGo.API.Controllers
             }
 
             var vehicles = await _vehicleService.GetVehiclesNearAsync(lat, lng, radiusM);
-            return Ok(vehicles);
+            return Ok(vehicles.Where(IsActive));
         }
 
         [HttpPatch("{puvNo}/status")]
@@ -51,19 +63,43 @@ namespace OnDaGo.API.Controllers
         {
             var vehicle = await _vehicleService.GetVehicleByPuvAsync(puvNo);
             if (vehicle == null) return NotFound("Vehicle not found");
+            if (!IsActive(vehicle)) return Conflict("This vehicle has been deactivated by your company admin.");
+
+            // A disabled driver is blocked at login, but an already-open app would
+            // keep broadcasting — reject here so disable takes effect promptly.
+            var driver = await _userService.FindDriverByPlateAsync(puvNo);
+            if (driver?.Status == "Disabled")
+                return StatusCode(403, "This driver account has been disabled by your company admin.");
 
             await _vehicleService.UpdateVehicleStatusAsync(puvNo, request);
 
-            // Push the updated vehicle to every connected map instead of
-            // making every client poll. Re-read so the payload carries the
-            // server-set LastUpdated timestamp.
+            // Push the updated vehicle to the maps watching it (firehose + its
+            // route group) instead of making every client poll. Re-read so the
+            // payload carries the server-set LastUpdated timestamp.
             var updated = await _vehicleService.GetVehicleByPuvAsync(puvNo);
             if (updated != null)
             {
-                await _vehicleHub.Clients.All.SendAsync(VehicleHub.VehicleUpdated, updated);
+                await SendToVehicleGroups(VehicleHub.VehicleUpdated, updated, updated.RouteId);
+                // Historical-ETA groundwork: record terminal arrivals off the hot
+                // path (fire-and-forget; ObserveAsync never throws).
+                _ = _stopArrivals.ObserveAsync(updated);
             }
 
             return NoContent();
+        }
+
+        /// <summary>
+        /// Fan a vehicle event out to the firehose group AND (if assigned) the
+        /// vehicle's route group, so route-filtered commuters get only their
+        /// route's traffic while "All routes" / admin still get everything.
+        /// </summary>
+        private async Task SendToVehicleGroups(string method, object payload, string? routeId)
+        {
+            await _vehicleHub.Clients.Group(VehicleHub.AllGroup).SendAsync(method, payload);
+            if (!string.IsNullOrEmpty(routeId))
+            {
+                await _vehicleHub.Clients.Group(VehicleHub.RouteGroup(routeId)).SendAsync(method, payload);
+            }
         }
 
         /// <summary>
@@ -79,7 +115,9 @@ namespace OnDaGo.API.Controllers
             if (vehicle == null) return NotFound("Vehicle not found");
 
             await _vehicleService.SetVehicleOfflineAsync(puvNo);
-            await _vehicleHub.Clients.All.SendAsync(VehicleHub.VehicleOffline, puvNo);
+            // Offline reaches the same groups the vehicle's live updates did, so a
+            // route-filtered commuter still sees it drop (use its pre-offline route).
+            await SendToVehicleGroups(VehicleHub.VehicleOffline, puvNo, vehicle.RouteId);
 
             return NoContent();
         }
