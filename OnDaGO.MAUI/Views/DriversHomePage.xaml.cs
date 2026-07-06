@@ -119,6 +119,44 @@ namespace OnDaGO.MAUI.Views
             }
         }
 
+        private async void OnEditPassengerCount(object sender, EventArgs e)
+        {
+            if (driverVehicle == null) return;
+
+            // Prompt for new count
+            string result = await DisplayPromptAsync(
+                "Set Passenger Count",
+                "Enter a custom passenger number:",
+                accept: "OK",
+                cancel: "Cancel",
+                keyboard: Keyboard.Numeric,
+                initialValue: passengerCount.ToString());
+
+            if (!string.IsNullOrWhiteSpace(result))
+            {
+                if (int.TryParse(result, out int newCount))
+                {
+                    if (newCount >= 0 && newCount <= driverVehicle.MaxPassengerCount)
+                    {
+                        passengerCount = newCount;
+                        PassengerCountLabel.Text = passengerCount.ToString();
+                        await UpdateVehicleStatusBackend();
+                    }
+                    else
+                    {
+                        await DisplayAlert("Invalid Input",
+                            $"Please enter a value between 0 and {driverVehicle.MaxPassengerCount}.",
+                            "OK");
+                    }
+                }
+                else
+                {
+                    await DisplayAlert("Invalid Input", "Please enter a valid number.", "OK");
+                }
+            }
+        }
+
+
         private async Task UpdateVehicleStatusBackend()
         {
             if (driverVehicle != null)
@@ -140,6 +178,8 @@ namespace OnDaGO.MAUI.Views
                 }
             }
         }
+
+        private Location _previousLocation;
 
         private void StartLocationUpdates()
         {
@@ -167,13 +207,25 @@ namespace OnDaGO.MAUI.Views
 
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
-                        if (!initialLocationSet)
+                        var currentLocation = new Location(location.Latitude, location.Longitude);
+
+                        // Center the map on the driver's location each time
+                        map.MoveToRegion(MapSpan.FromCenterAndRadius(
+                            currentLocation,
+                            Distance.FromMeters(500)));
+
+                        // Show driver's own location with golden logo pin
+                        map.Pins.Clear();
+                        map.Pins.Add(new OnDaGO.MAUI.Models.CustomPin
                         {
-                            map.MoveToRegion(MapSpan.FromCenterAndRadius(
-                                new Location(location.Latitude, location.Longitude),
-                                Distance.FromMeters(500)));
-                            initialLocationSet = true;
-                        }
+                            Label = "You",
+                            Type = PinType.Generic,
+                            Location = currentLocation,
+                            Icon = "goldenlogo.png"
+                        });
+
+                        _previousLocation = currentLocation;
+                        initialLocationSet = true;
                     });
                 }
             }
@@ -182,6 +234,7 @@ namespace OnDaGO.MAUI.Views
                 Console.WriteLine($"Location error: {ex.Message}");
             }
         }
+
 
         private async void OnSettingsClicked(object sender, EventArgs e)
         {

@@ -279,28 +279,26 @@ namespace OnDaGO.MAUI.Views
                     const double averageSpeedKmH = 18.0;
                     double etaMinutes = (distance / averageSpeedKmH) * 60;
                     SetButtonStrokeColor(vehicle.PassengerCount);
-                    // Create a pin with ETA, PUV number, and passenger count
-                    var pin = new Pin
+                    var pin = new OnDaGO.MAUI.Models.CustomPin
                     {
                         Label = $"Plate No: {vehicle.PuvNo} | ETA: {etaMinutes:F1} mins | Passengers: {vehicle.PassengerCount}/{vehicle.MaxPassengerCount}",
                         Location = vehicleLocation,
                         Type = PinType.Place,
-                        BindingContext = vehicle
+                        BindingContext = vehicle,
+                        Icon = "goldenlogo.png"
                     };
-
-                    map.Pins.Add(pin); // Add each vehicle pin to the map
+                    map.Pins.Add(pin);
                 }
                 else
                 {
-                    // If user location is unavailable, set default ETA message
-                    var pin = new Pin
+                    var pin = new OnDaGO.MAUI.Models.CustomPin
                     {
                         Label = $"Plate No: {vehicle.PuvNo} | ETA: N/A | Passengers: {vehicle.PassengerCount}/{vehicle.MaxPassengerCount}",
                         Location = vehicleLocation,
                         Type = PinType.Place,
-                        BindingContext = vehicle
+                        BindingContext = vehicle,
+                        Icon = "goldenlogo.png"
                     };
-
                     map.Pins.Add(pin);
                 }
             }
@@ -345,7 +343,7 @@ namespace OnDaGO.MAUI.Views
             {
                 strokeColor = Colors.Orange;
             }
-            else if (count >= 14 && count <= 18)
+            else if (count >= 14 && count <= 17)
             {
                 strokeColor = Colors.Red;
             }
@@ -433,21 +431,15 @@ namespace OnDaGO.MAUI.Views
             }
             foreach (var loc in filteredLocations)
             {
-                var pin = new Pin
+                var stopPin = new OnDaGO.MAUI.Models.CustomPin
                 {
                     Label = loc.Name,
                     Location = loc.Coordinates,
                     Type = PinType.Place,
-                    Address = loc.Name
-                };
-
-                var customPin = new CustomPin
-                {
-                    Pin = pin,
+                    Address = loc.Name,
                     Icon = "bustop.png"
                 };
-                map.Pins.Add(customPin.Pin);
-
+                map.Pins.Add(stopPin);
 
                 var yellowCircle = new Circle
                 {
@@ -721,12 +713,6 @@ namespace OnDaGO.MAUI.Views
             map.MapElements.Add(montalbanPolyline);
         }
 
-
-        public class CustomPin
-        {
-            public Pin Pin { get; set; }
-            public string Icon { get; set; }
-        }
 
         private List<Pin> savedPins = new List<Pin>(); // To store the pins
 
@@ -1096,7 +1082,7 @@ namespace OnDaGO.MAUI.Views
         private void OnPassengerCountCheck(object sender, ElapsedEventArgs e)
         {
             if (SelectedVehicle == null)
-                return; // don’t reset to 0 if no vehicle selected
+                return; // donï¿½t reset to 0 if no vehicle selected
 
             passengerCount = SelectedVehicle.PassengerCount;
 

@@ -1,17 +1,19 @@
 ﻿using Microsoft.Maui.Controls.Maps;
-using Microsoft.Maui.Graphics;
 
 namespace OnDaGO.MAUI.Models
 {
     public class CustomPin : Pin
     {
-        /*public static readonly BindableProperty ImageSourceProperty =
-            BindableProperty.Create(nameof(ImageSource), typeof(ImageSource), typeof(CustomPin));
+        public static readonly BindableProperty IconProperty =
+            BindableProperty.Create(nameof(Icon), typeof(string), typeof(CustomPin), null);
 
-        public ImageSource? ImageSource
+        /// <summary>
+        /// Filename of the image in Resources/Images (e.g. "goldenlogo.png" or "bustop.png").
+        /// </summary>
+        public string? Icon
         {
-            get => (ImageSource?)GetValue(ImageSourceProperty);
-            set => SetValue(ImageSourceProperty, value);
-        }*/
+            get => (string?)GetValue(IconProperty);
+            set => SetValue(IconProperty, value);
+        }
     }
 }
