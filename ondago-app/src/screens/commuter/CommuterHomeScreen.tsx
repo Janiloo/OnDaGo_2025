@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,6 +8,7 @@ import { useVehicles } from "../../hooks/useVehicles";
 import { useDiscovery } from "../../hooks/useDiscovery";
 import { useVehicleSpeeds } from "../../hooks/useVehicleSpeeds";
 import { VehicleMarker } from "../../components/VehicleMarker";
+import { StopMarker } from "../../components/StopMarker";
 import { VehicleDetailSheet } from "../../components/VehicleDetailSheet";
 import { TerminalDetailSheet } from "../../components/TerminalDetailSheet";
 import { OccupancyLegend } from "../../components/OccupancyLegend";
@@ -128,31 +129,14 @@ export default function CommuterHomeScreen() {
       >
         {(showStops || terminalMode) &&
           stops.map((stop) => (
-            <Marker
-              key={`${stop.key}-${terminalMode ? "tm" : "map"}`}
-              coordinate={{ latitude: stop.latitude, longitude: stop.longitude }}
-              title={stop.name}
-              description={terminalMode ? "Tap for routes & PUVs" : "Route stop"}
-              anchor={{ x: 0.5, y: 0.5 }}
-              tracksViewChanges={false}
-              onPress={(e) => {
-                // In terminal mode the marker opens the detail sheet instead of
-                // the default callout (only for real discovery terminals — the
-                // hardcoded fallback stops have no id to look up).
-                if (terminalMode && terminalById.has(stop.key)) {
-                  e.stopPropagation();
-                  setSelectedTerminalId(stop.key);
-                }
-              }}
-            >
-              <View
-                style={[
-                  styles.stopDot,
-                  terminalMode && styles.stopDotBig,
-                  { backgroundColor: palette.surface, borderColor: palette.accent },
-                ]}
-              />
-            </Marker>
+            <StopMarker
+              key={stop.key}
+              stop={stop}
+              terminalMode={terminalMode}
+              onOpenTerminal={
+                terminalById.has(stop.key) ? () => setSelectedTerminalId(stop.key) : undefined
+              }
+            />
           ))}
         {!terminalMode && vehicles.map((vehicle) => {
           const vStale = isVehicleStale(vehicle, now);
@@ -211,8 +195,19 @@ export default function CommuterHomeScreen() {
           onPress={() => {
             setTerminalMode((m) => {
               // Whichever sheet belongs to the mode we're leaving closes with it.
-              if (!m) setSelectedPuv(null);
-              else setSelectedTerminalId(null);
+              if (!m) {
+                setSelectedPuv(null);
+                // Frame the terminal network — that's what this mode is about.
+                const coords = stops.map((sp) => ({ latitude: sp.latitude, longitude: sp.longitude }));
+                if (coords.length > 0) {
+                  mapRef.current?.fitToCoordinates(coords, {
+                    edgePadding: { top: 160, bottom: 260, left: 100, right: 140 },
+                    animated: true,
+                  });
+                }
+              } else {
+                setSelectedTerminalId(null);
+              }
               return !m;
             });
           }}
@@ -345,19 +340,6 @@ export default function CommuterHomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  stopDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: 3,
-  },
-  // Terminal mode makes the terminals the protagonists — bigger tap targets.
-  stopDotBig: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 4,
-  },
   topPill: {
     position: "absolute",
     alignSelf: "center",
