@@ -19,8 +19,19 @@ import { Vehicle } from "../types";
  * but this keeps it working when it becomes [Authorize].
  */
 
+/** Firehose group — every vehicle update (matches VehicleHub.AllGroup). */
+export const ALL_GROUP = "vehicles:all";
+/** One route's updates only (matches VehicleHub.RouteGroup). */
+export const routeGroup = (routeId: string) => `vehicles:route:${routeId}`;
+
 export interface VehicleHubHandle {
   stop: () => Promise<void>;
+  /**
+   * Switch which fan-out group this connection receives. Pass ALL_GROUP for the
+   * firehose (admin / "All routes") or routeGroup(id) to receive just one route.
+   * Safe to call before the socket is connected — it applies on (re)connect.
+   */
+  setGroup: (group: string) => void;
 }
 
 /**
@@ -75,11 +86,35 @@ export function connectVehicleHub(handlers: {
     if (typeof puvNo === "string") handlers.onOffline(puvNo);
   });
 
-  connection.onreconnecting(() => handlers.onStateChange(false));
-  connection.onreconnected(() => handlers.onStateChange(true));
-  connection.onclose(() => handlers.onStateChange(false));
-
   let stopped = false;
+
+  // Group membership: `desiredGroup` is what we want; `joinedGroup` is what the
+  // server currently has us in. On reconnect the server forgets our groups, so
+  // we reset `joinedGroup` and re-subscribe.
+  let desiredGroup = ALL_GROUP;
+  let joinedGroup: string | null = null;
+
+  const ensureSubscription = async () => {
+    if (stopped || connection.state !== HubConnectionState.Connected) return;
+    if (joinedGroup === desiredGroup) return;
+    const previous = joinedGroup;
+    const target = desiredGroup;
+    joinedGroup = target; // optimistic; reset on failure so we retry
+    try {
+      if (previous) await connection.invoke("Unsubscribe", previous);
+      await connection.invoke("Subscribe", target);
+    } catch {
+      joinedGroup = null; // a later call (or reconnect) will retry
+    }
+  };
+
+  connection.onreconnecting(() => handlers.onStateChange(false));
+  connection.onreconnected(() => {
+    joinedGroup = null; // groups are dropped on the server across a reconnect
+    handlers.onStateChange(true);
+    ensureSubscription();
+  });
+  connection.onclose(() => handlers.onStateChange(false));
 
   // Initial connect with its own retry loop (withAutomaticReconnect only
   // covers drops after a successful start).
@@ -88,6 +123,7 @@ export function connectVehicleHub(handlers: {
       try {
         await connection.start();
         handlers.onStateChange(true);
+        await ensureSubscription();
         return;
       } catch {
         handlers.onStateChange(false);
@@ -103,6 +139,11 @@ export function connectVehicleHub(handlers: {
       if (connection.state !== HubConnectionState.Disconnected) {
         await connection.stop().catch(() => {});
       }
+    },
+    setGroup: (group: string) => {
+      if (!group || group === desiredGroup) return;
+      desiredGroup = group;
+      ensureSubscription();
     },
   };
 }
