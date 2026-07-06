@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { getVehicles } from "../services/vehicleApi";
-import { connectVehicleHub } from "../services/vehicleHub";
+import { ALL_GROUP, connectVehicleHub, routeGroup, VehicleHubHandle } from "../services/vehicleHub";
 import { Vehicle } from "../types";
 import { VEHICLE_REFRESH_MS, VEHICLE_RECONCILE_MS } from "../config";
 
@@ -14,8 +14,13 @@ import { VEHICLE_REFRESH_MS, VEHICLE_RECONCILE_MS } from "../config";
  *   deletions/new vehicles and self-heal any missed events.
  * - `now` ticks so staleness (isVehicleStale) advances even when no pushes
  *   arrive — a silent fleet must go grey, not freeze as "live".
+ *
+ * `routeId` (Phase 5B) narrows the SignalR fan-out: pass a route id to receive
+ * only that route's pushes, or null/undefined for the firehose (admin / "All
+ * routes"). This is bandwidth-only — the seed/reconcile GET still returns the
+ * whole fleet, so display correctness never depends on group membership.
  */
-export function useVehicles() {
+export function useVehicles(routeId?: string | null) {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [connected, setConnected] = useState(false);
   const [offline, setOffline] = useState(false); // REST unreachable (fallback path failing too)
@@ -23,6 +28,7 @@ export function useVehicles() {
 
   const connectedRef = useRef(false);
   const mountedRef = useRef(true);
+  const hubRef = useRef<VehicleHubHandle | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -71,6 +77,7 @@ export function useVehicles() {
         if (isConnected) refresh();
       },
     });
+    hubRef.current = hub;
 
     // Timers pause while the app is backgrounded, so catch up the moment it
     // becomes active again instead of waiting for the next tick/reconnect.
@@ -98,9 +105,17 @@ export function useVehicles() {
       mountedRef.current = false;
       clearInterval(timer);
       appStateSub.remove();
+      hubRef.current = null;
       hub.stop();
     };
   }, []);
+
+  // Narrow/widen the SignalR fan-out group when the route filter changes,
+  // WITHOUT tearing down the connection. The seed/reconcile GET is unaffected,
+  // so display stays correct regardless of which group we're in.
+  useEffect(() => {
+    hubRef.current?.setGroup(routeId ? routeGroup(routeId) : ALL_GROUP);
+  }, [routeId]);
 
   return { vehicles, connected, offline, now };
 }

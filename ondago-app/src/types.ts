@@ -30,6 +30,10 @@ export interface Vehicle {
   maxPassengerCount: number;
   /** ISO timestamp of the last status broadcast; null on legacy records. */
   lastUpdated?: string | null;
+  /** Assigned route id (set by a company admin); null when unassigned. */
+  routeId?: string | null;
+  /** Owning operator — pairs with discovery branding for "Operated by X". */
+  companyId?: string | null;
 }
 
 export interface FareMatrixItem {

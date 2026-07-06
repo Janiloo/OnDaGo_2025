@@ -11,6 +11,8 @@ export function normalizeVehicle(v: any): Vehicle {
     passengerCount: Number(v.passengerCount ?? v.PassengerCount ?? 0),
     maxPassengerCount: Number(v.maxPassengerCount ?? v.MaxPassengerCount ?? 0),
     lastUpdated: v.lastUpdated ?? v.LastUpdated ?? null,
+    routeId: v.routeId ?? v.RouteId ?? null,
+    companyId: v.companyId ?? v.CompanyId ?? null,
   };
 }
 

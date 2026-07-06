@@ -46,6 +46,13 @@ export const DRIVER_LOCATION_UPDATE_MS = 3000;
  */
 export const VEHICLE_STALE_MS = 25000;
 
+/**
+ * Assumed average PUV speed (km/h) for arrival estimates. Deliberately
+ * conservative for mixed urban traffic on the Montalban–Cubao corridor; the ETA
+ * is a straight-line estimate, so this is a coarse constant, not GPS speed.
+ */
+export const PUV_AVG_SPEED_KMH = 20;
+
 /** Route stops shown as fixed pins on the commuter map (Montalban–Cubao route). */
 export const ROUTE_STOPS = [
   { name: "Montalban Highway", latitude: 14.7288, longitude: 121.1441 },
