@@ -14,6 +14,19 @@ namespace OnDaGo.API.Models
         public string PasswordHash { get; set; }
         public string PhoneNumber { get; set; }
         public string Role { get; set; } = "User";
+
+        /// <summary>Owning company (CompanyAdmin / Driver). Null for platform SuperAdmins and Commuters.</summary>
+        public string? CompanyId { get; set; }
+        /// <summary>Account switch: "Active" | "Disabled". A disabled account cannot
+        /// log in and (for drivers) has its vehicle broadcasts rejected. Pre-existing
+        /// documents lack the field and deserialize to the default, Active.</summary>
+        public string Status { get; set; } = "Active";
+        /// <summary>Platform (OnDaGO) super admin — an additive capability, not a role swap.</summary>
+        public bool IsPlatformAdmin { get; set; }
+        /// <summary>True while the account is on a temporary password (freshly created
+        /// company admin, or one whose password a SuperAdmin reset) — the account is
+        /// forced through change-temp-password before it can do anything else.</summary>
+        public bool MustChangePassword { get; set; }
         //public string DocumentImageBase64 { get; set; } // Base64 string for ID document
         //public string FaceImageBase64 { get; set; } // Base64 string for selfie image
 

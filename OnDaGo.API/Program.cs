@@ -23,7 +23,10 @@ _ = Task.Run(async () =>
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
         await VehicleService.EnsureIndexesAsync(db);
-        app.Logger.LogInformation("Vehicle indexes ensured.");
+        await TerminalService.EnsureIndexesAsync(db);
+        await RouteService.EnsureIndexesAsync(db);
+        await StopArrivalService.EnsureIndexesAsync(db);
+        app.Logger.LogInformation("Vehicle, terminal, and route indexes ensured.");
     }
     catch (Exception ex)
     {

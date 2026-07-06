@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using OnDaGo.API.Services;
+using OnDaGo.API.Tenancy;
 
 public class Startup
 {
@@ -41,6 +42,22 @@ public class Startup
         //services.AddHttpClient<IdAnalyzerService>();
         services.AddScoped<VehicleService>();     // Register Vehicle service
         services.AddLogging();
+
+        // --- Multi-tenancy (Phase 1) ---
+        services.AddHttpContextAccessor();
+        services.AddSingleton<CompanyLookup>();         // cached company-count snapshot
+        services.AddScoped<CompanyService>();
+        services.AddScoped<TenantContext>();            // per-request tenant, from the JWT
+        services.AddScoped(typeof(TenantCollection<>)); // enforced company-scoped repository
+        services.AddScoped<TerminalService>();          // scoped writes + cross-tenant discovery reads
+        services.AddScoped<RouteService>();             // routes: scoped writes + discovery + vehicle assignment
+        services.AddHostedService<DutyTimeoutService>(); // closes abandoned shifts (OnDuty but silent too long)
+        services.AddSingleton<StopArrivalService>();     // records terminal arrivals (historical ETA groundwork)
+        // Platform SuperAdmin = the additive platform_admin claim (not a role swap).
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("SuperAdmin", p => p.RequireClaim(TenantContext.PlatformAdminClaim, "true"));
+        });
 
         // JSON serialization
         services.AddControllers().AddNewtonsoftJson();
@@ -192,6 +209,24 @@ public class Startup
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
+        // Turn a missing-tenant-scope into a clean, actionable 409 rather than an
+        // unhandled 500 — e.g. a legacy company-less admin hitting a scoped read
+        // once multiple companies exist. The fix is to re-authenticate for a token
+        // that carries the companyId claim.
+        app.Use(async (context, next) =>
+        {
+            try
+            {
+                await next();
+            }
+            catch (OnDaGo.API.Tenancy.TenantScopeException ex)
+            {
+                context.Response.StatusCode = StatusCodes.Status409Conflict;
+                context.Response.ContentType = "text/plain";
+                await context.Response.WriteAsync(ex.Message);
+            }
+        });
+
         if (env.IsDevelopment() || env.IsProduction()) // Optionally expose Swagger in production
         {
             app.UseSwagger();
