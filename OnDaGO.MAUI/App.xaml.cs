@@ -18,7 +18,9 @@ public partial class App : Application
     {
         InitializeComponent();
 
-        Application.Current.UserAppTheme = AppTheme.Light;
+        //Application.Current.UserAppTheme = AppTheme.Light;
+        UserAppTheme = AppTheme.Light;
+
 
 #if DEBUG
         string baseUrl = DeviceInfo.Platform == DevicePlatform.Android

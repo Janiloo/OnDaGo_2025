@@ -17,9 +17,13 @@ namespace OnDaGO.MAUI.Services
             _httpClient = httpClient;
             _secureStorage = secureStorage;
 
-            // Always use the production URL (Azure)
-            //_baseUrl = "https://ondago-fbb0b6f0a7ede3cx.eastasia-01.azurewebsites.net:443";
+#if DEBUG
+            _baseUrl = DeviceInfo.Platform == DevicePlatform.Android
+                ? "http://10.0.2.2:5147"
+                : "http://localhost:5147";
+#else
             _baseUrl = "https://ondago-api-akfye0eahsamhrgt.southeastasia-01.azurewebsites.net";
+#endif
 
         }
 

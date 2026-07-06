@@ -69,7 +69,7 @@
         <!-- Bottom Sheet -->
         <Grid x:Name="BottomSheet"
               BackgroundColor="White"
-              HeightRequest="250"
+              HeightRequest="350"
               VerticalOptions="End"
               IsVisible="False"
               Opacity="0"
@@ -89,13 +89,13 @@
                      WidthRequest="40"/>
 
             <!-- Passenger Counter -->
-            <!-- Passenger Counter -->
+            <!-- Passenger Controls -->
             <StackLayout Grid.Row="1"
              VerticalOptions="Center"
              HorizontalOptions="Center"
              Spacing="10">
 
-                <!-- Passenger count value on top -->
+                <!-- Passenger count value -->
                 <Label x:Name="PassengerCountLabel"
            Text="0"
            FontSize="48"
@@ -107,12 +107,10 @@
            FontSize="20"
            HorizontalOptions="Center"/>
 
-                <!-- Passenger Controls (remain horizontal) -->
+                <!-- +, -, and Clear All buttons in one row -->
                 <StackLayout Orientation="Horizontal"
                  HorizontalOptions="Center"
                  Spacing="20">
-
-                    <!-- Increment -->
                     <Button Text="➕"
                 Clicked="OnIncrementPassenger"
                 BackgroundColor="#77DD77"
@@ -122,7 +120,6 @@
                 FontSize="24"
                 CornerRadius="35"/>
 
-                    <!-- Decrement -->
                     <Button Text="➖"
                 Clicked="OnDecrementPassenger"
                 BackgroundColor="#AEC6CF"
@@ -132,7 +129,6 @@
                 FontSize="24"
                 CornerRadius="35"/>
 
-                    <!-- Clear All -->
                     <Button Text="✖️"
                 Clicked="OnClearPassengers"
                 BackgroundColor="#FF6961"
@@ -142,7 +138,19 @@
                 FontSize="24"
                 CornerRadius="35"/>
                 </StackLayout>
+
+                <!-- Edit / Custom Count button -->
+                <Button Text="Edit Count"
+            Clicked="OnEditPassengerCount"
+            BackgroundColor="#FFD700"
+            TextColor="Black"
+            FontSize="24"
+            WidthRequest="250"
+            CornerRadius="35"
+            HeightRequest="70"
+            HorizontalOptions="Center"/>
             </StackLayout>
+
 
 
 

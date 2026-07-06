@@ -24,6 +24,10 @@ namespace OnDaGO.MAUI.Views
         private List<Pin> _currentPins = new List<Pin>();
         private int passengerCount = 0;
         private System.Timers.Timer passengerCountCheckTimer;
+        private Circle userRadiusCircle; //  Keep track of the green circle
+        private bool yellowCirclesDrawn = false; //  Draw yellow circles only once
+        private List<Pin> vehiclePins = new();   // ?? Holds all dynamically updated vehicle pins
+        private List<Pin> locationPins = new();  // ?? Holds all your static stop/location pins
 
         public VehicleModel SelectedVehicle { get; set; }
 
@@ -42,10 +46,10 @@ namespace OnDaGO.MAUI.Views
             new LocationItem { Name = "Concepcion", Coordinates = new Location(14.6505, 121.1035) },
             new LocationItem { Name = "Savemore Bayan", Coordinates = new Location(14.6372, 121.0973) },
             new LocationItem { Name = "Marikina Riverbanks", Coordinates = new Location(14.6329, 121.0828) },
-            new LocationItem { Name = "Cubao", Coordinates = new Location(14.621360, 121.055222) },
-            new LocationItem { Name = "STI Main Building", Coordinates = new Location(14.616446, 121.054145) },
-            new LocationItem { Name = "STI Guard House", Coordinates = new Location(14.616470, 121.054000) },
-            new LocationItem { Name = "STI Canteen", Coordinates = new Location(14.616262, 121.054312) }
+            new LocationItem { Name = "Cubao", Coordinates = new Location(14.621360, 121.055222) }
+            //new LocationItem { Name = "STI Main Building", Coordinates = new Location(14.616446, 121.054145) },
+            //new LocationItem { Name = "STI Guard House", Coordinates = new Location(14.616470, 121.054000) },
+            //new LocationItem { Name = "STI Canteen", Coordinates = new Location(14.616262, 121.054312) }
         };
 
         private readonly Dictionary<(string, string), (int Regular, int Discounted)> fareMatrix = new()
@@ -130,23 +134,31 @@ namespace OnDaGO.MAUI.Views
             InitializeComponent();
             _googleMapsApiService = new GoogleMapsApiService("YOUR_GOOGLE_MAPS_API_KEY");
             _vehicleService = new VehicleService();
+
+            // Construct timers here but DON'T start them yet. Starting network/GPS work
+            // in the constructor ran before the page was fully on-screen and made any
+            // exception inside the fire-and-forget async-voids bring down the app right
+            // after login. Heavy work now waits for OnAppearing (see StartPageActivity).
             _vehicleRefreshTimer = new System.Timers.Timer(1000);
             _vehicleRefreshTimer.Elapsed += OnVehicleRefreshTimerElapsed;
-            _vehicleRefreshTimer.Start();
-            StartLocationUpdates();
+
+            locationUpdateTimer = new System.Timers.Timer(3000);
+            locationUpdateTimer.Elapsed += OnLocationUpdateTimerElapsed;
+            locationUpdateTimer.AutoReset = true;
+
+            passengerCountCheckTimer = new System.Timers.Timer(1000);
+            passengerCountCheckTimer.Elapsed += OnPassengerCountCheck;
+            passengerCountCheckTimer.AutoReset = true;
+
             _isSearchVisible = false;
             FrameLayout.IsVisible = false;
-            StartPassengerCountMonitor();
-            FrameLayout.TranslationY = FrameLayout.Height;
-            LoadVehicles();
-            LoadFareMatrixInBottomSheet();
+
             var tapGestureRecognizer = new TapGestureRecognizer();
             tapGestureRecognizer.Tapped += OnOverlayTapped;
             Overlay.GestureRecognizers.Add(tapGestureRecognizer);
 
             StartLocationPicker.SelectedIndexChanged += (s, e) => UpdateFare();
             EndLocationPicker.SelectedIndexChanged += (s, e) => UpdateFare();
-
 
             foreach (var loc in allLocations)
             {
@@ -157,7 +169,38 @@ namespace OnDaGO.MAUI.Views
 
             OnLocationToggled(null, new ToggledEventArgs(true));
 
-            UpdateMapToUserLocation();
+            // Defer anything that needs the actual measured size to Loaded,
+            // because FrameLayout.Height is -1 during the constructor.
+            this.Loaded += (s, e) =>
+            {
+                FrameLayout.TranslationY = FrameLayout.Height;
+                OnLocationToggled(null, new ToggledEventArgs(true));
+            };
+        }
+
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+            try { await StartPageActivityAsync(); }
+            catch (Exception ex) { Console.WriteLine($"OnAppearing failed: {ex}"); }
+        }
+
+        private async Task StartPageActivityAsync()
+        {
+            try
+            {
+                _vehicleRefreshTimer.Enabled = true;
+                locationUpdateTimer.Enabled = true;
+                passengerCountCheckTimer.Enabled = true;
+
+                await UpdateMapToUserLocation();
+                LoadVehicles();
+                LoadFareMatrixInBottomSheet();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"HomePage start-up failed: {ex}");
+            }
         }
 
         private void UpdateFare()
@@ -184,15 +227,6 @@ namespace OnDaGO.MAUI.Views
             }
         }
 
-
-
-        private void StartLocationUpdates()
-        {
-            locationUpdateTimer = new System.Timers.Timer(3000); // Set interval in milliseconds (e.g., 3000ms = 3 seconds)
-            locationUpdateTimer.Elapsed += async (sender, e) => await UpdateMapToUserLocation();
-            locationUpdateTimer.AutoReset = true;
-            locationUpdateTimer.Enabled = true;
-        }
 
         private bool initialLocationSet = false;  // Flag to check if the map was centered initially
 
@@ -224,7 +258,9 @@ namespace OnDaGO.MAUI.Views
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"An error occurred while retrieving location: {ex.Message}", "OK");
+                // Log only — this may be called from a timer thread-pool thread
+                // where DisplayAlert would crash. The map simply won't update.
+                Console.WriteLine($"Location error: {ex.Message}");
             }
         }
 
@@ -257,53 +293,145 @@ namespace OnDaGO.MAUI.Views
             }
         }
 
-        private void OnVehicleRefreshTimerElapsed(object sender, ElapsedEventArgs e)
+        private async void OnVehicleRefreshTimerElapsed(object sender, ElapsedEventArgs e)
         {
-            LoadVehicles();
+            try
+            {
+                Console.WriteLine("Timer: refreshing vehicles...");
+                List<VehicleModel> vehicles = await _vehicleService.GetVehiclesAsync();
+
+                // Must marshal to UI thread — timers fire on thread-pool threads,
+                // not the MAUI UI thread. DisplayAlert / Pin manipulation both
+                // need the UI thread, so wrap everything in BeginInvokeOnMainThread.
+                Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    try
+                    {
+                        if (vehicles == null || vehicles.Count == 0)
+                        {
+                            // Don't spam alerts every second; just log once.
+                            Console.WriteLine("No vehicles found (timer refresh).");
+                            return;
+                        }
+
+                        UpdatePins(vehicles);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Timer refresh UI error: {ex.Message}");
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Timer refresh error: {ex.Message}");
+            }
+        }
+
+        private async void OnLocationUpdateTimerElapsed(object sender, ElapsedEventArgs e)
+        {
+            try
+            {
+                await UpdateMapToUserLocation();
+            }
+            catch (Exception ex)
+            {
+                // Don't use DisplayAlert here — this runs on a thread-pool thread.
+                Console.WriteLine($"Location update timer error: {ex.Message}");
+            }
         }
 
 
         private async void UpdatePins(List<VehicleModel> vehicles)
         {
-            //var userLocation = new Location(14.7288, 121.1441);
-            var userLocation = await Geolocation.GetLastKnownLocationAsync();
-            /*if (userLocation == null)
+            // This whole method is a fire-and-forget async void invoked from a
+            // timer / BeginInvokeOnMainThread. ANY exception after the first await
+            // (map handler not ready, bad vehicle coords, etc.) is unhandled and
+            // instantly kills the process with no error UI. Keep the whole body
+            // inside try/catch so it degrades to a log line instead.
+            try
             {
-                await DisplayAlert("Error", "User location could not be determined.", "OK");
+            var userLocation = await Geolocation.GetLastKnownLocationAsync();
+
+            // Location may not be available yet on a fresh launch (no last-known fix).
+            // Without this guard, the CalculateDistance call below throws a null-ref and,
+            // because this runs via fire-and-forget BeginInvokeOnMainThread, takes the
+            // whole app down right after login.
+            if (userLocation == null)
+            {
                 return;
-            }*/
-            
+            }
+
             bool isUserWithinYellowCircle = false;
 
-            // Check if the user is within any yellow-circled locations
+            // ?? Draw yellow circles once (keep them visible always)
+            if (!yellowCirclesDrawn)
+            {
+                foreach (var location in allLocations)
+                {
+                    // Draw the yellow circle around the stop
+                    var yellowCircle = new Circle
+                    {
+                        Center = location.Coordinates,
+                        Radius = new Microsoft.Maui.Maps.Distance(15),
+                        StrokeColor = Colors.Yellow,
+                        StrokeWidth = 2,
+                        FillColor = Colors.Yellow.WithAlpha(0.2f)
+                    };
+                    map.MapElements.Add(yellowCircle);
+
+                    // ?? Added this block:
+                    // Create a static pin for the stop name
+                    var stopPin = new Pin
+                    {
+                        Label = location.Name,
+                        Location = location.Coordinates,
+                        Type = PinType.Place
+                    };
+                    map.Pins.Add(stopPin);
+                    locationPins.Add(stopPin);
+                }
+
+                yellowCirclesDrawn = true;
+            }
+
+
+            // ? Check if the user is within any yellow circle
             foreach (var location in allLocations)
             {
                 var distanceToLocation = userLocation.CalculateDistance(location.Coordinates, DistanceUnits.Kilometers);
-                if (distanceToLocation <= 0.015) // Adjust radius as needed (0.01 km = 10 meters)
+                if (distanceToLocation <= 0.015) // 15 meters
                 {
                     isUserWithinYellowCircle = true;
                     break;
                 }
             }
 
-            // If the user is within a yellow circle, draw a 2 km circle around the user location
+            // ?? User is inside a yellow circle
             if (isUserWithinYellowCircle)
             {
-                // Clear any previous 2 km radius circle if needed
-                map.MapElements.Clear();
-
-                // Draw the 2 km radius circle around the user
-                var userRadiusCircle = new Circle
+                // If no green circle exists yet, create one
+                if (userRadiusCircle == null)
                 {
-                    Center = new Location(userLocation.Latitude, userLocation.Longitude),
-                    Radius = new Microsoft.Maui.Maps.Distance(2000), // 2 km radius
-                    StrokeColor = Colors.Green, // Customize color
-                    StrokeWidth = 3,
-                    FillColor = Colors.Green.WithAlpha(0.2f) // Adjust fill color opacity
-                };
-                map.MapElements.Add(userRadiusCircle);
+                    userRadiusCircle = new Circle
+                    {
+                        Center = new Location(userLocation.Latitude, userLocation.Longitude),
+                        Radius = new Microsoft.Maui.Maps.Distance(2000), // 2 km
+                        StrokeColor = Colors.Green,
+                        StrokeWidth = 3,
+                        FillColor = Colors.Green.WithAlpha(0.2f)
+                    };
+                    map.MapElements.Add(userRadiusCircle);
+                }
+                else
+                {
+                    // Just update the position if it already exists
+                    userRadiusCircle.Center = new Location(userLocation.Latitude, userLocation.Longitude);
+                }
 
-                const double maxDisplayRadius = 2.0; // 2 km radius for displaying vehicles
+                // Show nearby vehicles (within 2 km)
+                map.Pins.Clear();
+                const double maxDisplayRadius = 2.0;
 
                 foreach (var vehicle in vehicles)
                 {
@@ -313,45 +441,62 @@ namespace OnDaGO.MAUI.Views
 
                     if (distance <= maxDisplayRadius)
                     {
-                        // Calculate ETA in minutes
                         const double averageSpeedKmH = 18.0;
                         double etaMinutes = (distance / averageSpeedKmH) * 60;
 
-                        var pin = new Pin
+                        var pin = new OnDaGO.MAUI.Models.CustomPin
                         {
                             Label = $"Plate No: {vehicle.PuvNo} | ETA: {etaMinutes:F1} mins | Passengers: {vehicle.PassengerCount}/{vehicle.MaxPassengerCount}",
                             Location = vehicleLocation,
                             Type = PinType.Place,
-                            BindingContext = vehicle
+                            BindingContext = vehicle,
+                            Icon = "goldenlogo.png"
                         };
                         map.Pins.Add(pin);
                     }
                 }
+
+                // ?? Update bottom sheet info if visible
                 if (BottomSheet.IsVisible && SelectedVehicle != null)
                 {
-                    // Find the closest vehicle to the user's location again, if needed
                     SelectedVehicle = vehicles
-                        .OrderBy(vehicle => userLocation?.CalculateDistance(new Location(vehicle.CurrentLat, vehicle.CurrentLong), DistanceUnits.Kilometers) ?? double.MaxValue)
+                        .OrderBy(v => userLocation?.CalculateDistance(
+                            new Location(v.CurrentLat, v.CurrentLong),
+                            DistanceUnits.Kilometers) ?? double.MaxValue)
                         .FirstOrDefault();
-
 
                     if (SelectedVehicle != null)
                     {
                         var vehicleLocation = new Location(SelectedVehicle.CurrentLat, SelectedVehicle.CurrentLong);
-                        var distance = userLocation?.CalculateDistance(vehicleLocation, DistanceUnits.Kilometers) ?? 0;
+                        var distance = userLocation.CalculateDistance(vehicleLocation, DistanceUnits.Kilometers);
                         const double averageSpeedKmH = 18.0;
                         double etaMinutes = (distance / averageSpeedKmH) * 60;
 
-                        // Update BottomSheet labels
                         ETALabel.Text = $"ETA: {etaMinutes:F1} mins";
                         PuvNoLabel.Text = $"PUV No: {SelectedVehicle.PuvNo}";
                         PassengerCountLabel.Text = $"Passenger Count: {SelectedVehicle.PassengerCount}/{SelectedVehicle.MaxPassengerCount}";
-                        //UpdateStandingPassengerCount(SelectedVehicle.PassengerCount, SelectedVehicle.MaxPassengerCount);
-                        // Calculate and update standing passengers
-                        //int standingPassengers = Math.Max(0, SelectedVehicle.PassengerCount - SelectedVehicle.MaxPassengerCount);
-                        //StandingPassengerCountLabel.Text = $"Standing Passengers: {standingPassengers}/10";
                     }
                 }
+            }
+            else
+            {
+                // ?? User is OUTSIDE the yellow circle ? Remove the green circle if it exists
+                if (userRadiusCircle != null)
+                {
+                    map.MapElements.Remove(userRadiusCircle);
+                    userRadiusCircle = null;
+                }
+
+                // Optionally clear vehicle pins when out of range
+                foreach (var vPin in vehiclePins)
+                    map.Pins.Remove(vPin);
+                vehiclePins.Clear();
+
+            }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"UpdatePins failed: {ex}");
             }
         }
 
@@ -381,7 +526,8 @@ namespace OnDaGO.MAUI.Views
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"Failed to load fare matrix: {ex.Message}", "OK");
+                // Log but don't crash — this is async void fire-and-forget.
+                Console.WriteLine($"Fare matrix load error: {ex.Message}");
             }
         }
 
@@ -425,21 +571,15 @@ namespace OnDaGO.MAUI.Views
             }
             foreach (var loc in filteredLocations)
             {
-                var pin = new Pin
+                var stopPin = new OnDaGO.MAUI.Models.CustomPin
                 {
                     Label = loc.Name,
                     Location = loc.Coordinates,
                     Type = PinType.Place,
-                    Address = loc.Name
-                };
-
-                var customPin = new CustomPin
-                {
-                    Pin = pin,
+                    Address = loc.Name,
                     Icon = "bustop.png"
                 };
-                map.Pins.Add(customPin.Pin);
-
+                map.Pins.Add(stopPin);
 
                 var yellowCircle = new Circle
                 {
@@ -714,12 +854,6 @@ namespace OnDaGO.MAUI.Views
         }
 
 
-        public class CustomPin
-        {
-            public Pin Pin { get; set; }
-            public string Icon { get; set; }
-        }
-
         private List<Pin> savedPins = new List<Pin>(); // To store the pins
 
         private async void OnGetDirectionsClicked(object sender, EventArgs e)
@@ -977,7 +1111,7 @@ namespace OnDaGO.MAUI.Views
             }
             else
             {
-                // Hide the BottomSheet if it�s already visible
+                // Hide the BottomSheet if it�s already visible
                 await BottomSheet.TranslateTo(0, this.Height, 300, Easing.CubicInOut);
                 await BottomSheet.FadeTo(0, 250);
                 map.IsTrafficEnabled = true;
@@ -1061,14 +1195,6 @@ namespace OnDaGO.MAUI.Views
         }
 
 
-        private void StartPassengerCountMonitor()
-        {
-            passengerCountCheckTimer = new System.Timers.Timer(1000); // Set interval (e.g., 1 second)
-            passengerCountCheckTimer.Elapsed += OnPassengerCountCheck;
-            passengerCountCheckTimer.AutoReset = true;
-            passengerCountCheckTimer.Enabled = true;
-        }
-
         private void OnPassengerCountCheck(object sender, System.Timers.ElapsedEventArgs e)
         {
             // Assuming SelectedVehicle is an existing property with a PassengerCount
@@ -1095,7 +1221,7 @@ namespace OnDaGO.MAUI.Views
             {
                 strokeColor = Colors.Orange;
             }
-            else if (count >= 14 && count <=18)
+            else if (count >= 14 && count <=17)
             {
                 strokeColor = Colors.Red;
             }
@@ -1113,8 +1239,11 @@ namespace OnDaGO.MAUI.Views
 
         protected override void OnDisappearing()
         {
-            // Stop the timer when the page is no longer visible
+            // Stop every timer when the page is no longer visible, otherwise they keep
+            // firing against a stale page (and against UI that may be gone).
             passengerCountCheckTimer?.Stop();
+            _vehicleRefreshTimer?.Stop();
+            locationUpdateTimer?.Stop();
             base.OnDisappearing();
         }
 
