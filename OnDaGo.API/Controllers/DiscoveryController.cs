@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OnDaGo.API.Services;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace OnDaGo.API.Controllers
@@ -51,6 +53,23 @@ namespace OnDaGo.API.Controllers
                 logo = c.LogoDataUri ?? c.LogoUrl,
                 brandColor = c.BrandColor,
             }));
+        }
+
+        /// <summary>Plate numbers for one Active+Verified company — powers the
+        /// commuter report form's optional plate picker (existing data, not free
+        /// text). Read-only and company-filtered; no tenant write path involved.</summary>
+        [HttpGet("companies/{companyId}/vehicles")]
+        public async Task<IActionResult> GetCompanyVehicles(string companyId)
+        {
+            var verified = await _companyService.GetVerifiedCompanyIdsAsync();
+            if (!verified.Contains(companyId)) return Ok(new List<object>());
+
+            var vehicles = await _vehicleService.GetVehiclesAsync();
+            var mine = vehicles
+                .Where(v => v.CompanyId == companyId && v.Status != "Inactive")
+                .OrderBy(v => v.PuvNo)
+                .Select(v => new { id = v.Id, puvNo = v.PuvNo });
+            return Ok(mine);
         }
 
         /// <summary>All active vehicles across every company (default "All Vehicles" mode).</summary>

@@ -54,6 +54,22 @@ namespace OnDaGo.API.Services
             return _reports.InsertAsync(report); // stamps CompanyId
         }
 
+        /// <summary>
+        /// Submit a report against an EXPLICIT company (the bus company a commuter
+        /// selected, or a driver's own). Writes through the raw collection so the
+        /// caller-company auto-stamp of <see cref="TenantCollection{T}"/> does not
+        /// overwrite it — a commuter has no company of their own, and a report must
+        /// be attributed to the operator it concerns. Reads stay scoped, so tenant
+        /// isolation (the security guarantee) is unaffected: a company admin only
+        /// ever sees reports whose CompanyId equals theirs.
+        /// </summary>
+        public Task SubmitAsync(ReportItem report)
+        {
+            report.CreatedAt = DateTime.UtcNow;
+            report.DeletedAt = null;
+            return _raw.InsertOneAsync(report);
+        }
+
         public Task<ReportItem?> UpdateReportStatusAsync(string id, string status)
         {
             var update = Builders<ReportItem>.Update.Set(r => r.Status, status);

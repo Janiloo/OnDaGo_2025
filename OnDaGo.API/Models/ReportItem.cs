@@ -12,13 +12,30 @@ public class ReportItem : ITenantEntity
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
 
-    /// <summary>Owning company (the operator the report concerns). Scoped by TenantCollection.</summary>
+    /// <summary>Owning company (the operator the report concerns). Scoped by TenantCollection.
+    /// For a commuter report this is the bus company they selected; for a driver report it is
+    /// the driver's own company. Set explicitly on create — see ReportService.SubmitAsync.</summary>
     public string? CompanyId { get; set; }
 
     public string? UserId { get; set; }
 
+    /// <summary>"Commuter" | "Driver" — who filed it. Null on legacy rows.</summary>
+    public string? ReporterRole { get; set; }
+    /// <summary>Denormalized reporter name so the admin list needs no user join.</summary>
+    public string? ReporterName { get; set; }
+
+    /// <summary>Plate/PUV number the report concerns (driver's own, or a commuter's optional pick).</summary>
+    public string? PlateNumber { get; set; }
+    /// <summary>Resolved vehicle id when the plate matches a vehicle in the owning company.</summary>
+    public string? VehicleId { get; set; }
+
     public string Subject { get; set; }
     public string Description { get; set; }
+
+    /// <summary>When the incident happened (commuter optional); distinct from CreatedAt (filed-at).</summary>
+    public DateTime? IncidentAt { get; set; }
+    /// <summary>Free-text incident location (commuter optional).</summary>
+    public string? IncidentLocation { get; set; }
 
     /// <summary>Pending | InProgress | Completed.</summary>
     public string Status { get; set; } = "Pending";
@@ -35,10 +52,20 @@ public class ReportItem : ITenantEntity
 public class CreateReportDto
 {
     public string? UserId { get; set; }
-    public string Subject { get; set; }
-    public string Description { get; set; }
-    public string Status { get; set; }
+    // Nullable so the controller's own validation (with clear messages) runs
+    // instead of [ApiController]'s automatic 400 on a missing non-nullable field.
+    public string? Subject { get; set; }
+    public string? Description { get; set; }
+    public string? Status { get; set; }
     public bool IsImportant { get; set; }
+
+    /// <summary>The bus company the report concerns. REQUIRED for commuter reports;
+    /// ignored for drivers (their own company is used). Server validates it.</summary>
+    public string? CompanyId { get; set; }
+    /// <summary>Optional plate the commuter is reporting about.</summary>
+    public string? PlateNumber { get; set; }
+    public DateTime? IncidentAt { get; set; }
+    public string? IncidentLocation { get; set; }
 }
 
 /// <summary>Body for PATCH /api/Reports/{id}/status.</summary>
