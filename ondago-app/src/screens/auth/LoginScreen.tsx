@@ -56,7 +56,7 @@ export default function LoginScreen({ navigation }: Props) {
         >
           <Ionicons name="bus" size={40} color={palette.onPrimary} />
         </View>
-        <Text style={[type.display, { color: palette.text }]}>OnDaGO</Text>
+        <Text style={[type.display, { color: palette.text }]}>ParaPo</Text>
         <Text style={[type.body, { color: palette.textMuted, marginTop: spacing.xs }]}>
           Montalban–Cubao PUV tracker
         </Text>

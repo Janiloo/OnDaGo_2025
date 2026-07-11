@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "OnDaGO",
+    "name": "ParaPo",
     "slug": "ondago",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,9 +13,11 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.ondago.app",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "OnDaGO uses your location to show nearby PUVs and, for drivers, to broadcast the vehicle position to commuters.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "OnDaGO broadcasts your PUV location to commuters while you are on duty, including when the app is in the background.",
-        "UIBackgroundModes": ["location"],
+        "NSLocationWhenInUseUsageDescription": "ParaPo uses your location to show nearby PUVs and, for drivers, to broadcast the vehicle position to commuters.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "ParaPo broadcasts your PUV location to commuters while you are on duty, including when the app is in the background.",
+        "UIBackgroundModes": [
+          "location"
+        ],
         "NSAppTransportSecurity": {
           "NSAllowsLocalNetworking": true
         }
@@ -40,8 +42,8 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "OnDaGO uses your location to show nearby PUVs and track vehicle positions.",
-          "locationAlwaysAndWhenInUsePermission": "OnDaGO broadcasts your PUV location to commuters while you are on duty, including when the app is in the background.",
+          "locationWhenInUsePermission": "ParaPo uses your location to show nearby PUVs and track vehicle positions.",
+          "locationAlwaysAndWhenInUsePermission": "ParaPo broadcasts your PUV location to commuters while you are on duty, including when the app is in the background.",
           "isAndroidBackgroundLocationEnabled": true,
           "isAndroidForegroundServiceEnabled": true
         }
@@ -54,7 +56,8 @@
             "usesCleartextTraffic": true
           }
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ]
   }
 }

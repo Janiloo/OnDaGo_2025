@@ -42,7 +42,7 @@ const SLIDES: Slide[] = [
       { icon: "sparkles", tone: "accent", style: { top: 6, right: 18 } },
       { icon: "location", tone: "primary", style: { bottom: 14, left: 6 } },
     ],
-    title: "Welcome to OnDaGO",
+    title: "Welcome to ParaPo",
     desc: "Your real-time companion for PUVs on the Montalban–Cubao route.",
   },
   {

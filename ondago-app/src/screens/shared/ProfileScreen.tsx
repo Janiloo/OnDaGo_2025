@@ -41,7 +41,7 @@ export default function ProfileScreen({ navigation }: any) {
   const confirmDelete = () => {
     Alert.alert(
       "Delete account?",
-      "This permanently deletes your OnDaGO account. This cannot be undone.",
+      "This permanently deletes your ParaPo account. This cannot be undone.",
       [
         { text: "Cancel", style: "cancel" },
         {

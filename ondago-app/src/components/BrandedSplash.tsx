@@ -73,7 +73,7 @@ export function BrandedSplash({ ready, onDone }: { ready: boolean; onDone: () =>
           <Ionicons name="bus" size={44} color="#FFFFFF" />
         </Animated.View>
         <Animated.View style={{ opacity: wordmarkOpacity, alignItems: "center" }}>
-          <Text style={styles.wordmark}>OnDaGO</Text>
+          <Text style={styles.wordmark}>ParaPo</Text>
           <Text style={styles.tagline}>Track your ride, in real time</Text>
         </Animated.View>
       </View>

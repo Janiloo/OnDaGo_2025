@@ -76,3 +76,15 @@ export async function getCompanies(): Promise<DiscoveryCompany[]> {
   const { data } = await client.get("/api/discovery/companies");
   return Array.isArray(data) ? data.map(normalizeCompany) : [];
 }
+
+export interface DiscoveryVehicle {
+  id: string;
+  puvNo: string;
+}
+
+/** Plate numbers for one company — powers the commuter report plate picker. */
+export async function getCompanyVehicles(companyId: string): Promise<DiscoveryVehicle[]> {
+  const { data } = await client.get(`/api/discovery/companies/${encodeURIComponent(companyId)}/vehicles`);
+  if (!Array.isArray(data)) return [];
+  return data.map((v: any) => ({ id: normalizeId(v.id ?? v.Id), puvNo: v.puvNo ?? v.PuvNo ?? "" }));
+}

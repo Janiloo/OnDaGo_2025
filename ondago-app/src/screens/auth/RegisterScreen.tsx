@@ -46,7 +46,7 @@ export default function RegisterScreen({ navigation }: Props) {
   return (
     <Screen>
       <Title>Create account</Title>
-      <Subtitle>Ride with OnDaGO as a commuter.</Subtitle>
+      <Subtitle>Ride with ParaPo as a commuter.</Subtitle>
       <Field label="Full Name" icon="person-outline" value={name} onChangeText={setName} placeholder="Juan Dela Cruz" />
       <Field
         label="Email"

@@ -47,10 +47,17 @@ export interface FareMatrixItem {
 export interface ReportItem {
   id: string;
   userId?: string | null;
+  companyId?: string | null;
+  reporterRole?: string | null;
+  reporterName?: string | null;
+  plateNumber?: string | null;
+  vehicleId?: string | null;
   subject: string;
   description: string;
   status: string;
   isImportant: boolean;
+  incidentAt?: string | null;
+  incidentLocation?: string | null;
   createdAt: string;
   completedAt?: string | null;
   deletedAt?: string | null;
