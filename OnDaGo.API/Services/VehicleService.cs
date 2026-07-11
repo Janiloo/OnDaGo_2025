@@ -89,9 +89,10 @@ namespace OnDaGo.API.Services
         /// <paramref name="timeout"/> go OffDuty with reason "timeout" (phone died,
         /// app killed — the driver never tapped end shift). LastUpdated is kept:
         /// it is the last evidence of contact, and it's already stale to clients.
-        /// Returns how many shifts were closed.
+        /// Returns the closed vehicles (pre-close duty fields intact) so the
+        /// caller can append their shift logs.
         /// </summary>
-        public async Task<long> TimeoutStaleDutiesAsync(TimeSpan timeout)
+        public async Task<List<VehicleModel>> TimeoutStaleDutiesAsync(TimeSpan timeout)
         {
             var cutoff = DateTime.UtcNow - timeout;
             var onDuty = Builders<VehicleModel>.Filter.Eq(v => v.DutyStatus, "OnDuty");
@@ -102,14 +103,19 @@ namespace OnDaGo.API.Services
                 Builders<VehicleModel>.Filter.And(
                     Builders<VehicleModel>.Filter.Eq(v => v.LastUpdated, (DateTime?)null),
                     Builders<VehicleModel>.Filter.Lt(v => v.DutyStartedAt, cutoff)));
+            var stale = Builders<VehicleModel>.Filter.And(onDuty, silent);
+
+            var closed = await _vehicles.Find(stale).ToListAsync();
+            if (closed.Count == 0) return closed;
+
             var update = Builders<VehicleModel>.Update
                 .Set(v => v.DutyStatus, "OffDuty")
                 .Set(v => v.DutyEndedAt, DateTime.UtcNow)
                 .Set(v => v.DutyEndReason, "timeout");
-
-            var result = await _vehicles.UpdateManyAsync(
-                Builders<VehicleModel>.Filter.And(onDuty, silent), update);
-            return result.ModifiedCount;
+            // Re-apply the staleness filter (not just the ids) so a vehicle that
+            // broadcast between the find and the update isn't force-closed.
+            await _vehicles.UpdateManyAsync(stale, update);
+            return closed;
         }
 
         /// <summary>

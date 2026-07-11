@@ -53,6 +53,8 @@ public class Startup
         services.AddScoped<RouteService>();             // routes: scoped writes + discovery + vehicle assignment
         services.AddHostedService<DutyTimeoutService>(); // closes abandoned shifts (OnDuty but silent too long)
         services.AddSingleton<StopArrivalService>();     // records terminal arrivals (historical ETA groundwork)
+        services.AddSingleton<TelemetryService>();       // Tier 3: 1/min occupancy+position samples (in-memory throttle → singleton)
+        services.AddSingleton<ShiftLogService>();        // Tier 3: durable per-shift history
         // Platform SuperAdmin = the additive platform_admin claim (not a role swap).
         services.AddAuthorization(options =>
         {

@@ -18,13 +18,15 @@ namespace OnDaGo.API.Services
     public class DutyTimeoutService : BackgroundService
     {
         private readonly VehicleService _vehicles;
+        private readonly ShiftLogService _shiftLogs;
         private readonly ILogger<DutyTimeoutService> _logger;
         private readonly TimeSpan _timeout;
         private readonly TimeSpan _sweepEvery;
 
         public DutyTimeoutService(IMongoDatabase db, IConfiguration config, ILogger<DutyTimeoutService> logger)
         {
-            _vehicles = new VehicleService(db); // stateless; safe outside DI scope
+            _vehicles = new VehicleService(db);   // stateless; safe outside DI scope
+            _shiftLogs = new ShiftLogService(db); // ditto
             _logger = logger;
             _timeout = TimeSpan.FromMinutes(config.GetValue("Duty:TimeoutMinutes", 30.0));
             _sweepEvery = TimeSpan.FromSeconds(config.GetValue("Duty:SweepSeconds", 60.0));
@@ -37,8 +39,14 @@ namespace OnDaGo.API.Services
                 try
                 {
                     var closed = await _vehicles.TimeoutStaleDutiesAsync(_timeout);
-                    if (closed > 0)
-                        _logger.LogInformation("Duty timeout: closed {Count} abandoned shift(s).", closed);
+                    if (closed.Count > 0)
+                    {
+                        // Durable shift history (Tier 3) — RecordAsync never throws.
+                        var endedAt = DateTime.UtcNow;
+                        foreach (var vehicle in closed)
+                            await _shiftLogs.RecordAsync(vehicle, "timeout", endedAt);
+                        _logger.LogInformation("Duty timeout: closed {Count} abandoned shift(s).", closed.Count);
+                    }
                 }
                 catch (Exception ex)
                 {

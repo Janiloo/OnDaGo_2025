@@ -15,17 +15,23 @@ namespace OnDaGo.API.Controllers
         private readonly VehicleService _vehicleService;
         private readonly UserService _userService;
         private readonly StopArrivalService _stopArrivals;
+        private readonly TelemetryService _telemetry;
+        private readonly ShiftLogService _shiftLogs;
         private readonly IHubContext<VehicleHub> _vehicleHub;
 
         public VehicleController(
             VehicleService vehicleService,
             UserService userService,
             StopArrivalService stopArrivals,
+            TelemetryService telemetry,
+            ShiftLogService shiftLogs,
             IHubContext<VehicleHub> vehicleHub)
         {
             _vehicleService = vehicleService;
             _userService = userService;
             _stopArrivals = stopArrivals;
+            _telemetry = telemetry;
+            _shiftLogs = shiftLogs;
             _vehicleHub = vehicleHub;
         }
 
@@ -88,9 +94,11 @@ namespace OnDaGo.API.Controllers
             if (updated != null)
             {
                 await SendToVehicleGroups(VehicleHub.VehicleUpdated, updated, updated.RouteId);
-                // Historical-ETA groundwork: record terminal arrivals off the hot
-                // path (fire-and-forget; ObserveAsync never throws).
+                // Analytics side channels, off the hot path (fire-and-forget;
+                // both ObserveAsync methods never throw): terminal arrivals for
+                // historical ETAs, telemetry samples for trends/heatmaps.
                 _ = _stopArrivals.ObserveAsync(updated);
+                _ = _telemetry.ObserveAsync(updated);
             }
 
             return NoContent();
@@ -123,6 +131,9 @@ namespace OnDaGo.API.Controllers
             if (vehicle == null) return NotFound("Vehicle not found");
 
             await _vehicleService.SetVehicleOfflineAsync(puvNo);
+            // Durable shift history (Tier 3): `vehicle` was fetched before the
+            // close, so its duty fields still describe the shift that just ended.
+            _ = _shiftLogs.RecordAsync(vehicle, "driver", DateTime.UtcNow);
             // Offline reaches the same groups the vehicle's live updates did, so a
             // route-filtered commuter still sees it drop (use its pre-offline route).
             await SendToVehicleGroups(VehicleHub.VehicleOffline, puvNo, vehicle.RouteId);
