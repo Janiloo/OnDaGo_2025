@@ -8,6 +8,7 @@ export const COMPANY_NAV: NavItem[] = [
   { label: "Vehicles", icon: "🚐", to: "/company/vehicles" },
   { label: "Drivers", icon: "🧑‍✈️", to: "/company/drivers" },
   { label: "Branding", icon: "🎨", to: "/company/branding" },
+  { label: "Analytics", icon: "📈", disabled: true }, // Tier 3 — coming soon
   { label: "Fares", icon: "💵", disabled: true },
   { label: "Reports", icon: "📋", disabled: true },
   { label: "Change password", icon: "🔐", to: "/change-password" },
