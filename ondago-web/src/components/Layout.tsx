@@ -30,7 +30,7 @@ export default function Layout({
         <div style={s.brand}>
           <div style={s.logo}>🚌</div>
           <div>
-            <div style={s.brandName}>OnDaGO</div>
+            <div style={s.brandName}>ParaPo</div>
             <div style={s.brandArea}>{area} Console</div>
           </div>
         </div>

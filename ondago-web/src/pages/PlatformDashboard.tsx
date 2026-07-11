@@ -37,7 +37,7 @@ export default function PlatformDashboard() {
     <Layout area="Platform" nav={NAV}>
       <h1 style={s.h1}>Platform overview</h1>
       <p style={s.sub}>
-        You're signed in as an OnDaGO <b>platform super admin</b>. From here you manage every transport company on
+        You're signed in as a ParaPo <b>platform super admin</b>. From here you manage every transport company on
         the platform.
       </p>
 

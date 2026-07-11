@@ -6,11 +6,12 @@ export const COMPANY_NAV: NavItem[] = [
   { label: "Terminals", icon: "🚏", to: "/company/terminals" },
   { label: "Routes", icon: "🛣️", to: "/company/routes" },
   { label: "Vehicles", icon: "🚐", to: "/company/vehicles" },
+  { label: "Fleet Map", icon: "🗺️", to: "/company/fleet" },
   { label: "Drivers", icon: "🧑‍✈️", to: "/company/drivers" },
+  { label: "Reports", icon: "📋", to: "/company/reports" },
   { label: "Branding", icon: "🎨", to: "/company/branding" },
   { label: "Analytics", icon: "📈", disabled: true }, // Tier 3 — coming soon
   { label: "Fares", icon: "💵", disabled: true },
-  { label: "Reports", icon: "📋", disabled: true },
   { label: "Change password", icon: "🔐", to: "/change-password" },
 ];
 
@@ -44,6 +45,9 @@ export interface Vehicle {
   maxPassengerCount: number;
   routeId: string | null;
   lastUpdated: string | null;
+  /** Latest GPS position from the broadcast stream (0/0 until first broadcast). */
+  currentLat?: number;
+  currentLong?: number;
   /** "Active" | "Inactive" — null/undefined (legacy) means Active. */
   status?: string | null;
   /** "OnDuty" | "OffDuty" — recorded shift intent; null/undefined (legacy) means OffDuty. */
@@ -52,6 +56,22 @@ export interface Vehicle {
   dutyEndedAt?: string | null;
   /** "driver" | "timeout" — how the last shift ended. */
   dutyEndReason?: string | null;
+}
+
+export interface ReportInfo {
+  id: string;
+  companyId: string | null;
+  reporterRole: "Commuter" | "Driver" | null;
+  reporterName: string | null;
+  plateNumber: string | null;
+  vehicleId: string | null;
+  subject: string;
+  description: string;
+  status: string;
+  isImportant: boolean;
+  incidentAt: string | null;
+  incidentLocation: string | null;
+  createdAt: string;
 }
 
 export interface Driver {

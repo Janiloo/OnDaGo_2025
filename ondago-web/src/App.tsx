@@ -10,6 +10,8 @@ import CompanyRoutesPage from "./pages/CompanyRoutesPage";
 import CompanyVehiclesPage from "./pages/CompanyVehiclesPage";
 import CompanyDriversPage from "./pages/CompanyDriversPage";
 import CompanyBrandingPage from "./pages/CompanyBrandingPage";
+import CompanyReportsPage from "./pages/CompanyReportsPage";
+import CompanyFleetPage from "./pages/CompanyFleetPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { colors } from "./theme";
@@ -102,6 +104,22 @@ export default function App() {
         element={
           <ProtectedRoute allow="company">
             <CompanyBrandingPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/company/reports"
+        element={
+          <ProtectedRoute allow="company">
+            <CompanyReportsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/company/fleet"
+        element={
+          <ProtectedRoute allow="company">
+            <CompanyFleetPage />
           </ProtectedRoute>
         }
       />
