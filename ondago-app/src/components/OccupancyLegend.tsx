@@ -8,13 +8,15 @@ import { useTheme } from "../store/ThemeContext";
 /**
  * Tiny tappable legend explaining the marker color code. Collapsed to a single
  * chip by default so it never crowds the map; tap to expand the full scale.
+ * Tiers are fill percentages — seat capacity varies per vehicle, so absolute
+ * counts would only be true for one size of PUV.
  */
 const TIERS: { label: string; sample: number }[] = [
-  { label: "0–5", sample: 0 },
-  { label: "6–10", sample: 6 },
-  { label: "11–15", sample: 11 },
-  { label: "16–17", sample: 16 },
-  { label: "18", sample: 18 },
+  { label: "Available", sample: 0 },
+  { label: "Moderate", sample: 30 },
+  { label: "High", sample: 60 },
+  { label: "Nearly full", sample: 85 },
+  { label: "Full", sample: 100 },
 ];
 
 export function OccupancyLegend({ top }: { top: number }) {
@@ -29,12 +31,12 @@ export function OccupancyLegend({ top }: { top: number }) {
       {open ? (
         <View>
           <View style={styles.headerRow}>
-            <Text style={[type.caption, { color: palette.textMuted, fontWeight: "700" }]}>Seats occupied</Text>
+            <Text style={[type.caption, { color: palette.textMuted, fontWeight: "700" }]}>How full</Text>
             <Ionicons name="chevron-up" size={13} color={palette.textMuted} />
           </View>
           {TIERS.map((t) => (
             <View key={t.label} style={styles.row}>
-              <View style={[styles.dot, { backgroundColor: occupancyColor(t.sample) }]} />
+              <View style={[styles.dot, { backgroundColor: occupancyColor(t.sample, 100) }]} />
               <Text style={[type.caption, { color: palette.text }]}>{t.label}</Text>
             </View>
           ))}
@@ -42,7 +44,7 @@ export function OccupancyLegend({ top }: { top: number }) {
       ) : (
         <View style={styles.chip}>
           {TIERS.map((t) => (
-            <View key={t.label} style={[styles.dot, { backgroundColor: occupancyColor(t.sample), marginRight: 2 }]} />
+            <View key={t.label} style={[styles.dot, { backgroundColor: occupancyColor(t.sample, 100), marginRight: 2 }]} />
           ))}
           <Text style={[type.caption, { color: palette.textMuted, marginLeft: 4, fontWeight: "700" }]}>Seats</Text>
         </View>

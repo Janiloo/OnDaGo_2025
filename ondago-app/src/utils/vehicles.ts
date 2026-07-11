@@ -1,28 +1,39 @@
 import { Vehicle } from "../types";
 import { VEHICLE_STALE_MS } from "../config";
 
-/** Every PUV seats 18; occupancy tiers/labels are keyed to that. */
+/** Fallback capacity for legacy records that never carried one. Seat capacity
+ * is per-vehicle (set by the company admin) — never assume it. */
 export const MAX_CAPACITY = 18;
 
+/** How full a vehicle is, as a 0..1+ ratio of ITS OWN capacity. */
+function occupancyRatio(count: number, max?: number): number {
+  const capacity = max && max > 0 ? max : MAX_CAPACITY;
+  return count / capacity;
+}
+
 /**
- * Occupancy status color by absolute passenger count (max 18). Fixed,
- * theme-independent status palette so the meaning is consistent everywhere:
- *   0–5 green · 6–10 yellow · 11–15 orange · 16–17 red · 18 dark red.
+ * Occupancy status color by fill ratio. Fixed, theme-independent status
+ * palette so the meaning is consistent everywhere. The thresholds reproduce
+ * the historical 18-seat tiers exactly (6/18, 11/18, 16/18, 18/18) while
+ * scaling honestly to any capacity:
+ *   <30% green · <60% yellow · <85% orange · <100% red · full dark red.
  */
-export function occupancyColor(count: number): string {
-  if (count >= 18) return "#7F1D1D"; // full
-  if (count >= 16) return "#DC2626"; // nearly full
-  if (count >= 11) return "#F97316"; // high
-  if (count >= 6) return "#EAB308"; // moderate
+export function occupancyColor(count: number, max?: number): string {
+  const r = occupancyRatio(count, max);
+  if (r >= 1) return "#7F1D1D"; // full
+  if (r >= 0.85) return "#DC2626"; // nearly full
+  if (r >= 0.6) return "#F97316"; // high
+  if (r >= 0.3) return "#EAB308"; // moderate
   return "#16A34A"; // low
 }
 
 /** Short status word for the current occupancy tier. */
-export function occupancyLabel(count: number): string {
-  if (count >= 18) return "FULL";
-  if (count >= 16) return "Nearly full";
-  if (count >= 11) return "High";
-  if (count >= 6) return "Moderate";
+export function occupancyLabel(count: number, max?: number): string {
+  const r = occupancyRatio(count, max);
+  if (r >= 1) return "FULL";
+  if (r >= 0.85) return "Nearly full";
+  if (r >= 0.6) return "High";
+  if (r >= 0.3) return "Moderate";
   return "Available";
 }
 

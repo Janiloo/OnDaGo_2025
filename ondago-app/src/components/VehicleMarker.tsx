@@ -37,7 +37,7 @@ export function VehicleMarker({
   const { palette } = useTheme();
   const count = vehicle.passengerCount;
   const max = vehicle.maxPassengerCount || MAX_CAPACITY;
-  const color = stale ? palette.textMuted : occupancyColor(count);
+  const color = stale ? palette.textMuted : occupancyColor(count, max);
 
   const signature = `${count}-${color}`;
   const [tracks, setTracks] = useState(true);

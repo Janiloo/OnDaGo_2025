@@ -36,8 +36,16 @@ namespace OnDaGo.API.Controllers
             [Required, StringLength(32, MinimumLength = 1)]
             public string PuvNo { get; set; } = "";
 
-            [Range(1, 200)]
-            public int MaxPassengerCount { get; set; } = 18;
+            /// <summary>Seat capacity — required; there is no standard PUV size
+            /// (jeepneys ~18, coasters ~25-30).</summary>
+            [Required, Range(1, 200)]
+            public int? MaxPassengerCount { get; set; }
+        }
+
+        public class CapacityRequest
+        {
+            [Required, Range(1, 200)]
+            public int? MaxPassengerCount { get; set; }
         }
 
         public class VehicleStatusRequest
@@ -70,7 +78,7 @@ namespace OnDaGo.API.Controllers
             var vehicle = new VehicleModel
             {
                 PuvNo = puvNo,
-                MaxPassengerCount = body.MaxPassengerCount,
+                MaxPassengerCount = body.MaxPassengerCount!.Value,
                 PassengerCount = 0,
                 CurrentLat = 0,
                 CurrentLong = 0,
@@ -79,6 +87,21 @@ namespace OnDaGo.API.Controllers
             await _vehicles.InsertAsync(vehicle); // stamps CompanyId
 
             return CreatedAtAction(nameof(GetAll), new { id = vehicle.Id }, vehicle);
+        }
+
+        /// <summary>Change a vehicle's seat capacity. Occupancy displays, ETA seat
+        /// counts, and broadcast clamping all key off this value.</summary>
+        [HttpPut("{puvNo}/capacity")]
+        public async Task<IActionResult> SetCapacity(string puvNo, [FromBody] CapacityRequest body)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            var filter = Builders<VehicleModel>.Filter.Eq(v => v.PuvNo, puvNo);
+            var update = Builders<VehicleModel>.Update.Set(v => v.MaxPassengerCount, body.MaxPassengerCount!.Value);
+            var result = await _vehicles.UpdateOneAsync(filter, update);
+            if (result.MatchedCount == 0) return NotFound("Vehicle not found in your company.");
+
+            return Ok(new { puvNo, maxPassengerCount = body.MaxPassengerCount.Value });
         }
 
         /// <summary>Activate or deactivate a vehicle.</summary>

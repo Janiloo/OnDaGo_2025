@@ -27,7 +27,7 @@ export default function CompanyVehiclesPage() {
   // Create form
   const [showForm, setShowForm] = useState(false);
   const [newPuv, setNewPuv] = useState("");
-  const [newCapacity, setNewCapacity] = useState("18");
+  const [newCapacity, setNewCapacity] = useState("");
   const [saving, setSaving] = useState(false);
 
   const activeRoutes = useMemo(() => routes.filter((r) => r.status === "Active"), [routes]);
@@ -61,15 +61,20 @@ export default function CompanyVehiclesPage() {
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
+    const capacity = Number(newCapacity);
+    if (!Number.isInteger(capacity) || capacity < 1 || capacity > 200) {
+      setError("Seat capacity must be a whole number between 1 and 200.");
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
       await api.post("/api/admin/vehicles", {
         puvNo: newPuv.trim(),
-        maxPassengerCount: Number(newCapacity) || 18,
+        maxPassengerCount: capacity,
       });
       setNewPuv("");
-      setNewCapacity("18");
+      setNewCapacity("");
       setShowForm(false);
       await load();
     } catch (err) {
@@ -112,6 +117,29 @@ export default function CompanyVehiclesPage() {
       await load();
     } catch (err) {
       setError(errorMessage(err, "Could not assign driver."));
+    } finally {
+      setBusyPuv(null);
+    }
+  };
+
+  /** Inline capacity edit — saves on blur when the value actually changed. */
+  const saveCapacity = async (v: Vehicle, raw: string) => {
+    const capacity = Number(raw);
+    if (!Number.isInteger(capacity) || capacity < 1 || capacity > 200) {
+      setError("Seat capacity must be a whole number between 1 and 200.");
+      await load(); // snap the input back to the stored value
+      return;
+    }
+    if (capacity === v.maxPassengerCount) return;
+    setBusyPuv(v.puvNo);
+    setError(null);
+    try {
+      await api.put(`/api/admin/vehicles/${encodeURIComponent(v.puvNo)}/capacity`, {
+        maxPassengerCount: capacity,
+      });
+      await load();
+    } catch (err) {
+      setError(errorMessage(err, "Could not update the seat capacity."));
     } finally {
       setBusyPuv(null);
     }
@@ -168,12 +196,14 @@ export default function CompanyVehiclesPage() {
               />
             </label>
             <label style={s.field}>
-              <span style={s.fieldLabel}>Seating capacity</span>
+              <span style={s.fieldLabel}>Seat capacity *</span>
               <input
                 style={s.input}
                 type="number"
                 min={1}
                 max={200}
+                required
+                placeholder="e.g. 10, 18, 25, 30"
                 value={newCapacity}
                 onChange={(e) => setNewCapacity(e.target.value)}
               />
@@ -210,6 +240,7 @@ export default function CompanyVehiclesPage() {
                 <th style={s.th}>Status</th>
                 <th style={s.th}>Duty</th>
                 <th style={s.th}>Occupancy</th>
+                <th style={s.th}>Capacity</th>
                 <th style={s.th}>Assigned route</th>
                 <th style={s.th}>Driver</th>
                 <th style={s.th}>Actions</th>
@@ -247,6 +278,22 @@ export default function CompanyVehiclesPage() {
                       <span style={s.occ}>
                         {v.passengerCount}/{v.maxPassengerCount}
                       </span>
+                    </td>
+                    <td style={s.td}>
+                      <input
+                        // Remount when the stored value changes so defaultValue refreshes.
+                        key={`${v.puvNo}-${v.maxPassengerCount}`}
+                        style={s.capacityInput}
+                        type="number"
+                        min={1}
+                        max={200}
+                        disabled={busy}
+                        defaultValue={v.maxPassengerCount}
+                        onBlur={(e) => saveCapacity(v, e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                        }}
+                      />
                     </td>
                     <td style={s.td}>
                       <select
@@ -348,6 +395,16 @@ const s: any = {
   td: { padding: "14px 14px", color: colors.text, borderBottom: `1px solid ${colors.border}`, verticalAlign: "middle" },
   name: { fontWeight: 700, fontFamily: "monospace", fontSize: 15 },
   occ: { fontFamily: "monospace", fontSize: 14 },
+  capacityInput: {
+    background: colors.surfaceAlt,
+    color: colors.text,
+    border: `1px solid ${colors.border}`,
+    borderRadius: radius.md,
+    padding: "8px 10px",
+    fontSize: 13,
+    width: 72,
+    fontFamily: "monospace",
+  },
   pill: { fontSize: 12, fontWeight: 700, border: "1px solid", borderRadius: radius.pill, padding: "3px 10px", whiteSpace: "nowrap" },
   select: { background: colors.surfaceAlt, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: radius.md, padding: "8px 10px", fontSize: 13, minWidth: 170 },
   smallBtn: {

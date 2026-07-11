@@ -58,7 +58,7 @@ export function VehicleDetailSheet({
   const max = vehicle.maxPassengerCount;
   const full = max > 0 && vehicle.passengerCount >= max;
   const ratio = max > 0 ? vehicle.passengerCount / max : 0;
-  const occ = stale ? palette.textMuted : occupancyColor(vehicle.passengerCount);
+  const occ = stale ? palette.textMuted : occupancyColor(vehicle.passengerCount, max);
 
   // Arrival estimates (only meaningful for a live vehicle with known stops).
   const etas = useMemo(() => {
@@ -125,7 +125,7 @@ export function VehicleDetailSheet({
           <Text style={[type.caption, { color: palette.textMuted }]}>
             {full
               ? "FULL — no seats available"
-              : `${occupancyLabel(vehicle.passengerCount)} · ${Math.max(0, max - vehicle.passengerCount)} seat${max - vehicle.passengerCount === 1 ? "" : "s"} free`}
+              : `${occupancyLabel(vehicle.passengerCount, max)} · ${Math.max(0, max - vehicle.passengerCount)} seat${max - vehicle.passengerCount === 1 ? "" : "s"} free`}
           </Text>
         </View>
       </View>

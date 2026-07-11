@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using OnDaGo.API.Hubs;
 using OnDaGo.API.Services;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -70,6 +71,13 @@ namespace OnDaGo.API.Controllers
             var driver = await _userService.FindDriverByPlateAsync(puvNo);
             if (driver?.Status == "Disabled")
                 return StatusCode(403, "This driver account has been disabled by your company admin.");
+
+            // The vehicle's seat capacity is the occupancy ceiling everywhere —
+            // clamp rather than reject so a stale driver app can't fail to
+            // broadcast position just because its count is out of range.
+            request.PassengerCount = Math.Max(0, vehicle.MaxPassengerCount > 0
+                ? Math.Min(request.PassengerCount, vehicle.MaxPassengerCount)
+                : request.PassengerCount);
 
             await _vehicleService.UpdateVehicleStatusAsync(puvNo, request);
 
