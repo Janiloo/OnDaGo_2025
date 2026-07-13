@@ -361,3 +361,20 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Secrets & signing keys — never commit these
+appsettings.json
+appsettings.*.json
+!appsettings.Development.json
+*.keystore
+
+# React Native / Expo
+ondago-app/node_modules/
+ondago-app/.expo/
+
+# Web admin console
+ondago-web/node_modules/
+ondago-web/dist/
+
+# Claude Code
+.claude/

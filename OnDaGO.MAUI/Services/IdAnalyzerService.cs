@@ -12,7 +12,7 @@ namespace OnDaGO.MAUI.Services
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiUrl = "https://api.idanalyzer.com/scan"; // ID Analyzer API endpoint
-        private readonly string _apiKey = "YOUR_ID_ANALYZER_API_KEY"; // Restricted API Key
+        private readonly string _apiKey = "YOUR_ID_ANALYZER_API_KEY";
 
         public IdAnalyzerService(HttpClient httpClient)
         {
