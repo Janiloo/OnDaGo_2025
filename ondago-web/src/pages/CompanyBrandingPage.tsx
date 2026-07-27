@@ -177,7 +177,7 @@ export default function CompanyBrandingPage() {
                       Operated by {profile?.name ?? "—"}
                     </div>
                     <div style={{ color: validColor && color.trim() ? color.trim() : colors.textMuted, fontSize: 12, fontWeight: 700 }}>
-                      Montalban–Cubao · 2 stops
+                      Your route · 2 stops
                     </div>
                   </div>
                 </div>

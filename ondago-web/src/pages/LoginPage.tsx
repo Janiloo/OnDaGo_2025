@@ -32,7 +32,7 @@ export default function LoginPage() {
         <div style={s.brand}>
           <div style={s.logo}>🚌</div>
           <div>
-            <div style={s.title}>ParaPo</div>
+            <div style={s.title}>Sabako</div>
             <div style={s.subtitle}>Admin Console</div>
           </div>
         </div>

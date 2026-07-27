@@ -1,0 +1,125 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background var(--m-fast) var(--m-ease), border-color var(--m-fast) var(--m-ease),
+    color var(--m-fast) var(--m-ease), transform var(--m-fast) var(--m-ease), box-shadow var(--m-fast) var(--m-ease);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* CSS Modules load after index.css, so a variant's own box-shadow would beat the
+   global :focus-visible ring (equal specificity, later wins). Re-assert the ring
+   here — and compose it with the primary variant's inset edge so we keep both. */
+.btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+.primary:focus-visible {
+  box-shadow: var(--ring), inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* ---- Sizes ---- */
+.sm {
+  padding: 6px var(--s-3);
+  font-size: var(--t-sm);
+  min-height: 32px;
+}
+.md {
+  padding: 9px var(--s-4);
+  font-size: var(--t-body);
+  min-height: 38px;
+}
+.lg {
+  padding: 12px var(--s-5);
+  font-size: 15px;
+  min-height: 44px;
+}
+
+/* ---- Primary: enamel vermillion. The inset bottom edge gives it the depth of
+       painted metal rather than a flat rectangle. ---- */
+.primary {
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+}
+.primary:hover {
+  background: var(--c-primary-hover);
+}
+.primary:active:not(:disabled) {
+  background: var(--c-primary-active);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.18);
+}
+
+/* ---- Secondary: quiet, for the many actions that aren't the point ---- */
+.secondary {
+  background: var(--c-surface-alt);
+  color: var(--c-text);
+  border-color: var(--c-border);
+}
+.secondary:hover {
+  background: var(--c-surface-hover);
+  border-color: var(--c-border-strong);
+}
+
+/* ---- Danger ---- */
+.danger {
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
+  border-color: color-mix(in srgb, var(--c-danger) 35%, transparent);
+}
+.danger:hover {
+  background: color-mix(in srgb, var(--c-danger) 22%, var(--c-danger-soft));
+  border-color: var(--c-danger);
+}
+
+/* ---- Ghost: toolbar / table-row actions ---- */
+.ghost {
+  background: transparent;
+  color: var(--c-text-muted);
+}
+.ghost:hover {
+  background: var(--c-surface-alt);
+  color: var(--c-text);
+}
+
+.block {
+  width: 100%;
+}
+
+/* ---- Loading ---- */
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 600ms linear infinite;
+  flex: none;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 1600ms;
+  }
+}

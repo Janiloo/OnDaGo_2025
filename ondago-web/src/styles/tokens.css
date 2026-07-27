@@ -1,0 +1,120 @@
+/**
+ * Sabako design tokens — the single source of truth for the web console.
+ *
+ * DIRECTION: "jeepney at dusk". The palette is rooted in Filipino road culture
+ * rather than framework defaults — hand-painted enamel vermillion, the marigold
+ * of the flag's sun, and flag blue for information, over a deep indigo night.
+ * (The previous palette was stock Tailwind: orange-500, green-600, red-600…
+ * which is why it read as generic.)
+ *
+ * Bold in the CHROME, calm in the DATA: saturated brand color belongs in the
+ * sidebar, headers, primary actions and empty states. Tables and forms stay
+ * quiet so numbers remain readable.
+ *
+ * Consumed two ways:
+ *   - CSS Modules read the custom properties below (preferred — supports
+ *     :hover/:focus-visible/transitions, which inline styles cannot express).
+ *   - theme.ts mirrors these values for the JS-side call sites that remain.
+ * Keep the two in sync when editing.
+ *
+ * Light mode: every color below is semantic, so a light theme is a drop-in
+ * `:root[data-theme="light"]` block later — no component changes needed.
+ */
+
+:root {
+  /* ---- Surfaces: deep indigo night ---- */
+  --c-bg: #0b0e1a;
+  --c-surface: #141827;
+  --c-surface-alt: #1d2233;
+  --c-surface-hover: #232941;
+  --c-border: #2a3145;
+  --c-border-strong: #3a4460;
+
+  /* ---- Text ---- */
+  --c-text: #eef1f8;
+  --c-text-muted: #9aa3b8;
+  --c-text-faint: #6b7590;
+
+  /* ---- Brand: jeepney enamel vermillion ----
+     Dark text on vermillion (not white) — hits 4.9:1 AA and reads like
+     hand-painted signage. */
+  --c-primary: #e24e1b;
+  --c-primary-hover: #f25f2d;
+  --c-primary-active: #c94214;
+  --c-primary-soft: #3a1b10;
+  --c-on-primary: #0b0e1a;
+
+  /* ---- Accent: marigold, the sun of the flag ---- */
+  --c-accent: #f2b233;
+  --c-accent-soft: #3a2c10;
+  --c-on-accent: #0b0e1a;
+
+  /* ---- Status ---- */
+  --c-success: #3fbf7f;
+  --c-success-soft: #0f2e20;
+  --c-danger: #f2624f;
+  --c-danger-soft: #3a1714;
+  --c-warning: #e8a020;
+  --c-warning-soft: #382a0f;
+  --c-info: #3d7be0; /* flag blue */
+  --c-info-soft: #12233f;
+
+  /* ---- Map / modal scrim ---- */
+  --c-overlay: rgba(11, 14, 26, 0.88);
+
+  /* ---- Spacing: 4px base. Use these, never ad-hoc padding. ---- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
+
+  /* ---- Radius ---- */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+  --r-pill: 999px;
+
+  /* ---- Type ----
+     Display = signage voice (headings, brand, stat numbers).
+     Sans    = everything else. Both fall back to system fonts if the webfont
+     hasn't loaded, so nothing shifts layout catastrophically. */
+  --font-display: "Archivo Black", "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+
+  --t-display: 30px;
+  --t-h1: 24px;
+  --t-h2: 18px;
+  --t-body: 14px;
+  --t-sm: 13px;
+  --t-xs: 11px;
+
+  /* ---- Elevation: one scale, used everywhere ---- */
+  --e-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --e-2: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --e-3: 0 12px 32px rgba(0, 0, 0, 0.45);
+
+  /* ---- Motion: 120–240ms. Long enough to read, short enough to feel instant. ---- */
+  --m-fast: 120ms;
+  --m-base: 180ms;
+  --m-slow: 240ms;
+  --m-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---- Focus ring: one definition, applied globally ---- */
+  --ring: 0 0 0 3px rgba(226, 78, 27, 0.45);
+}
+
+/* Respect users who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --m-fast: 0ms;
+    --m-base: 0ms;
+    --m-slow: 0ms;
+  }
+}

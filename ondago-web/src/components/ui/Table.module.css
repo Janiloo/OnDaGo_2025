@@ -1,0 +1,83 @@
+/* Wide tables scroll inside their own container so the page body never scrolls
+   horizontally. */
+.scroll {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--t-body);
+}
+
+.th {
+  text-align: left;
+  padding: var(--s-3) var(--s-4);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--c-text-faint);
+  background: var(--c-surface-alt);
+  border-bottom: 1px solid var(--c-border);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.td {
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--c-border);
+  color: var(--c-text);
+  vertical-align: middle;
+}
+
+/* Last row shouldn't draw a rule against the container edge. */
+.tbody tr:last-child .td {
+  border-bottom: none;
+}
+
+.tr {
+  transition: background var(--m-fast) var(--m-ease);
+}
+.tbody .tr:hover {
+  background: var(--c-surface-alt);
+}
+
+/* Numeric columns: right-aligned with tabular figures so digits line up. */
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Secondary text inside a cell (e.g. a subtitle under a plate number). */
+.sub {
+  display: block;
+  font-size: var(--t-sm);
+  color: var(--c-text-muted);
+  margin-top: 2px;
+}
+
+/* Row actions: revealed on row hover on pointer devices, always visible on
+   touch (where there is no hover). */
+.actions {
+  display: flex;
+  gap: var(--s-1);
+  justify-content: flex-end;
+}
+@media (hover: hover) {
+  .actions {
+    opacity: 0;
+    transition: opacity var(--m-fast) var(--m-ease);
+  }
+  .tr:hover .actions,
+  .tr:focus-within .actions {
+    opacity: 1;
+  }
+}

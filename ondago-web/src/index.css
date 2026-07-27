@@ -1,6 +1,16 @@
+/* Archivo superfamily: Archivo Black for the signage/display voice, Archivo for
+   UI text. Chosen because heavy grotesques echo hand-painted jeepney signboards.
+   TODO(prod): self-host these to drop the third-party request and avoid FOUT. */
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&display=swap");
+@import "./styles/tokens.css";
+
 :root {
   color-scheme: dark;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
+  /* Slightly tighter than default for a denser, more deliberate console feel. */
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
@@ -15,12 +25,26 @@ body,
 }
 
 body {
-  background: #0b1220;
-  color: #e8edf7;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-size: var(--t-body);
 }
 
-input {
+/* Headings speak in the display voice by default. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 400; /* Archivo Black is already heavy — avoid double-bolding */
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+input,
+textarea,
+select {
   font-family: inherit;
+  font-size: inherit;
 }
 
 button {
@@ -29,4 +53,46 @@ button {
 }
 button:disabled {
   cursor: default;
+}
+
+/* One focus ring for the whole app. Keyboard users get a visible ring; mouse
+   users don't. Previously there were zero focus styles anywhere — this is both
+   a polish and an accessibility fix. */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: var(--r-sm);
+}
+
+::selection {
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+}
+
+/* Live-updating counts shouldn't jitter as digits change width. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scrollbars that match the surface instead of the OS default. */
+* {
+  scrollbar-color: var(--c-border-strong) transparent;
+  scrollbar-width: thin;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--c-border-strong);
+  border-radius: var(--r-pill);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--c-text-faint);
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
 }

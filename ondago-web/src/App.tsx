@@ -13,6 +13,7 @@ import CompanyBrandingPage from "./pages/CompanyBrandingPage";
 import CompanyReportsPage from "./pages/CompanyReportsPage";
 import CompanyFleetPage from "./pages/CompanyFleetPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
+import UIKitPage from "./pages/UIKitPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { colors } from "./theme";
 
@@ -39,6 +40,9 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={user ? <Navigate to={home} replace /> : <LoginPage />} />
+      {/* Design-system catalogue. Unauthenticated so it can be reviewed without a
+          login; remove once every page is migrated onto the UI kit. */}
+      <Route path="/ui" element={<UIKitPage />} />
       <Route
         path="/change-password"
         element={user ? <ChangePasswordPage /> : <Navigate to="/login" replace />}

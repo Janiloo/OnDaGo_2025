@@ -1,0 +1,92 @@
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--c-text-muted);
+}
+
+.req {
+  color: var(--c-primary);
+  margin-left: 2px;
+}
+
+.control {
+  width: 100%;
+  background: var(--c-surface-alt);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  padding: 10px var(--s-3);
+  font-size: var(--t-body);
+  transition: border-color var(--m-fast) var(--m-ease), background var(--m-fast) var(--m-ease);
+}
+
+.control::placeholder {
+  color: var(--c-text-faint);
+}
+
+.control:hover:not(:disabled):not(:focus) {
+  border-color: var(--c-border-strong);
+}
+
+/* The global :focus-visible ring covers keyboard nav; inputs additionally show
+   the brand border while typing, which :focus (not :focus-visible) gives us. */
+.control:focus {
+  outline: none;
+  border-color: var(--c-primary);
+  box-shadow: var(--ring);
+}
+
+.control:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.invalid {
+  border-color: var(--c-danger);
+}
+.invalid:focus {
+  border-color: var(--c-danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-danger) 40%, transparent);
+}
+
+.textarea {
+  min-height: 96px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* Native select needs its own arrow once we remove the OS appearance. */
+.select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--c-text-muted) 50%),
+    linear-gradient(135deg, var(--c-text-muted) 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(50% + 2px), calc(100% - 13px) calc(50% + 2px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: var(--s-8);
+}
+
+.hint {
+  font-size: var(--t-sm);
+  color: var(--c-text-faint);
+}
+
+.error {
+  font-size: var(--t-sm);
+  color: var(--c-danger);
+  font-weight: 500;
+}
+
+/* Form layout helper: responsive two-up row that stacks on narrow screens. */
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--s-4);
+}

@@ -1,0 +1,147 @@
+/* ---- Badge / pill ---- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.neutral {
+  background: var(--c-surface-alt);
+  color: var(--c-text-muted);
+  border-color: var(--c-border);
+}
+.brand {
+  background: var(--c-primary-soft);
+  color: var(--c-primary);
+}
+.success {
+  background: var(--c-success-soft);
+  color: var(--c-success);
+}
+.danger {
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
+}
+.warning {
+  background: var(--c-warning-soft);
+  color: var(--c-warning);
+}
+.info {
+  background: var(--c-info-soft);
+  color: var(--c-info);
+}
+
+/* Live status gets a pulsing dot so "LIVE" is legible at a glance. */
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.pulse {
+  animation: pulse 1.8s var(--m-ease) infinite;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
+  }
+}
+
+/* ---- Alert ---- */
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  font-size: var(--t-body);
+  border: 1px solid transparent;
+  line-height: 1.5;
+}
+.alertError {
+  background: var(--c-danger-soft);
+  color: var(--c-danger);
+  border-color: color-mix(in srgb, var(--c-danger) 30%, transparent);
+}
+.alertSuccess {
+  background: var(--c-success-soft);
+  color: var(--c-success);
+  border-color: color-mix(in srgb, var(--c-success) 30%, transparent);
+}
+.alertInfo {
+  background: var(--c-info-soft);
+  color: var(--c-info);
+  border-color: color-mix(in srgb, var(--c-info) 30%, transparent);
+}
+.alertWarning {
+  background: var(--c-warning-soft);
+  color: var(--c-warning);
+  border-color: color-mix(in srgb, var(--c-warning) 30%, transparent);
+}
+
+/* ---- Empty state ---- */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--s-12) var(--s-6);
+  gap: var(--s-3);
+}
+.emptyMark {
+  color: var(--c-border-strong);
+  margin-bottom: var(--s-1);
+}
+.emptyTitle {
+  font-family: var(--font-display);
+  font-size: var(--t-h2);
+  color: var(--c-text);
+}
+.emptyBody {
+  color: var(--c-text-muted);
+  font-size: var(--t-body);
+  max-width: 44ch;
+  margin: 0;
+  line-height: 1.55;
+}
+.emptyActions {
+  margin-top: var(--s-3);
+  display: flex;
+  gap: var(--s-2);
+}
+
+/* ---- Skeleton ---- */
+.skeleton {
+  background: linear-gradient(90deg, var(--c-surface-alt) 25%, var(--c-surface-hover) 50%, var(--c-surface-alt) 75%);
+  background-size: 200% 100%;
+  border-radius: var(--r-sm);
+  animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
