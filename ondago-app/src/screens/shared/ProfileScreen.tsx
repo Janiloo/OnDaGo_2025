@@ -5,8 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Card, ListRow, Screen, SectionHeader } from "../../components/UI";
 import { Pinstripe } from "../../components/Brand";
-import { deleteAccount, getProfile } from "../../services/authApi";
-import { errorMessage } from "../../services/client";
+import { getProfile } from "../../services/authApi";
 import { useAuth } from "../../store/AuthContext";
 import { ThemeMode, useTheme } from "../../store/ThemeContext";
 import { UserProfile } from "../../types";
@@ -39,24 +38,6 @@ export default function ProfileScreen({ navigation }: any) {
     Alert.alert("Sign out?", "You'll need to sign in again.", [
       { text: "Cancel", style: "cancel" },
       { text: "Sign Out", style: "destructive", onPress: () => signOut() },
-    ]);
-  };
-
-  const confirmDelete = () => {
-    Alert.alert("Delete account?", "This permanently deletes your Sabako account. This cannot be undone.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete Forever",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteAccount();
-            await signOut();
-          } catch (error) {
-            Alert.alert("Error", errorMessage(error));
-          }
-        },
-      },
     ]);
   };
 
@@ -157,15 +138,6 @@ export default function ProfileScreen({ navigation }: any) {
         <ListRow icon="log-out-outline" label="Sign out" onPress={confirmLogout} />
       </Card>
 
-      {/* Danger zone — visually set apart from ordinary settings. */}
-      <SectionHeader title="Danger zone" icon="warning-outline" />
-      <View style={[styles.danger, { borderColor: palette.dangerSoft, backgroundColor: palette.surface }]}>
-        <ListRow icon="trash-outline" label="Delete account" destructive onPress={confirmDelete} />
-        <Text style={[type.caption, { color: palette.textMuted, paddingHorizontal: spacing.xs, paddingBottom: spacing.xs }]}>
-          Permanently removes your account and data. This cannot be undone.
-        </Text>
-      </View>
-
       <View style={{ height: spacing.lg }} />
     </Screen>
   );
@@ -193,10 +165,4 @@ const styles = StyleSheet.create({
   },
   roleRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 5 },
   divider: { height: StyleSheet.hairlineWidth, marginLeft: 42 },
-  danger: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
-  },
 });

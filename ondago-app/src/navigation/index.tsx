@@ -22,10 +22,11 @@ import ResetPasswordScreen from "../screens/auth/ResetPasswordScreen";
 import LegalScreen from "../screens/legal/LegalScreen";
 
 import CommuterHomeScreen from "../screens/commuter/CommuterHomeScreen";
-import FareMatrixScreen from "../screens/commuter/FareMatrixScreen";
 import ReportScreen from "../screens/shared/ReportScreen";
 import ProfileScreen from "../screens/shared/ProfileScreen";
 import EditProfileScreen from "../screens/shared/EditProfileScreen";
+import SettingsScreen from "../screens/settings/SettingsScreen";
+import ChatSupportScreen from "../screens/settings/ChatSupportScreen";
 
 import DriverHomeScreen from "../screens/driver/DriverHomeScreen";
 
@@ -46,6 +47,7 @@ export type AuthStackParamList = {
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tab = createBottomTabNavigator();
 const ProfileStackNav = createNativeStackNavigator();
+const SettingsStackNav = createNativeStackNavigator();
 
 function tabIcon(focusedName: IconName, name: IconName) {
   return ({ color, focused }: { color: string; focused: boolean }) => (
@@ -107,29 +109,41 @@ function ProfileStack() {
   );
 }
 
+/** Settings hub + its sub-pages (Report an Issue, Chat with Support, legal). */
+function SettingsStack() {
+  const screenOptions = useScreenOptions();
+  return (
+    <SettingsStackNav.Navigator screenOptions={screenOptions}>
+      <SettingsStackNav.Screen name="SettingsMain" component={SettingsScreen} options={{ title: "Settings" }} />
+      {/* Sub-pages carry their own large display titles, so the nav bar is just a
+          back affordance (empty title). */}
+      <SettingsStackNav.Screen name="Report" component={ReportScreen} options={{ title: "" }} />
+      <SettingsStackNav.Screen name="ChatSupport" component={ChatSupportScreen} options={{ title: "" }} />
+      <SettingsStackNav.Screen name="Legal" component={LegalScreen} options={{ title: "" }} />
+    </SettingsStackNav.Navigator>
+  );
+}
+
+// Consumer bottom nav (commuter + driver): Profile · Home · Settings. Opens on
+// Home; Report an Issue now lives under Settings.
 function CommuterTabs() {
   const tabOptions = useTabOptions();
   return (
-    <Tab.Navigator screenOptions={tabOptions} screenListeners={tabListeners}>
+    <Tab.Navigator initialRouteName="Home" screenOptions={tabOptions} screenListeners={tabListeners}>
+      <Tab.Screen
+        name="Profile"
+        component={ProfileStack}
+        options={{ headerShown: false, tabBarIcon: tabIcon("person", "person-outline") }}
+      />
       <Tab.Screen
         name="Home"
         component={CommuterHomeScreen}
         options={{ headerShown: false, tabBarIcon: tabIcon("map", "map-outline") }}
       />
       <Tab.Screen
-        name="Fares"
-        component={FareMatrixScreen}
-        options={{ title: "Fare Matrix", tabBarIcon: tabIcon("cash", "cash-outline") }}
-      />
-      <Tab.Screen
-        name="Report"
-        component={ReportScreen}
-        options={{ title: "Report an Issue", tabBarIcon: tabIcon("megaphone", "megaphone-outline") }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileStack}
-        options={{ headerShown: false, tabBarIcon: tabIcon("person", "person-outline") }}
+        name="Settings"
+        component={SettingsStack}
+        options={{ headerShown: false, tabBarIcon: tabIcon("settings", "settings-outline") }}
       />
     </Tab.Navigator>
   );
@@ -138,21 +152,21 @@ function CommuterTabs() {
 function DriverTabs() {
   const tabOptions = useTabOptions();
   return (
-    <Tab.Navigator screenOptions={tabOptions} screenListeners={tabListeners}>
-      <Tab.Screen
-        name="DriverHome"
-        component={DriverHomeScreen}
-        options={{ headerShown: false, tabBarLabel: "Map", tabBarIcon: tabIcon("map", "map-outline") }}
-      />
-      <Tab.Screen
-        name="Report"
-        component={ReportScreen}
-        options={{ title: "Report an Issue", tabBarIcon: tabIcon("megaphone", "megaphone-outline") }}
-      />
+    <Tab.Navigator initialRouteName="DriverHome" screenOptions={tabOptions} screenListeners={tabListeners}>
       <Tab.Screen
         name="Profile"
         component={ProfileStack}
         options={{ headerShown: false, tabBarIcon: tabIcon("person", "person-outline") }}
+      />
+      <Tab.Screen
+        name="DriverHome"
+        component={DriverHomeScreen}
+        options={{ headerShown: false, tabBarLabel: "Home", tabBarIcon: tabIcon("map", "map-outline") }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsStack}
+        options={{ headerShown: false, tabBarIcon: tabIcon("settings", "settings-outline") }}
       />
     </Tab.Navigator>
   );

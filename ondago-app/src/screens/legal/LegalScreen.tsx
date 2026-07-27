@@ -1,13 +1,12 @@
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Pinstripe } from "../../components/Brand";
 import { COMBINED, PRIVACY, LegalDoc } from "../../content/legal";
 import { useTheme } from "../../store/ThemeContext";
 import { fonts, spacing, type } from "../../theme";
-import { AuthStackParamList } from "../../navigation";
 
-type Props = NativeStackScreenProps<AuthStackParamList, "Legal">;
+// Loosely typed so the same screen works from both the auth and settings stacks.
+type Props = { route: { params?: { doc?: "terms" | "privacy" } } };
 
 // The "terms" link opens the combined Terms + Privacy agreement; the separate
 // "privacy" link opens the standalone Privacy Policy.

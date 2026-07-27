@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Location from "expo-location";
@@ -15,7 +15,7 @@ import { OccupancyLegend } from "../../components/OccupancyLegend";
 import { RouteFilterModal } from "../../components/RouteFilterModal";
 import { hasRealPosition, isVehicleStale } from "../../utils/vehicles";
 import { DEFAULT_MAP_REGION, ROUTE_STOPS } from "../../config";
-import { darkMapStyle, radius, spacing, type } from "../../theme";
+import { darkMapStyle, fonts, radius, spacing, type } from "../../theme";
 import { useTheme } from "../../store/ThemeContext";
 
 /**
@@ -38,6 +38,11 @@ export default function CommuterHomeScreen() {
   const [terminalMode, setTerminalMode] = useState(false);
   const [selectedTerminalId, setSelectedTerminalId] = useState<string | null>(null);
   const speedByPuv = useVehicleSpeeds(allVehicles);
+  // Map layers: "standard" = Street, "hybrid" = Satellite (with road labels).
+  // Traffic overlays live road-speed colours (red/orange/green).
+  const [mapType, setMapType] = useState<"standard" | "hybrid">("standard");
+  const [traffic, setTraffic] = useState(false);
+  const [mapMenuOpen, setMapMenuOpen] = useState(false);
 
   useEffect(() => {
     Location.requestForegroundPermissionsAsync().catch(() => {});
@@ -121,11 +126,17 @@ export default function CommuterHomeScreen() {
         style={StyleSheet.absoluteFill}
         provider={PROVIDER_GOOGLE}
         initialRegion={DEFAULT_MAP_REGION}
-        customMapStyle={isDark ? darkMapStyle : []}
+        mapType={mapType}
+        showsTraffic={traffic}
+        // Custom (dark) styling only applies to the street map, not satellite.
+        customMapStyle={isDark && mapType === "standard" ? darkMapStyle : []}
         showsUserLocation
         showsMyLocationButton={false}
         toolbarEnabled={false}
-        onPress={() => setSelectedPuv(null)}
+        onPress={() => {
+          setSelectedPuv(null);
+          setMapMenuOpen(false);
+        }}
       >
         {(showStops || terminalMode) &&
           stops.map((stop) => (
@@ -172,6 +183,18 @@ export default function CommuterHomeScreen() {
           style={[styles.fab, { backgroundColor: palette.surface, borderColor: palette.border }]}
         >
           <Ionicons name="locate" size={20} color={palette.primary} />
+        </Pressable>
+        <Pressable
+          onPress={() => setMapMenuOpen((o) => !o)}
+          style={[
+            styles.fab,
+            {
+              backgroundColor: mapMenuOpen ? palette.primary : palette.surface,
+              borderColor: mapMenuOpen ? palette.primary : palette.border,
+            },
+          ]}
+        >
+          <Ionicons name="layers-outline" size={20} color={mapMenuOpen ? palette.onPrimary : palette.primary} />
         </Pressable>
         <Pressable
           onPress={() => setShowStops((sv) => !sv)}
@@ -222,6 +245,53 @@ export default function CommuterHomeScreen() {
           <Ionicons name="business" size={20} color={terminalMode ? palette.onPrimary : palette.primary} />
         </Pressable>
       </View>
+
+      {/* Map layers menu (Street/Satellite + traffic), anchored under the FABs */}
+      {mapMenuOpen && (
+        <View
+          style={[
+            styles.mapMenu,
+            { top: insets.top + spacing.sm + 252, backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow },
+          ]}
+        >
+          <Text style={[styles.menuLabel, { color: palette.textMuted }]}>MAP TYPE</Text>
+          <View style={[styles.segment, { backgroundColor: palette.surfaceAlt }]}>
+            {(["standard", "hybrid"] as const).map((t) => {
+              const active = mapType === t;
+              return (
+                <Pressable
+                  key={t}
+                  onPress={() => setMapType(t)}
+                  style={[styles.segmentBtn, active && { backgroundColor: palette.primary }]}
+                >
+                  <Ionicons
+                    name={t === "standard" ? "map-outline" : "globe-outline"}
+                    size={14}
+                    color={active ? palette.onPrimary : palette.textMuted}
+                  />
+                  <Text style={{ color: active ? palette.onPrimary : palette.text, fontFamily: fonts.semibold, fontSize: 12 }}>
+                    {t === "standard" ? "Street" : "Satellite"}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <Text style={[styles.menuLabel, { color: palette.textMuted, marginTop: spacing.md }]}>MAP DETAILS</Text>
+          <View style={styles.detailRow}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 7, flex: 1 }}>
+              <Ionicons name="car-outline" size={16} color={palette.textMuted} />
+              <Text style={{ color: palette.text, fontSize: 13, fontFamily: fonts.medium }}>Traffic</Text>
+            </View>
+            <Switch
+              value={traffic}
+              onValueChange={setTraffic}
+              trackColor={{ true: palette.primary, false: palette.border }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+        </View>
+      )}
 
       {/* Occupancy color legend (top-left, below the status pill) */}
       <OccupancyLegend top={insets.top + 52} />
@@ -386,5 +456,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: radius.pill,
+  },
+  mapMenu: {
+    position: "absolute",
+    right: spacing.md,
+    width: 208,
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: spacing.md,
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+  },
+  menuLabel: {
+    fontSize: 11,
+    fontFamily: fonts.bold,
+    letterSpacing: 0.8,
+    marginBottom: spacing.xs,
+  },
+  segment: {
+    flexDirection: "row",
+    borderRadius: radius.md,
+    padding: 3,
+    gap: 3,
+  },
+  segmentBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    paddingVertical: 8,
+    borderRadius: radius.sm,
+  },
+  detailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 2,
   },
 });
