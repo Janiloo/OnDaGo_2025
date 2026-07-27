@@ -1,14 +1,16 @@
 import React, { useCallback, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { Badge, Card, ListRow, Screen, SectionHeader } from "../../components/UI";
+import { Card, ListRow, Screen, SectionHeader } from "../../components/UI";
+import { Pinstripe } from "../../components/Brand";
 import { deleteAccount, getProfile } from "../../services/authApi";
 import { errorMessage } from "../../services/client";
 import { useAuth } from "../../store/AuthContext";
 import { ThemeMode, useTheme } from "../../store/ThemeContext";
 import { UserProfile } from "../../types";
-import { radius, spacing, type } from "../../theme";
+import { fonts, radius, spacing, type } from "../../theme";
 
 /** Profile + settings, including the appearance (light/dark) preference. */
 export default function ProfileScreen({ navigation }: any) {
@@ -30,6 +32,8 @@ export default function ProfileScreen({ navigation }: any) {
   const email = profile?.email ?? user?.email ?? "—";
   const phone = profile?.phoneNumber || "Not set";
   const plate = profile?.plateNumber ?? user?.plateNumber;
+  const role = user?.role ?? "User";
+  const roleIcon = role === "Admin" ? "shield-checkmark" : role === "Driver" ? "bus" : "person";
 
   const confirmLogout = () => {
     Alert.alert("Sign out?", "You'll need to sign in again.", [
@@ -39,25 +43,21 @@ export default function ProfileScreen({ navigation }: any) {
   };
 
   const confirmDelete = () => {
-    Alert.alert(
-      "Delete account?",
-      "This permanently deletes your ParaPo account. This cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete Forever",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteAccount();
-              await signOut();
-            } catch (error) {
-              Alert.alert("Error", errorMessage(error));
-            }
-          },
+    Alert.alert("Delete account?", "This permanently deletes your Sabako account. This cannot be undone.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete Forever",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteAccount();
+            await signOut();
+          } catch (error) {
+            Alert.alert("Error", errorMessage(error));
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const appearanceOptions: { key: ThemeMode; label: string; icon: "phone-portrait-outline" | "sunny-outline" | "moon-outline" }[] = [
@@ -68,41 +68,50 @@ export default function ProfileScreen({ navigation }: any) {
 
   return (
     <Screen>
-      {/* Identity header */}
-      <View style={{ alignItems: "center", marginVertical: spacing.lg }}>
-        <View
-          style={{
-            width: 84,
-            height: 84,
-            borderRadius: 42,
-            backgroundColor: palette.primary,
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: spacing.sm,
-          }}
+      {/* Identity banner — dusk gradient + painted avatar. */}
+      <LinearGradient
+        colors={palette.heroGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.banner, { borderColor: palette.border }]}
+      >
+        <LinearGradient
+          colors={["#F25F2D", palette.primary, "#C94214"]}
+          start={{ x: 0.2, y: 0 }}
+          end={{ x: 0.8, y: 1 }}
+          style={styles.avatar}
         >
-          <Text style={{ color: palette.onPrimary, fontSize: 34, fontWeight: "900" }}>
+          <Text style={{ color: "#FFF6EF", fontSize: 32, fontFamily: fonts.black }}>
             {name.charAt(0).toUpperCase()}
           </Text>
+        </LinearGradient>
+
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[type.title, { color: palette.text }]} numberOfLines={1}>
+            {name}
+          </Text>
+          <View style={styles.roleRow}>
+            <Ionicons name={roleIcon as any} size={13} color={palette.accent} />
+            <Text style={{ color: palette.accent, fontFamily: fonts.bold, fontSize: 12, letterSpacing: 0.4 }}>
+              {role.toUpperCase()}
+              {plate ? ` · ${plate}` : ""}
+            </Text>
+          </View>
+          <Pinstripe width={44} style={{ marginTop: spacing.sm }} />
         </View>
-        <Text style={[type.title, { color: palette.text }]}>{name}</Text>
-        <View style={{ marginTop: spacing.xs }}>
-          <Badge
-            label={user?.role ?? "User"}
-            tone="primary"
-            icon={user?.role === "Admin" ? "shield-outline" : user?.role === "Driver" ? "bus-outline" : "person-outline"}
-          />
-        </View>
-      </View>
+      </LinearGradient>
 
       <SectionHeader title="Account" icon="person-circle-outline" />
       <Card>
         <ListRow icon="mail-outline" label="Email" value={email} />
+        <View style={[styles.divider, { backgroundColor: palette.border }]} />
         <ListRow icon="call-outline" label="Phone" value={phone} />
-        {!!plate && <ListRow icon="bus-outline" label="Plate Number" value={plate} />}
+        {!!plate && <View style={[styles.divider, { backgroundColor: palette.border }]} />}
+        {!!plate && <ListRow icon="bus-outline" label="Plate number" value={plate} />}
+        <View style={[styles.divider, { backgroundColor: palette.border }]} />
         <ListRow
           icon="create-outline"
-          label="Edit Profile"
+          label="Edit profile"
           onPress={() => navigation.navigate("EditProfile", { name, phoneNumber: profile?.phoneNumber ?? "" })}
         />
       </Card>
@@ -122,15 +131,21 @@ export default function ProfileScreen({ navigation }: any) {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: 6,
-                  paddingVertical: 9,
+                  paddingVertical: 10,
                   borderRadius: radius.sm,
-                  backgroundColor: active ? palette.surface : "transparent",
-                  borderWidth: active ? StyleSheet.hairlineWidth : 0,
-                  borderColor: palette.border,
+                  backgroundColor: active ? palette.primary : "transparent",
                 }}
               >
-                <Ionicons name={option.icon} size={15} color={active ? palette.primary : palette.textMuted} />
-                <Text style={[type.label, { color: active ? palette.text : palette.textMuted }]}>{option.label}</Text>
+                <Ionicons name={option.icon} size={15} color={active ? palette.onPrimary : palette.textMuted} />
+                <Text
+                  style={{
+                    color: active ? palette.onPrimary : palette.textMuted,
+                    fontFamily: active ? fonts.bold : fonts.semibold,
+                    fontSize: 13,
+                  }}
+                >
+                  {option.label}
+                </Text>
               </Pressable>
             );
           })}
@@ -139,9 +154,49 @@ export default function ProfileScreen({ navigation }: any) {
 
       <SectionHeader title="Session" icon="log-out-outline" />
       <Card>
-        <ListRow icon="log-out-outline" label="Sign Out" onPress={confirmLogout} />
-        <ListRow icon="trash-outline" label="Delete Account" destructive onPress={confirmDelete} />
+        <ListRow icon="log-out-outline" label="Sign out" onPress={confirmLogout} />
       </Card>
+
+      {/* Danger zone — visually set apart from ordinary settings. */}
+      <SectionHeader title="Danger zone" icon="warning-outline" />
+      <View style={[styles.danger, { borderColor: palette.dangerSoft, backgroundColor: palette.surface }]}>
+        <ListRow icon="trash-outline" label="Delete account" destructive onPress={confirmDelete} />
+        <Text style={[type.caption, { color: palette.textMuted, paddingHorizontal: spacing.xs, paddingBottom: spacing.xs }]}>
+          Permanently removes your account and data. This cannot be undone.
+        </Text>
+      </View>
+
+      <View style={{ height: spacing.lg }} />
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  banner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    padding: spacing.lg,
+    borderRadius: radius.xl,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  avatar: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "rgba(0,0,0,0.18)",
+  },
+  roleRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 5 },
+  divider: { height: StyleSheet.hairlineWidth, marginLeft: 42 },
+  danger: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+  },
+});

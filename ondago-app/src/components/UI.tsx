@@ -14,7 +14,7 @@ import {
   ViewStyle,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { motion, Palette, radius, spacing, type } from "../theme";
+import { fonts, motion, Palette, radius, spacing, type } from "../theme";
 import { useTheme } from "../store/ThemeContext";
 import { haptics } from "../services/haptics";
 
@@ -129,7 +129,7 @@ export function Field({ label, icon, error, style, secureTextEntry, ...props }: 
       >
         {icon && <Ionicons name={icon} size={18} color={accent} style={{ marginRight: spacing.sm }} />}
         <TextInput
-          style={[{ flex: 1, paddingVertical: 13, fontSize: 15, color: palette.text }, style]}
+          style={[{ flex: 1, paddingVertical: 14, fontSize: 15, fontFamily: fonts.medium, color: palette.text }, style]}
           placeholderTextColor={palette.textMuted}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
@@ -222,7 +222,9 @@ export function Button({
         ) : (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             {icon && <Ionicons name={icon} size={17} color={textColor} />}
-            <Text style={{ color: textColor, fontWeight: "700", fontSize: compact ? 14 : 15.5 }}>{title}</Text>
+            <Text style={{ color: textColor, fontFamily: fonts.extrabold, letterSpacing: 0.2, fontSize: compact ? 14 : 16 }}>
+              {title}
+            </Text>
           </View>
         )}
       </Pressable>

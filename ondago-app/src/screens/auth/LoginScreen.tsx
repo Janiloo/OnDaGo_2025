@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Ionicons } from "@expo/vector-icons";
-import { Screen, Field, Button } from "../../components/UI";
+import { Field, Button } from "../../components/UI";
+import { AuthScaffold } from "../../components/AuthScaffold";
 import { useAuth } from "../../store/AuthContext";
 import { useTheme } from "../../store/ThemeContext";
 import { useToast } from "../../components/Toast";
 import { errorMessage } from "../../services/client";
-import { radius, spacing, type } from "../../theme";
+import { fonts, spacing, type } from "../../theme";
 import { AuthStackParamList } from "../../navigation";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
@@ -30,8 +30,6 @@ export default function LoginScreen({ navigation }: Props) {
 
     setLoading(true);
     try {
-      // Role-based routing happens automatically in RootNavigator
-      // based on the role returned by the backend.
       await signIn(email.trim(), password);
     } catch (error) {
       toast.error(errorMessage(error));
@@ -41,32 +39,17 @@ export default function LoginScreen({ navigation }: Props) {
   };
 
   return (
-    <Screen>
-      <View style={{ alignItems: "center", marginTop: spacing.xl * 2, marginBottom: spacing.xl }}>
-        <View
-          style={{
-            width: 76,
-            height: 76,
-            borderRadius: radius.xl,
-            backgroundColor: palette.primary,
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: spacing.md,
-          }}
-        >
-          <Ionicons name="bus" size={40} color={palette.onPrimary} />
-        </View>
-        <Text style={[type.display, { color: palette.text }]}>ParaPo</Text>
-        <Text style={[type.body, { color: palette.textMuted, marginTop: spacing.xs }]}>
-          Montalban–Cubao PUV tracker
-        </Text>
-      </View>
+    <AuthScaffold onBack={navigation.canGoBack() ? () => navigation.goBack() : undefined} tagline brandSize={88}>
+      <Text style={[type.title, { color: palette.text, marginBottom: spacing.lg }]}>Welcome back</Text>
 
       <Field
         label="Email"
         icon="mail-outline"
         value={email}
-        onChangeText={(t) => { setEmail(t); if (errors.email) setErrors((e) => ({ ...e, email: undefined })); }}
+        onChangeText={(t) => {
+          setEmail(t);
+          if (errors.email) setErrors((e) => ({ ...e, email: undefined }));
+        }}
         autoCapitalize="none"
         keyboardType="email-address"
         placeholder="you@example.com"
@@ -76,20 +59,29 @@ export default function LoginScreen({ navigation }: Props) {
         label="Password"
         icon="lock-closed-outline"
         value={password}
-        onChangeText={(t) => { setPassword(t); if (errors.password) setErrors((e) => ({ ...e, password: undefined })); }}
+        onChangeText={(t) => {
+          setPassword(t);
+          if (errors.password) setErrors((e) => ({ ...e, password: undefined }));
+        }}
         secureTextEntry
         placeholder="••••••••"
         error={errors.password}
       />
-      <Button title="Sign In" icon="log-in-outline" onPress={handleLogin} loading={loading} />
-      <Button title="Forgot password?" variant="ghost" onPress={() => navigation.navigate("ForgotPassword")} />
 
-      <Text style={[type.body, { textAlign: "center", marginTop: spacing.lg, color: palette.textMuted }]}>
-        New here?{" "}
-        <Text style={{ color: palette.primary, fontWeight: "700" }} onPress={() => navigation.navigate("Register")}>
-          Create a commuter account
-        </Text>
-      </Text>
-    </Screen>
+      <View style={{ alignItems: "flex-end", marginBottom: spacing.sm }}>
+        <Pressable onPress={() => navigation.navigate("ForgotPassword")} hitSlop={8}>
+          <Text style={[type.label, { color: palette.textMuted }]}>Forgot password?</Text>
+        </Pressable>
+      </View>
+
+      <Button title="Sign In" icon="arrow-forward" onPress={handleLogin} loading={loading} />
+
+      <View style={{ flexDirection: "row", justifyContent: "center", marginTop: spacing.md }}>
+        <Text style={[type.body, { color: palette.textMuted }]}>New here? </Text>
+        <Pressable onPress={() => navigation.navigate("Register")} hitSlop={8}>
+          <Text style={[type.body, { color: palette.primary, fontFamily: fonts.bold }]}>Create an account</Text>
+        </Pressable>
+      </View>
+    </AuthScaffold>
   );
 }

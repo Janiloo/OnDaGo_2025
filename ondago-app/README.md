@@ -10,7 +10,7 @@ Role comes from the backend's login response (`user.role`) and drives navigation
 
 | Role   | Experience |
 |--------|-----------|
-| User (commuter) | Map-first: live PUV markers on the Montalban–Cubao route, seat availability, fare matrix, reports |
+| User (commuter) | Map-first: live PUV markers, seat availability, fare matrix, reports |
 | Driver | Operational dashboard: GPS broadcast, big-target passenger counter, capacity bar |
 | Admin  | Dashboard: report stats + triage, fare management, driver/admin account creation |
 

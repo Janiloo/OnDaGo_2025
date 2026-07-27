@@ -14,10 +14,12 @@ import OnboardingScreen from "../screens/onboarding/OnboardingScreen";
 /** Subtle tactile tick on every tab switch. */
 const tabListeners = { tabPress: () => haptics.selection() };
 
+import WelcomeScreen from "../screens/auth/WelcomeScreen";
 import LoginScreen from "../screens/auth/LoginScreen";
 import RegisterScreen from "../screens/auth/RegisterScreen";
 import ForgotPasswordScreen from "../screens/auth/ForgotPasswordScreen";
 import ResetPasswordScreen from "../screens/auth/ResetPasswordScreen";
+import LegalScreen from "../screens/legal/LegalScreen";
 
 import CommuterHomeScreen from "../screens/commuter/CommuterHomeScreen";
 import FareMatrixScreen from "../screens/commuter/FareMatrixScreen";
@@ -33,10 +35,12 @@ import EditFaresScreen from "../screens/admin/EditFaresScreen";
 import ManageUsersScreen from "../screens/admin/ManageUsersScreen";
 
 export type AuthStackParamList = {
+  Welcome: undefined;
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
   ResetPassword: { email: string };
+  Legal: { doc: "terms" | "privacy" };
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -212,10 +216,16 @@ export default function RootNavigator() {
     <NavigationContainer theme={navTheme}>
       {!user ? (
         <AuthStack.Navigator screenOptions={screenOptions}>
+          <AuthStack.Screen name="Welcome" component={WelcomeScreen} options={{ headerShown: false }} />
           <AuthStack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-          <AuthStack.Screen name="Register" component={RegisterScreen} options={{ title: "Create Account" }} />
+          <AuthStack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
           <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={{ title: "Reset Password" }} />
           <AuthStack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ title: "Enter Reset Token" }} />
+          <AuthStack.Screen
+            name="Legal"
+            component={LegalScreen}
+            options={({ route }) => ({ title: route.params.doc === "privacy" ? "Privacy Policy" : "Terms & Conditions" })}
+          />
         </AuthStack.Navigator>
       ) : user.role === "Admin" ? (
         <AdminTabs />

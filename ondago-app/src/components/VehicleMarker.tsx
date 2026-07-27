@@ -6,7 +6,8 @@ import { Vehicle } from "../types";
 import { MAX_CAPACITY, occupancyColor } from "../utils/vehicles";
 import { useTheme } from "../store/ThemeContext";
 
-/** Fixed dark pin fill (theme-independent) so white content always reads. */
+/** Dark navy used as the pin fill in light mode (with white content), and as
+ *  the number/icon color in dark mode (on a white fill). */
 const PIN_FILL = "#101B2E";
 
 /**
@@ -34,12 +35,18 @@ export function VehicleMarker({
   /** When set, tapping opens the app's own detail UI instead of the map callout. */
   onPress?: () => void;
 }) {
-  const { palette } = useTheme();
+  const { palette, isDark } = useTheme();
   const count = vehicle.passengerCount;
   const max = vehicle.maxPassengerCount || MAX_CAPACITY;
   const color = stale ? palette.textMuted : occupancyColor(count, max);
 
-  const signature = `${count}-${color}`;
+  // Invert the pin by theme so it always contrasts the map: a dark pin with
+  // white content on the light map, a white pin with dark content on the dark
+  // map (where a dark fill would blend into the terrain).
+  const fill = isDark ? "#FFFFFF" : PIN_FILL;
+  const content = isDark ? PIN_FILL : "#FFFFFF";
+
+  const signature = `${count}-${color}-${isDark}`;
   const [tracks, setTracks] = useState(true);
   useEffect(() => {
     setTracks(true);
@@ -66,11 +73,20 @@ export function VehicleMarker({
     >
       <View style={styles.wrap}>
         {/* Body hugs its content — count over bus glyph. */}
-        <View style={[styles.body, { borderColor: color }]}>
-          <Text allowFontScaling={false} numberOfLines={1} style={styles.count}>
-            {count}
-          </Text>
-          <Ionicons name="bus" size={11} color="#FFFFFF" />
+        <View style={styles.bodyWrap}>
+          {/* Drop shadow baked into the marker bitmap: native elevation/shadow
+              props draw outside the captured bitmap on Android and vanish. RN
+              can't blur, so we fake a soft falloff by stacking layers that grow
+              larger and fainter outward — the edges fade like a real shadow. */}
+          <View style={[styles.shadow, styles.shadow1]} pointerEvents="none" />
+          <View style={[styles.shadow, styles.shadow2]} pointerEvents="none" />
+          <View style={[styles.shadow, styles.shadow3]} pointerEvents="none" />
+          <View style={[styles.body, { borderColor: color, backgroundColor: fill }]}>
+            <Text allowFontScaling={false} numberOfLines={1} style={[styles.count, { color: content }]}>
+              {count}
+            </Text>
+            <Ionicons name="bus" size={11} color={content} />
+          </View>
         </View>
         {/* Pointer tail (tier color). */}
         <View style={[styles.tail, { borderTopColor: color }]} />
@@ -80,7 +96,16 @@ export function VehicleMarker({
 }
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: "center" },
+  // Padding gives the layered drop shadow room to render inside the marker
+  // bitmap (react-native-maps clips a marker tight to its content otherwise).
+  wrap: { alignItems: "center", paddingHorizontal: 7, paddingTop: 4, paddingBottom: 5 },
+  bodyWrap: { position: "relative" },
+  // Soft baked drop shadow: three stacked layers, each larger and fainter, so
+  // the edges fade out instead of forming a hard block. Offset slightly down.
+  shadow: { position: "absolute" },
+  shadow1: { top: 4, left: -4, right: -4, bottom: -5, borderRadius: 15, backgroundColor: "rgba(0,0,0,0.05)" },
+  shadow2: { top: 3.5, left: -2.5, right: -2.5, bottom: -3.5, borderRadius: 13, backgroundColor: "rgba(0,0,0,0.07)" },
+  shadow3: { top: 3, left: -1, right: -1, bottom: -2, borderRadius: 11, backgroundColor: "rgba(0,0,0,0.1)" },
   body: {
     alignItems: "center",
     justifyContent: "center",

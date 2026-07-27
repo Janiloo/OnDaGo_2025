@@ -42,8 +42,8 @@ const SLIDES: Slide[] = [
       { icon: "sparkles", tone: "accent", style: { top: 6, right: 18 } },
       { icon: "location", tone: "primary", style: { bottom: 14, left: 6 } },
     ],
-    title: "Welcome to ParaPo",
-    desc: "Your real-time companion for PUVs on the Montalban–Cubao route.",
+    title: "Welcome to Sabako",
+    desc: "Your real-time companion for public transport, wherever you ride.",
   },
   {
     key: "track",

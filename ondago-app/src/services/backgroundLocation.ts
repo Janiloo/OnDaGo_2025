@@ -93,7 +93,7 @@ export async function startDriverTracking(
       pausesUpdatesAutomatically: false,
       showsBackgroundLocationIndicator: true,
       foregroundService: {
-        notificationTitle: "ParaPo — On duty",
+        notificationTitle: "Sabako — On duty",
         notificationBody: "Broadcasting your PUV location to commuters.",
         notificationColor: palettes.light.primary,
       },

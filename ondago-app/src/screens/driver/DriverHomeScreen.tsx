@@ -8,6 +8,7 @@ import { useAuth } from "../../store/AuthContext";
 import { useTheme } from "../../store/ThemeContext";
 import { getProfile } from "../../services/authApi";
 import { getVehicles, goOffline, updateVehicleStatus } from "../../services/vehicleApi";
+import { getCompanies } from "../../services/discoveryApi";
 import {
   isDriverTrackingActive,
   startDriverTracking,
@@ -16,6 +17,7 @@ import {
 } from "../../services/backgroundLocation";
 import { Vehicle } from "../../types";
 import { Badge } from "../../components/UI";
+import { PlateIcon } from "../../components/PlateIcon";
 import { BottomSheet } from "../../components/BottomSheet";
 import { useToast } from "../../components/Toast";
 import { haptics } from "../../services/haptics";
@@ -47,6 +49,9 @@ export default function DriverHomeScreen() {
   const mapRef = useRef<MapView>(null);
 
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+  // The driver's own operator logo (branding), shown on the plate badge. Null
+  // until resolved, or when the company hasn't uploaded one.
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const [count, setCount] = useState(0);
   const [onDuty, setOnDuty] = useState(false);
   const [hasFix, setHasFix] = useState(false);
@@ -83,6 +88,27 @@ export default function DriverHomeScreen() {
   useEffect(() => {
     onDutyRef.current = onDuty;
   }, [onDuty]);
+
+  // Resolve the driver's operator logo for the plate badge. Uses the commuter
+  // discovery layer (Verified companies) matched to the driver's own company;
+  // falls back to the default bus glyph when there's no logo.
+  useEffect(() => {
+    let mounted = true;
+    const companyId = vehicle?.companyId ?? null;
+    if (!companyId) {
+      setCompanyLogo(null);
+      return;
+    }
+    getCompanies()
+      .then((companies) => {
+        if (!mounted) return;
+        setCompanyLogo(companies.find((c) => c.id === companyId)?.logo ?? null);
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, [vehicle?.companyId]);
 
   // Load the vehicle assigned to this driver's plate number, and restore duty
   // state if a background task is already running from a previous screen visit.
@@ -374,11 +400,10 @@ export default function DriverHomeScreen() {
           from expanding taller. */}
       <BottomSheet height={SHEET_HEIGHT} peekHeight={SHEET_HEIGHT}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing.sm }}>
-          {/* Header: plate + duty toggle */}
+          {/* Header: plate + duty toggle. The plate badge shows the driver's
+              company logo when one is set, else the default bus glyph. */}
           <View style={styles.headerRow}>
-            <View style={[styles.plateIcon, { backgroundColor: palette.primarySoft }]}>
-              <Ionicons name="bus" size={22} color={palette.primary} />
-            </View>
+            <PlateIcon logo={companyLogo} />
             <View style={{ flex: 1 }}>
               <Text style={[type.caption, { color: palette.textMuted }]}>PUV No.</Text>
               <Text style={[type.title, { color: palette.text }]}>{vehicle?.puvNo ?? "—"}</Text>
@@ -536,7 +561,6 @@ const makeStyles = (p: Palette) =>
       elevation: 3,
     },
     headerRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginBottom: spacing.sm },
-    plateIcon: { width: 44, height: 44, borderRadius: radius.md, alignItems: "center", justifyContent: "center" },
     dutyButton: {
       flexDirection: "row",
       alignItems: "center",

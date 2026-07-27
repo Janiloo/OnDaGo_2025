@@ -2,14 +2,15 @@ import React, { useEffect, useState } from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
-import { Button, Field, IconName, Screen, SectionHeader, Subtitle, Title } from "../../components/UI";
+import { Button, Field, IconName, Screen, SectionHeader } from "../../components/UI";
+import { Pinstripe } from "../../components/Brand";
 import { PickerField, PickerOption } from "../../components/PickerField";
 import { createReport } from "../../services/reportApi";
 import { getCompanies, getCompanyVehicles } from "../../services/discoveryApi";
 import { errorMessage } from "../../services/client";
 import { useAuth } from "../../store/AuthContext";
 import { useToast } from "../../components/Toast";
-import { radius, spacing, type } from "../../theme";
+import { fonts, radius, spacing, type } from "../../theme";
 import { useTheme } from "../../store/ThemeContext";
 
 /** Report categories offered to commuters (Subject). "Other" reveals a free-text field. */
@@ -20,6 +21,18 @@ const CATEGORIES: { key: string; icon: IconName }[] = [
   { key: "Vehicle Issue", icon: "construct-outline" },
   { key: "Other", icon: "ellipsis-horizontal-outline" },
 ];
+
+/** Shared page header: display title + pinstripe + subtitle. */
+function ReportHeader({ subtitle }: { subtitle: string }) {
+  const { palette } = useTheme();
+  return (
+    <View style={{ marginTop: spacing.sm, marginBottom: spacing.lg }}>
+      <Text style={[type.display, { color: palette.text, fontSize: 30 }]}>Report an issue</Text>
+      <Pinstripe width={64} style={{ marginTop: spacing.sm }} />
+      <Text style={[type.body, { color: palette.textMuted, marginTop: spacing.md }]}>{subtitle}</Text>
+    </View>
+  );
+}
 
 export default function ReportScreen() {
   const { user } = useAuth();
@@ -32,6 +45,7 @@ export default function ReportScreen() {
 function DriverReportForm() {
   const { user } = useAuth();
   const toast = useToast();
+  const { palette } = useTheme();
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [errors, setErrors] = useState<{ subject?: string; description?: string }>({});
@@ -59,13 +73,30 @@ function DriverReportForm() {
 
   return (
     <Screen>
-      <Title>Report an issue</Title>
-      <Subtitle>Sent to your company admin, tagged with your vehicle{user?.plateNumber ? ` (${user.plateNumber})` : ""}.</Subtitle>
+      <ReportHeader subtitle="Straight to your company admin — no need to pick a company." />
+
+      {/* Auto-attach notice */}
+      <View style={[styles.notice, { backgroundColor: palette.primarySoft }]}>
+        <Ionicons name="bus" size={16} color={palette.primary} />
+        <Text style={[type.caption, { color: palette.text, flex: 1 }]}>
+          Tagged automatically with your vehicle
+          {user?.plateNumber ? (
+            <Text style={{ fontFamily: fonts.bold, color: palette.primary }}> {user.plateNumber}</Text>
+          ) : (
+            ""
+          )}
+          .
+        </Text>
+      </View>
+
       <Field
         label="Subject"
         icon="alert-circle-outline"
         value={subject}
-        onChangeText={(t) => { setSubject(t); if (errors.subject) setErrors((e) => ({ ...e, subject: undefined })); }}
+        onChangeText={(t) => {
+          setSubject(t);
+          if (errors.subject) setErrors((e) => ({ ...e, subject: undefined }));
+        }}
         placeholder="e.g. Terminal congestion at Cubao"
         error={errors.subject}
       />
@@ -73,14 +104,17 @@ function DriverReportForm() {
         label="Description"
         icon="document-text-outline"
         value={description}
-        onChangeText={(t) => { setDescription(t); if (errors.description) setErrors((e) => ({ ...e, description: undefined })); }}
+        onChangeText={(t) => {
+          setDescription(t);
+          if (errors.description) setErrors((e) => ({ ...e, description: undefined }));
+        }}
         placeholder="What happened?"
         multiline
         numberOfLines={6}
         style={{ height: 140, textAlignVertical: "top" }}
         error={errors.description}
       />
-      <Button title="Submit Report" icon="send-outline" onPress={submit} loading={loading} />
+      <Button title="Submit Report" icon="send" onPress={submit} loading={loading} />
     </Screen>
   );
 }
@@ -170,7 +204,6 @@ function CommuterReportForm() {
       return;
     }
     if (Platform.OS === "android" && pickerStage === "date") {
-      // Keep the date, advance to the time step.
       const base = incidentAt ?? new Date();
       const merged = new Date(picked);
       merged.setHours(base.getHours(), base.getMinutes());
@@ -188,55 +221,75 @@ function CommuterReportForm() {
 
   return (
     <Screen>
-      <Title>Report an issue</Title>
-      <Subtitle>Tell us what happened. Only the bus company and a description are required.</Subtitle>
+      <ReportHeader subtitle="Tell us what happened. Only the bus company and a description are required." />
 
-      <SectionHeader title="Category" icon="pricetag-outline" />
+      <SectionHeader title="What kind of issue?" icon="pricetag-outline" />
       <View style={styles.chips}>
         {CATEGORIES.map((c) => {
           const active = category === c.key;
           return (
             <Pressable
               key={c.key}
-              onPress={() => { setCategory(c.key); setErrors((e) => ({ ...e, category: undefined })); }}
+              onPress={() => {
+                setCategory(c.key);
+                setErrors((e) => ({ ...e, category: undefined }));
+              }}
               style={[
                 styles.chip,
-                { borderColor: active ? palette.primary : palette.border, backgroundColor: active ? palette.primarySoft : palette.surfaceAlt },
+                {
+                  borderColor: active ? palette.primary : palette.border,
+                  backgroundColor: active ? palette.primary : palette.surfaceAlt,
+                },
               ]}
             >
-              <Ionicons name={c.icon} size={15} color={active ? palette.primary : palette.textMuted} />
-              <Text style={[type.caption, { color: active ? palette.primary : palette.text, fontWeight: "700" }]}>{c.key}</Text>
+              <Ionicons name={c.icon} size={15} color={active ? palette.onPrimary : palette.textMuted} />
+              <Text
+                style={{
+                  color: active ? palette.onPrimary : palette.text,
+                  fontFamily: active ? fonts.bold : fonts.semibold,
+                  fontSize: 13,
+                }}
+              >
+                {c.key}
+              </Text>
             </Pressable>
           );
         })}
       </View>
-      {!!errors.category && <Text style={[type.caption, { color: palette.danger, marginBottom: spacing.sm }]}>{errors.category}</Text>}
+      {!!errors.category && (
+        <Text style={[type.caption, { color: palette.danger, marginBottom: spacing.sm }]}>{errors.category}</Text>
+      )}
 
       {category === "Other" && (
         <Field
           label="Subject"
           icon="create-outline"
           value={customSubject}
-          onChangeText={(t) => { setCustomSubject(t); if (errors.custom) setErrors((e) => ({ ...e, custom: undefined })); }}
+          onChangeText={(t) => {
+            setCustomSubject(t);
+            if (errors.custom) setErrors((e) => ({ ...e, custom: undefined }));
+          }}
           placeholder="Short summary"
           error={errors.custom}
         />
       )}
 
-      <View style={{ height: spacing.sm }} />
+      <SectionHeader title="Which operator?" icon="business-outline" />
       <PickerField
-        label="Bus Company *"
+        label="Bus company *"
         icon="business-outline"
         placeholder="Select the operator"
         value={companyId}
         options={companies}
-        onSelect={(k) => { setCompanyId(k); setErrors((e) => ({ ...e, company: undefined })); }}
+        onSelect={(k) => {
+          setCompanyId(k);
+          setErrors((e) => ({ ...e, company: undefined }));
+        }}
         error={errors.company}
         emptyText="No companies published yet."
       />
-
       <PickerField
-        label="Plate / PUV Number (optional)"
+        label="Plate / PUV number (optional)"
         icon="bus-outline"
         placeholder={!companyId ? "Choose a company first" : platesLoading ? "Loading…" : plates.length ? "Select a plate" : "No plates listed"}
         value={plate}
@@ -246,12 +299,16 @@ function CommuterReportForm() {
         emptyText="This company has no plates listed."
       />
 
+      <SectionHeader title="What happened?" icon="document-text-outline" />
       <Field
         label="Description *"
         icon="document-text-outline"
         value={description}
-        onChangeText={(t) => { setDescription(t); if (errors.description) setErrors((e) => ({ ...e, description: undefined })); }}
-        placeholder="What happened?"
+        onChangeText={(t) => {
+          setDescription(t);
+          if (errors.description) setErrors((e) => ({ ...e, description: undefined }));
+        }}
+        placeholder="Describe the incident in a few sentences."
         multiline
         numberOfLines={6}
         style={{ height: 130, textAlignVertical: "top" }}
@@ -261,10 +318,12 @@ function CommuterReportForm() {
       <SectionHeader title="Incident details (optional)" icon="time-outline" />
       <Pressable
         onPress={() => setPickerStage(Platform.OS === "android" ? "date" : "time")}
-        style={[styles.dateField, { backgroundColor: palette.surfaceAlt }]}
+        style={[styles.dateField, { backgroundColor: palette.surfaceAlt, borderColor: palette.border }]}
       >
         <Ionicons name="calendar-outline" size={18} color={palette.textMuted} style={{ marginRight: spacing.sm }} />
-        <Text style={{ flex: 1, fontSize: 15, color: incidentAt ? palette.text : palette.textMuted }}>{incidentLabel}</Text>
+        <Text style={{ flex: 1, fontSize: 15, fontFamily: fonts.medium, color: incidentAt ? palette.text : palette.textMuted }}>
+          {incidentLabel}
+        </Text>
         {incidentAt && (
           <Pressable onPress={() => setIncidentAt(null)} hitSlop={10}>
             <Ionicons name="close-circle" size={18} color={palette.textMuted} />
@@ -272,35 +331,33 @@ function CommuterReportForm() {
         )}
       </Pressable>
       {pickerStage !== "none" && (
-        <DateTimePicker
-          value={incidentAt ?? new Date()}
-          mode={pickerStage === "time" ? "time" : "date"}
-          maximumDate={new Date()}
-          onChange={onPickerChange}
-        />
+        <DateTimePicker value={incidentAt ?? new Date()} mode={pickerStage === "time" ? "time" : "date"} maximumDate={new Date()} onChange={onPickerChange} />
       )}
 
-      <Field
-        label="Location (optional)"
-        icon="location-outline"
-        value={location}
-        onChangeText={setLocation}
-        placeholder="e.g. near Cubao terminal"
-      />
+      <Field label="Location (optional)" icon="location-outline" value={location} onChangeText={setLocation} placeholder="e.g. near Cubao terminal" />
 
-      <Button title="Submit Report" icon="send-outline" onPress={submit} loading={loading} />
+      <View style={{ height: spacing.xs }} />
+      <Button title="Submit Report" icon="send" onPress={submit} loading={loading} />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  notice: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    marginBottom: spacing.lg,
+  },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginBottom: spacing.sm },
   chip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: radius.pill,
     borderWidth: 1.5,
   },
@@ -308,8 +365,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderRadius: radius.md,
+    borderWidth: 1.5,
     paddingHorizontal: spacing.md,
-    paddingVertical: 13,
+    paddingVertical: 14,
     marginBottom: spacing.md,
   },
 });

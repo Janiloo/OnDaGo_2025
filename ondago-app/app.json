@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ParaPo",
+    "name": "Sabako",
     "slug": "ondago",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,8 +13,8 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.ondago.app",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "ParaPo uses your location to show nearby PUVs and, for drivers, to broadcast the vehicle position to commuters.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "ParaPo broadcasts your PUV location to commuters while you are on duty, including when the app is in the background.",
+        "NSLocationWhenInUseUsageDescription": "Sabako uses your location to show nearby PUVs and, for drivers, to broadcast the vehicle position to commuters.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Sabako broadcasts your PUV location to commuters while you are on duty, including when the app is in the background.",
         "UIBackgroundModes": [
           "location"
         ],
@@ -42,8 +42,8 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "ParaPo uses your location to show nearby PUVs and track vehicle positions.",
-          "locationAlwaysAndWhenInUsePermission": "ParaPo broadcasts your PUV location to commuters while you are on duty, including when the app is in the background.",
+          "locationWhenInUsePermission": "Sabako uses your location to show nearby PUVs and track vehicle positions.",
+          "locationAlwaysAndWhenInUsePermission": "Sabako broadcasts your PUV location to commuters while you are on duty, including when the app is in the background.",
           "isAndroidBackgroundLocationEnabled": true,
           "isAndroidForegroundServiceEnabled": true
         }
@@ -57,7 +57,8 @@
           }
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-font"
     ]
   }
 }
