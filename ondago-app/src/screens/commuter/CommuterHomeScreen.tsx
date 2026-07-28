@@ -9,6 +9,7 @@ import { useDiscovery } from "../../hooks/useDiscovery";
 import { useVehicleSpeeds } from "../../hooks/useVehicleSpeeds";
 import { VehicleMarker } from "../../components/VehicleMarker";
 import { StopMarker } from "../../components/StopMarker";
+import { IconName } from "../../components/UI";
 import { VehicleDetailSheet } from "../../components/VehicleDetailSheet";
 import { TerminalDetailSheet } from "../../components/TerminalDetailSheet";
 import { OccupancyLegend } from "../../components/OccupancyLegend";
@@ -176,45 +177,21 @@ export default function CommuterHomeScreen() {
         </Text>
       </View>
 
-      {/* Floating actions */}
+      {/* Floating actions (top → bottom): find your ride · stops · routes ·
+          terminal view · map layers. Every button highlights on press, and the
+          toggles stay highlighted while active — consistent in light & dark. */}
       <View style={[styles.fabColumn, { top: insets.top + spacing.sm }]}>
-        <Pressable
-          onPress={fitToVehicles}
-          style={[styles.fab, { backgroundColor: palette.surface, borderColor: palette.border }]}
-        >
-          <Ionicons name="locate" size={20} color={palette.primary} />
-        </Pressable>
-        <Pressable
-          onPress={() => setMapMenuOpen((o) => !o)}
-          style={[
-            styles.fab,
-            {
-              backgroundColor: mapMenuOpen ? palette.primary : palette.surface,
-              borderColor: mapMenuOpen ? palette.primary : palette.border,
-            },
-          ]}
-        >
-          <Ionicons name="layers-outline" size={20} color={mapMenuOpen ? palette.onPrimary : palette.primary} />
-        </Pressable>
-        <Pressable
+        <MapFab icon="locate" onPress={fitToVehicles} />
+        <MapFab
+          icon={showStops ? "flag" : "flag-outline"}
+          tint="accent"
+          active={showStops}
           onPress={() => setShowStops((sv) => !sv)}
-          style={[styles.fab, { backgroundColor: palette.surface, borderColor: palette.border }]}
-        >
-          <Ionicons name={showStops ? "flag" : "flag-outline"} size={20} color={palette.accent} />
-        </Pressable>
-        <Pressable
-          onPress={() => setPickerOpen(true)}
-          style={[
-            styles.fab,
-            {
-              backgroundColor: selectedRoute ? palette.primary : palette.surface,
-              borderColor: selectedRoute ? palette.primary : palette.border,
-            },
-          ]}
-        >
-          <Ionicons name="git-branch" size={20} color={selectedRoute ? palette.onPrimary : palette.primary} />
-        </Pressable>
-        <Pressable
+        />
+        <MapFab icon="git-branch" active={!!selectedRoute} onPress={() => setPickerOpen(true)} />
+        <MapFab
+          icon="business"
+          active={terminalMode}
           onPress={() => {
             setTerminalMode((m) => {
               // Whichever sheet belongs to the mode we're leaving closes with it.
@@ -234,16 +211,9 @@ export default function CommuterHomeScreen() {
               return !m;
             });
           }}
-          style={[
-            styles.fab,
-            {
-              backgroundColor: terminalMode ? palette.primary : palette.surface,
-              borderColor: terminalMode ? palette.primary : palette.border,
-            },
-          ]}
-        >
-          <Ionicons name="business" size={20} color={terminalMode ? palette.onPrimary : palette.primary} />
-        </Pressable>
+        />
+        {/* Map layers — sits under the terminal button. */}
+        <MapFab icon="layers-outline" active={mapMenuOpen} onPress={() => setMapMenuOpen((o) => !o)} />
       </View>
 
       {/* Map layers menu (Street/Satellite + traffic), anchored under the FABs */}
@@ -406,6 +376,43 @@ export default function CommuterHomeScreen() {
         onClose={() => setPickerOpen(false)}
       />
     </View>
+  );
+}
+
+/**
+ * A round map control button. Highlights (fills with its tint + inverts the
+ * icon) while pressed OR while `active` — so momentary actions flash on tap and
+ * toggles stay lit. `tint` picks the accent colour; both read correctly on the
+ * light and dark surfaces.
+ */
+function MapFab({
+  icon,
+  onPress,
+  active = false,
+  tint = "primary",
+}: {
+  icon: IconName;
+  onPress: () => void;
+  active?: boolean;
+  tint?: "primary" | "accent";
+}) {
+  const { palette } = useTheme();
+  const color = tint === "accent" ? palette.accent : palette.primary;
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.fab,
+        {
+          backgroundColor: active || pressed ? color : palette.surface,
+          borderColor: active || pressed ? color : palette.border,
+        },
+      ]}
+    >
+      {({ pressed }) => (
+        <Ionicons name={icon} size={20} color={active || pressed ? palette.onPrimary : color} />
+      )}
+    </Pressable>
   );
 }
 
