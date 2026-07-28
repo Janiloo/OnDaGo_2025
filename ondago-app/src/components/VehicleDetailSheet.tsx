@@ -1,11 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useMemo } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { BottomSheet } from "./BottomSheet";
 import { PlateIcon } from "./PlateIcon";
-import { Badge, EmptyState } from "./UI";
-import { FareMatrixItem, Vehicle } from "../types";
-import { getFareMatrix } from "../services/fareApi";
+import { Badge } from "./UI";
+import { Vehicle } from "../types";
 import { estimateStopEtas, formatDistance } from "../utils/eta";
 import { isVehicleStale, lastSeenLabel, occupancyColor, occupancyLabel } from "../utils/vehicles";
 import { radius, spacing, type } from "../theme";
@@ -13,11 +12,9 @@ import { useTheme } from "../store/ThemeContext";
 
 /**
  * Slides up when a PUV marker is tapped (commuter + admin maps): plate,
- * occupancy, and the fare matrix. Height is sized to the content (capped so a
- * long matrix scrolls) so a short matrix doesn't leave dead space below.
- * The vehicle prop stays live — pushes keep the occupancy current while open.
+ * occupancy, and arrival estimates. Height is sized to the content so there's no
+ * dead space below. The vehicle prop stays live — pushes keep occupancy current.
  */
-const FARE_ROW_HEIGHT = 48;
 const ETA_ROW_HEIGHT = 34;
 export function VehicleDetailSheet({
   vehicle,
@@ -38,23 +35,6 @@ export function VehicleDetailSheet({
   onClose: () => void;
 }) {
   const { palette } = useTheme();
-  const [fares, setFares] = useState<FareMatrixItem[] | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    let mounted = true;
-    getFareMatrix()
-      .then((list) => {
-        if (mounted) setFares(list);
-      })
-      .catch(() => {
-        if (mounted) setFailed(true);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
   const stale = isVehicleStale(vehicle, now);
   const max = vehicle.maxPassengerCount;
   const full = max > 0 && vehicle.passengerCount >= max;
@@ -68,18 +48,13 @@ export function VehicleDetailSheet({
   }, [stale, stops, vehicle.currentLat, vehicle.currentLong, speedKmh]);
 
   // Height fits the content: fixed header/occupancy block + optional operator
-  // row + optional ETA block + the fare section, capped so a long matrix
-  // scrolls instead of overflowing.
+  // row + optional ETA block.
   const sheetHeight = useMemo(() => {
-    const base = 184; // handle + header + occupancy + capacity bar + fare label
+    const base = 176; // handle + header + occupancy + capacity bar + bottom padding
     const operatorBlock = operator ? 30 : 0;
     const etaBlock = etas.length > 0 ? 34 + etas.length * ETA_ROW_HEIGHT + 22 : 0; // label + rows + footnote
-    let section: number;
-    if (fares === null && !failed) section = 64; // spinner
-    else if (failed || (fares && fares.length === 0)) section = 128; // empty state
-    else section = Math.min(fares!.length, 5) * FARE_ROW_HEIGHT + spacing.sm;
-    return Math.min(580, base + operatorBlock + etaBlock + section);
-  }, [fares, failed, etas.length, operator]);
+    return base + operatorBlock + etaBlock;
+  }, [etas.length, operator]);
 
   return (
     <BottomSheet height={sheetHeight} peekHeight={sheetHeight} animateOnMount onDismiss={onClose}>
@@ -166,44 +141,6 @@ export function VehicleDetailSheet({
           </Text>
         </View>
       )}
-
-      {/* Fare matrix */}
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: spacing.xs }}>
-        <Ionicons name="cash-outline" size={14} color={palette.textMuted} />
-        <Text style={[type.label, { color: palette.textMuted, textTransform: "uppercase", letterSpacing: 0.8 }]}>
-          Fare Matrix
-        </Text>
-      </View>
-      {fares === null && !failed ? (
-        <ActivityIndicator color={palette.primary} style={{ marginTop: spacing.md }} />
-      ) : failed ? (
-        <EmptyState icon="cloud-offline-outline" message="Couldn't load fares. Check your connection." />
-      ) : fares!.length === 0 ? (
-        <EmptyState icon="cash-outline" message="No fares published yet." />
-      ) : (
-        <FlatList
-          style={{ flex: 1 }}
-          data={fares}
-          keyExtractor={(item, index) => item.id || String(index)}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: spacing.md }}
-          renderItem={({ item }) => (
-            <View style={[styles.fareRow, { borderBottomColor: palette.border }]}>
-              <Text style={[type.body, { color: palette.text, flex: 1 }]} numberOfLines={1}>
-                {item.origin} → {item.destination}
-              </Text>
-              <View style={{ alignItems: "flex-end" }}>
-                <Text style={{ color: palette.primary, fontWeight: "800", fontSize: 15 }}>
-                  ₱{item.fare.toFixed(2)}
-                </Text>
-                <Text style={[type.caption, { color: palette.textMuted }]}>
-                  ₱{item.discountedFare.toFixed(2)} discounted
-                </Text>
-              </View>
-            </View>
-          )}
-        />
-      )}
     </BottomSheet>
   );
 }
@@ -233,11 +170,4 @@ const styles = StyleSheet.create({
     height: ETA_ROW_HEIGHT,
   },
   etaDot: { width: 8, height: 8, borderRadius: 4 },
-  fareRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
 });
